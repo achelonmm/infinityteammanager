@@ -1,12 +1,12 @@
-import express from 'express';
-import { TournamentModel, TeamModel, PlayerModel, MatchModel } from '../models/Tournament';
+import { Router, Request, Response } from 'express';
+import { TournamentModel, TeamModel, PlayerModel, TeamMatchModel, IndividualMatchModel } from '../models/Tournament';
 
-const router = express.Router();
+const router = Router();
 
-// GET /api/tournaments - Get all tournaments
-router.get('/', async (req, res) => {
+// Get all tournaments
+router.get('/', async (req: Request, res: Response) => {
   try {
-    const tournaments = await TournamentModel.getAll();
+    const tournaments = TournamentModel.findAll();
     res.json(tournaments);
   } catch (error) {
     console.error('Error fetching tournaments:', error);
@@ -14,59 +14,118 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/tournaments/:id - Get tournament by ID with all related data
-router.get('/:id', async (req, res) => {
+// Get a specific tournament with all related data
+router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const tournament = TournamentModel.findById(id);
     
-    const tournament = await TournamentModel.getById(id);
     if (!tournament) {
       return res.status(404).json({ error: 'Tournament not found' });
     }
 
-    const teams = await TournamentModel.getTeams(id);
-    const players = await TournamentModel.getPlayers(id);
-    const teamMatches = await TournamentModel.getTeamMatches(id);
-    const individualMatches = await TournamentModel.getIndividualMatches(id);
+    const teams = TeamModel.findByTournamentId(id);
+    const teamMatches = TeamMatchModel.findByTournamentId(id);
+    
+    // Get all players for this tournament
+    const allPlayers = teams.flatMap(team => PlayerModel.findByTeamId(team.id));
+    console.log('RAW PLAYERS FROM DB:', allPlayers);
 
-    // Group players by team
+
+    // Convert snake_case to camelCase for frontend
+    const camelCasePlayers = allPlayers.map(player => ({
+      id: player.id,
+      teamId: player.team_id,
+      nickname: player.nickname,
+      itsPin: player.its_pin,
+      army: player.army,
+      isCaptain: Boolean(player.is_captain),  // Changed: camelCase + boolean
+      isPainted: Boolean(player.is_painted),  // Changed: camelCase + boolean
+      createdAt: player.created_at,
+      updatedAt: player.updated_at
+    }));
+
+    // Build teams with their players
     const teamsWithPlayers = teams.map(team => ({
-      ...team,
-      players: players.filter(player => player.teamId === team.id)
+      id: team.id,
+      tournamentId: team.tournament_id,
+      name: team.name,
+      captainId: team.captain_id,
+      createdAt: team.created_at,
+      updatedAt: team.updated_at,
+      players: camelCasePlayers.filter(player => player.teamId === team.id)
     }));
 
-    // Group individual matches by team match
-    const teamMatchesWithIndividual = teamMatches.map(teamMatch => ({
-      ...teamMatch,
-      individualMatches: individualMatches.filter(indMatch => indMatch.teamMatchId === teamMatch.id)
-    }));
+    // Get all individual matches
+    const allIndividualMatches = teamMatches.flatMap(tm => IndividualMatchModel.findByTeamMatchId(tm.id));
 
-    const fullTournament = {
-      ...tournament,
+    const teamMatchesWithIndividual = teamMatches.map(teamMatch => {
+      const individualMatches = allIndividualMatches
+        .filter((indMatch: any) => indMatch.team_match_id === teamMatch.id)
+        .map((indMatch: any) => ({
+          id: indMatch.id,
+          teamMatchId: indMatch.team_match_id,
+          player1Id: indMatch.player1_id,
+          player2Id: indMatch.player2_id,
+          tournamentPoints1: indMatch.tournament_points1,
+          tournamentPoints2: indMatch.tournament_points2,
+          objectivePoints1: indMatch.objective_points1,
+          objectivePoints2: indMatch.objective_points2,
+          victoryPointsFor1: indMatch.victory_points_for1,
+          victoryPointsAgainst1: indMatch.victory_points_against1,
+          victoryPointsFor2: indMatch.victory_points_for2,
+          victoryPointsAgainst2: indMatch.victory_points_against2,
+          paintedBonus1: Boolean(indMatch.painted_bonus1),
+          paintedBonus2: Boolean(indMatch.painted_bonus2),
+          isCompleted: Boolean(indMatch.is_completed),
+          createdAt: indMatch.created_at,
+          updatedAt: indMatch.updated_at
+        }));
+
+      return {
+        id: teamMatch.id,
+        tournamentId: teamMatch.tournament_id,
+        round: teamMatch.round,
+        team1Id: teamMatch.team1_id,
+        team2Id: teamMatch.team2_id,
+        tableNumber: teamMatch.table_number,
+        isCompleted: Boolean(teamMatch.is_completed),
+        createdAt: teamMatch.created_at,
+        updatedAt: teamMatch.updated_at,
+        individualMatches
+      };
+    });
+
+    res.json({
+      id: tournament.id,
+      name: tournament.name,
+      currentRound: tournament.current_round,
+      createdAt: tournament.created_at,
+      updatedAt: tournament.updated_at,
       teams: teamsWithPlayers,
       teamMatches: teamMatchesWithIndividual
-    };
-
-    res.json(fullTournament);
+    });
   } catch (error) {
     console.error('Error fetching tournament:', error);
     res.status(500).json({ error: 'Failed to fetch tournament' });
   }
 });
 
-// POST /api/tournaments - Create new tournament
-router.post('/', async (req, res) => {
+// Create a new tournament
+router.post('/', async (req: Request, res: Response) => {
   try {
-    const { id, name, currentRound = 1 } = req.body;
+    const { id, name } = req.body;
     
-    if (!id || !name) {
-      return res.status(400).json({ error: 'Tournament ID and name are required' });
+    // Check if tournament already exists
+    const existing = TournamentModel.findById(id);
+    if (existing) {
+      return res.status(200).json(existing); // Return existing tournament instead of error
     }
-
-    const tournament = await TournamentModel.create({
+    
+    const tournament = TournamentModel.create({
       id,
       name,
-      currentRound
+      current_round: 1
     });
 
     res.status(201).json(tournament);
@@ -76,35 +135,49 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /api/tournaments/:id - Update tournament
-router.put('/:id', async (req, res) => {
+// Update tournament
+router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-
-    const tournament = await TournamentModel.update(id, updates);
+    
+    // Convert camelCase to snake_case for database
+    const dbUpdates: any = {};
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.currentRound !== undefined) dbUpdates.current_round = updates.currentRound;
+    if (updates.status !== undefined) dbUpdates.status = updates.status;
+    
+    const tournament = TournamentModel.update(id, dbUpdates);
+    
     if (!tournament) {
       return res.status(404).json({ error: 'Tournament not found' });
     }
-
-    res.json(tournament);
+    
+    // Convert back to camelCase for response
+    res.json({
+      id: tournament.id,
+      name: tournament.name,
+      currentRound: tournament.current_round,
+      createdAt: tournament.created_at,
+      updatedAt: tournament.updated_at
+    });
   } catch (error) {
     console.error('Error updating tournament:', error);
     res.status(500).json({ error: 'Failed to update tournament' });
   }
 });
 
-// DELETE /api/tournaments/:id - Delete tournament
-router.delete('/:id', async (req, res) => {
+// Delete tournament
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const deleted = TournamentModel.delete(id);
     
-    const deleted = await TournamentModel.delete(id);
     if (!deleted) {
       return res.status(404).json({ error: 'Tournament not found' });
     }
 
-    res.json({ message: 'Tournament deleted successfully' });
+    res.status(204).send();
   } catch (error) {
     console.error('Error deleting tournament:', error);
     res.status(500).json({ error: 'Failed to delete tournament' });

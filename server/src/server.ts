@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { initializeDatabase } from './config/database';
 import tournamentRoutes from './routes/tournaments';
 import teamRoutes from './routes/teams';
+import playerRoutes from './routes/players';
 import matchRoutes from './routes/matches';
 
 dotenv.config();
@@ -12,12 +13,18 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
+/* app.use(cors());
+app.use(express.json()); */
+app.use(cors({
+  origin: process.env.CLIENT_URL || '*',
+  credentials: true
+}));
 app.use(express.json());
 
 // Routes
 app.use('/api/tournaments', tournamentRoutes);
 app.use('/api/teams', teamRoutes);
+app.use('/api/players', playerRoutes);
 app.use('/api/matches', matchRoutes);
 
 // Health check

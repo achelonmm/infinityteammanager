@@ -4,9 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon src/server.ts",
+    /* //"dev": "nodemon src/server.ts",
+    //"build": "tsc",
+    //"start": "node dist/server.js" */
+    "start": "node dist/index.js",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "dev": "ts-node src/server.ts"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +17,7 @@
   "type": "commonjs",
   "dependencies": {
     "bcryptjs": "^3.0.2",
+    "better-sqlite3": "^12.3.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
@@ -23,6 +27,7 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",

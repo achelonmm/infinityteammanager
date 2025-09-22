@@ -1,84 +1,183 @@
-import express from 'express';
+import { Router, Request, Response } from 'express';
 import { TeamModel, PlayerModel } from '../models/Tournament';
 
-const router = express.Router();
+const router = Router();
 
-// POST /api/teams - Create new team with players
-router.post('/', async (req, res) => {
+// Create team
+router.post('/', async (req: Request, res: Response) => {
   try {
     const { team, players } = req.body;
     
-    if (!team || !players || !Array.isArray(players)) {
-      return res.status(400).json({ error: 'Team data and players array are required' });
+    // Validate required fields
+    if (!team.tournamentId) {
+      return res.status(400).json({ error: 'tournamentId is required' });
     }
+    
+    // Find the captain from the players array
+    const captainPlayer = players?.find((p: any) => Boolean(p.isCaptain));
+    
+    const createdTeam = TeamModel.create({
+      id: team.id,
+      tournament_id: team.tournamentId,
+      name: team.name,
+      captain_id: captainPlayer?.id || null
+    });
 
-    // Create team
-    const createdTeam = await TeamModel.create(team);
-
-    // Create players
+    // Create players if provided
     const createdPlayers = [];
-    for (const player of players) {
-      const createdPlayer = await PlayerModel.create({
-        ...player,
-        teamId: team.id
-      });
-      createdPlayers.push(createdPlayer);
+    if (players && Array.isArray(players)) {
+      for (const player of players) {
+        const createdPlayer = PlayerModel.create({
+          id: player.id,
+          team_id: createdTeam.id,
+          nickname: player.nickname,
+          its_pin: player.itsPin,
+          army: player.army,
+          is_captain: player.isCaptain ? 1 : 0,
+          is_painted: player.isPainted ? 1 : 0
+        });
+        
+        // Convert to camelCase for response
+        createdPlayers.push({
+          id: createdPlayer.id,
+          teamId: createdPlayer.team_id,
+          nickname: createdPlayer.nickname,
+          itsPin: createdPlayer.its_pin,
+          army: createdPlayer.army,
+          isCaptain: createdPlayer.is_captain,
+          isPainted: createdPlayer.is_painted,
+          createdAt: createdPlayer.created_at,
+          updatedAt: createdPlayer.updated_at
+        });
+      }
     }
 
-    // Update team with captain ID
-    const captain = createdPlayers.find(p => p.isCaptain);
-    if (captain) {
-      await TeamModel.update(team.id, { captainId: captain.id });
-    }
-
-    const teamWithPlayers = {
-      ...createdTeam,
-      captainId: captain?.id || null,
+    // Return team with players in camelCase
+    res.status(201).json({
+      id: createdTeam.id,
+      tournamentId: createdTeam.tournament_id,
+      name: createdTeam.name,
+      captainId: createdTeam.captain_id,
+      createdAt: createdTeam.created_at,
+      updatedAt: createdTeam.updated_at,
       players: createdPlayers
-    };
-
-    res.status(201).json(teamWithPlayers);
+    });
   } catch (error) {
     console.error('Error creating team:', error);
     res.status(500).json({ error: 'Failed to create team' });
   }
 });
 
-// PUT /api/teams/:id - Update team
-router.put('/:id', async (req, res) => {
+// Update team
+router.put('/:id', async (req: Request, res: Response) => {
+  console.log('PUT /teams/:id CALLED WITH ID:', req.params.id);
+  console.log('REQUEST BODY:', JSON.stringify(req.body, null, 2));
   try {
     const { id } = req.params;
-    const updates = req.body;
-
-    const team = await TeamModel.update(id, updates);
-    if (!team) {
+    
+    console.log('UPDATE TEAM REQUEST:', JSON.stringify(req.body, null, 2));
+    
+    // Handle both flat and nested data structures
+    let teamData, playersData;
+    
+    if (req.body.team) {
+      teamData = req.body.team;
+      playersData = req.body.players;
+    } else {
+      teamData = {
+        name: req.body.name,
+        captainId: req.body.captainId
+      };
+      playersData = req.body.players;
+    }
+    
+    // Find the captain from the players array
+    const captainPlayer = playersData?.find((p: any) => p.isCaptain);
+    const captainId = captainPlayer?.id || teamData.captainId || null;
+    
+    console.log('CAPTAIN ID TO SET:', captainId);
+    console.log('CAPTAIN PLAYER:', captainPlayer);
+    
+    const updatedTeam = TeamModel.update(id, {
+      name: teamData.name,
+      captain_id: captainId
+    });
+    
+    if (!updatedTeam) {
       return res.status(404).json({ error: 'Team not found' });
     }
 
-    const players = await TeamModel.getPlayers(id);
-    const teamWithPlayers = {
-      ...team,
-      players
-    };
+    console.log('UPDATED TEAM:', updatedTeam);
 
-    res.json(teamWithPlayers);
+    // Update players if provided
+    const updatedPlayers = [];
+if (playersData && Array.isArray(playersData)) {
+  console.log('PLAYERS DATA TO UPDATE:', JSON.stringify(playersData, null, 2));
+  
+  // Delete existing players
+  const existingPlayers = PlayerModel.findByTeamId(id);
+  existingPlayers.forEach(p => PlayerModel.delete(p.id));
+  
+  // Create new players with correct captain flag
+  for (const player of playersData) {
+    console.log('CREATING PLAYER:', player.nickname, 'isCaptain:', player.isCaptain, 'will save as:', player.isCaptain ? 1 : 0);
+    
+    const createdPlayer = PlayerModel.create({
+      id: player.id,
+      team_id: id,
+      nickname: player.nickname,
+      its_pin: player.itsPin,
+      army: player.army,
+      is_captain: player.isCaptain ? 1 : 0,
+      is_painted: player.isPainted ? 1 : 0
+    });
+    
+    console.log('PLAYER CREATED IN DB:', createdPlayer);
+        
+        updatedPlayers.push({
+          id: createdPlayer.id,
+          teamId: createdPlayer.team_id,
+          nickname: createdPlayer.nickname,
+          itsPin: createdPlayer.its_pin,
+          army: createdPlayer.army,
+          isCaptain: createdPlayer.is_captain,
+          isPainted: createdPlayer.is_painted,
+          createdAt: createdPlayer.created_at,
+          updatedAt: createdPlayer.updated_at
+        });
+      }
+    }
+
+    const response = {
+      id: updatedTeam.id,
+      tournamentId: updatedTeam.tournament_id,
+      name: updatedTeam.name,
+      captainId: updatedTeam.captain_id,
+      createdAt: updatedTeam.created_at,
+      updatedAt: updatedTeam.updated_at,
+      players: updatedPlayers
+    };
+    
+    console.log('RESPONSE:', JSON.stringify(response, null, 2));
+
+    res.json(response);
   } catch (error) {
     console.error('Error updating team:', error);
     res.status(500).json({ error: 'Failed to update team' });
   }
 });
 
-// DELETE /api/teams/:id - Delete team
-router.delete('/:id', async (req, res) => {
+// Delete team
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const deleted = TeamModel.delete(id);
     
-    const deleted = await TeamModel.delete(id);
     if (!deleted) {
       return res.status(404).json({ error: 'Team not found' });
     }
 
-    res.json({ message: 'Team deleted successfully' });
+    res.status(204).send();
   } catch (error) {
     console.error('Error deleting team:', error);
     res.status(500).json({ error: 'Failed to delete team' });
