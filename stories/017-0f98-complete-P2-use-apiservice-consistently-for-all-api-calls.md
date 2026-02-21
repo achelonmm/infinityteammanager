@@ -1,10 +1,10 @@
 ---
 id: 017-0f98
 title: Use apiService consistently for all API calls
-status: ready
+status: complete
 priority: P2
 created: "2026-02-21T10:25:40.371Z"
-updated: "2026-02-21T10:26:29.369Z"
+updated: "2026-02-21T11:09:55.300Z"
 dependencies: []
 ---
 
@@ -26,4 +26,6 @@ deleteRoundMatches in TournamentContext.tsx:464 uses raw fetch() instead of the 
 - client/src/contexts/TournamentContext.tsx
 
 ## Work Log
+
+### 2026-02-21T11:09:55.249Z - Already completed in previous session: deleteTeamMatch added to apiService, deleteRoundMatches uses it
 

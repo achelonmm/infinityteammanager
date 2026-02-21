@@ -1,10 +1,10 @@
 ---
 id: 014-fe61
 title: Add rate limiting to API endpoints
-status: ready
+status: complete
 priority: P2
 created: "2026-02-21T10:25:40.369Z"
-updated: "2026-02-21T10:26:29.367Z"
+updated: "2026-02-21T11:21:28.106Z"
 dependencies: []
 ---
 
@@ -25,4 +25,6 @@ No rate limiting on any endpoint. API can be hammered without restriction.
 - server/src/server.ts
 
 ## Work Log
+
+### 2026-02-21T11:21:28.053Z - Added express-rate-limit middleware: 300 requests per 15-min window on /api routes
 

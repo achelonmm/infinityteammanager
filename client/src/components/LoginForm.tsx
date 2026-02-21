@@ -10,10 +10,16 @@ const LoginForm: React.FC<LoginFormProps> = ({ onClose }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const showToast = (message: string) => {
+    setToast(message);
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!password.trim()) {
       setError('Please enter the admin password');
       return;
@@ -22,38 +28,37 @@ const LoginForm: React.FC<LoginFormProps> = ({ onClose }) => {
     setIsSubmitting(true);
     setError('');
 
-    // Small delay to prevent brute force attempts
-    setTimeout(() => {
-      const success = login(password);
-      
+    try {
+      const success = await login(password);
+
       if (success) {
         setPassword('');
+        showToast('Welcome! You are now logged in as admin.');
         if (onClose) onClose();
-        // Success notification
-        const successAlert = document.createElement('div');
-        successAlert.className = 'alert alert-success';
-        successAlert.style.position = 'fixed';
-        successAlert.style.top = '20px';
-        successAlert.style.right = '20px';
-        successAlert.style.zIndex = '1000';
-        successAlert.innerHTML = '<strong>🔓 Welcome!</strong> You are now logged in as admin.';
-        document.body.appendChild(successAlert);
-        
-        setTimeout(() => {
-          if (document.body.contains(successAlert)) {
-            document.body.removeChild(successAlert);
-          }
-        }, 3000);
       } else {
         setError('Invalid admin password. Please try again.');
         setPassword('');
       }
-      
+    } catch {
+      setError('Failed to connect to server. Please try again.');
+      setPassword('');
+    } finally {
       setIsSubmitting(false);
-    }, 500);
+    }
   };
 
   return (
+    <>
+    {toast && (
+      <div className="alert alert-success" style={{
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        zIndex: 1001,
+      }}>
+        <strong>🔓 {toast}</strong>
+      </div>
+    )}
     <div style={{
       position: 'fixed',
       top: 0,
@@ -183,6 +188,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onClose }) => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

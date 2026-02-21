@@ -1,10 +1,10 @@
 ---
 id: 020-41bc
 title: Extract service layer from route handlers
-status: ready
+status: complete
 priority: P2
 created: "2026-02-21T10:25:57.921Z"
-updated: "2026-02-21T10:26:29.371Z"
+updated: "2026-02-21T11:24:37.036Z"
 dependencies: []
 ---
 
@@ -27,4 +27,6 @@ No service layer exists. Route handlers directly orchestrate DB operations, mixi
 - server/src/routes/matches.ts
 
 ## Work Log
+
+### 2026-02-21T11:24:36.985Z - Created service layer (tournamentService, teamService, matchService, playerService). Routes now only handle HTTP concerns, services own business logic, transactions, and case mapping.
 

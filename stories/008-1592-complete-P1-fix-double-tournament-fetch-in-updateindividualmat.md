@@ -1,10 +1,10 @@
 ---
 id: 008-1592
 title: Fix double tournament fetch in updateIndividualMatch
-status: ready
+status: complete
 priority: P1
 created: "2026-02-21T10:25:21.900Z"
-updated: "2026-02-21T10:26:29.363Z"
+updated: "2026-02-21T11:17:03.499Z"
 dependencies: []
 ---
 
@@ -24,4 +24,6 @@ updateIndividualMatch in TournamentContext.tsx:358+384 fetches the full tourname
 - client/src/contexts/TournamentContext.tsx
 
 ## Work Log
+
+### 2026-02-21T11:17:03.447Z - Eliminated redundant loadTournament call; now uses setTournament directly from first fetch, only re-fetches if team match auto-complete needed
 

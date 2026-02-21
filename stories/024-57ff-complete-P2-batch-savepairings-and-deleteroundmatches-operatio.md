@@ -1,10 +1,10 @@
 ---
 id: 024-57ff
 title: Batch savePairings and deleteRoundMatches operations
-status: ready
+status: complete
 priority: P2
 created: "2026-02-21T10:25:57.923Z"
-updated: "2026-02-21T10:26:29.373Z"
+updated: "2026-02-21T11:17:04.362Z"
 dependencies: []
 ---
 
@@ -27,4 +27,6 @@ Pairings are saved one-by-one in a loop with await each. Matches are deleted one
 - server/src/routes/matches.ts
 
 ## Work Log
+
+### 2026-02-21T11:17:04.311Z - Added batch create/delete endpoints, added apiService methods, updated savePairings and deleteRoundMatches to use batch ops
 

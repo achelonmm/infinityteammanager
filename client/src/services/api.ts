@@ -1,6 +1,8 @@
 import { Tournament, Team, Player, TeamMatch, IndividualMatch } from '../types';
 
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
+const AUTH_TOKEN_KEY = 'infinityTournamentToken';
 
 export class ApiError extends Error {
   constructor(message: string, public status: number) {
@@ -9,7 +11,46 @@ export class ApiError extends Error {
   }
 }
 
+function getToken(): string | null {
+  return localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+export function setToken(token: string): void {
+  localStorage.setItem(AUTH_TOKEN_KEY, token);
+}
+
+export function clearToken(): void {
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+}
+
+export function hasToken(): boolean {
+  return !!localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+function authHeaders(): Record<string, string> {
+  const token = getToken();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 export const apiService = {
+  // Auth
+  async login(password: string): Promise<{ token: string }> {
+    const response = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({ error: 'Login failed' }));
+      throw new ApiError(data.error || 'Login failed', response.status);
+    }
+    return response.json();
+  },
+
   // Tournament endpoints
   async getTournaments(): Promise<Tournament[]> {
     const response = await fetch(`${API_BASE}/tournaments`);
@@ -26,7 +67,7 @@ export const apiService = {
   async createTournament(tournament: Omit<Tournament, 'teams' | 'teamMatches'>): Promise<Tournament> {
     const response = await fetch(`${API_BASE}/tournaments`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify(tournament),
     });
     if (!response.ok) throw new Error('Failed to create tournament');
@@ -36,7 +77,7 @@ export const apiService = {
   async updateTournament(id: string, updates: Partial<Tournament>): Promise<Tournament> {
     const response = await fetch(`${API_BASE}/tournaments/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify(updates),
     });
     if (!response.ok) throw new Error('Failed to update tournament');
@@ -46,35 +87,36 @@ export const apiService = {
   async deleteTournament(id: string): Promise<void> {
     const response = await fetch(`${API_BASE}/tournaments/${id}`, {
       method: 'DELETE',
+      headers: authHeaders(),
     });
     if (!response.ok) throw new Error('Failed to delete tournament');
   },
 
   // Team endpoints
-async createTeam(data: { team: Omit<Team, 'players'>; players: Omit<Player, 'created_at' | 'updated_at'>[] }): Promise<Team> {
-  const response = await fetch(`${API_BASE}/teams`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!response.ok) throw new Error('Failed to create team');
-  return response.json();
-},
+  async createTeam(data: { team: Omit<Team, 'players'>; players: Omit<Player, 'created_at' | 'updated_at'>[] }): Promise<Team> {
+    const response = await fetch(`${API_BASE}/teams`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to create team');
+    return response.json();
+  },
 
-  // Change this method:
-async updateTeam(id: string, data: { team: Partial<Team>; players: Player[] }): Promise<Team> {
-  const response = await fetch(`${API_BASE}/teams/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),  // Now sending { team: {...}, players: [...] }
-  });
-  if (!response.ok) throw new Error('Failed to update team');
-  return response.json();
-},
+  async updateTeam(id: string, data: { team: Partial<Team>; players: Player[] }): Promise<Team> {
+    const response = await fetch(`${API_BASE}/teams/${id}`, {
+      method: 'PUT',
+      headers: authHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update team');
+    return response.json();
+  },
 
   async deleteTeam(id: string): Promise<void> {
     const response = await fetch(`${API_BASE}/teams/${id}`, {
       method: 'DELETE',
+      headers: authHeaders(),
     });
     if (!response.ok) throw new Error('Failed to delete team');
   },
@@ -83,7 +125,7 @@ async updateTeam(id: string, data: { team: Partial<Team>; players: Player[] }): 
   async updatePlayer(id: string, updates: Partial<Player>): Promise<Player> {
     const response = await fetch(`${API_BASE}/players/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify(updates),
     });
     if (!response.ok) throw new Error('Failed to update player');
@@ -93,6 +135,7 @@ async updateTeam(id: string, data: { team: Partial<Team>; players: Player[] }): 
   async deletePlayer(id: string): Promise<void> {
     const response = await fetch(`${API_BASE}/players/${id}`, {
       method: 'DELETE',
+      headers: authHeaders(),
     });
     if (!response.ok) throw new Error('Failed to delete player');
   },
@@ -101,7 +144,7 @@ async updateTeam(id: string, data: { team: Partial<Team>; players: Player[] }): 
   async createTeamMatch(teamMatch: Omit<TeamMatch, 'created_at' | 'updated_at' | 'individualMatches'>): Promise<TeamMatch> {
     const response = await fetch(`${API_BASE}/matches/team`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify(teamMatch),
     });
     if (!response.ok) throw new Error('Failed to create team match');
@@ -111,7 +154,7 @@ async updateTeam(id: string, data: { team: Partial<Team>; players: Player[] }): 
   async updateTeamMatch(id: string, updates: Partial<TeamMatch>): Promise<TeamMatch> {
     const response = await fetch(`${API_BASE}/matches/team/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify(updates),
     });
     if (!response.ok) throw new Error('Failed to update team match');
@@ -121,16 +164,36 @@ async updateTeam(id: string, data: { team: Partial<Team>; players: Player[] }): 
   async createIndividualMatches(teamMatchId: string, pairings: { player1Id: string; player2Id: string }[]): Promise<IndividualMatch[]> {
     const response = await fetch(`${API_BASE}/matches/individual/batch`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify({ teamMatchId, pairings }),
     });
     if (!response.ok) throw new Error('Failed to create individual matches');
     return response.json();
   },
 
+  async batchCreateTeamMatches(matches: Omit<TeamMatch, 'created_at' | 'updated_at' | 'individualMatches'>[]): Promise<TeamMatch[]> {
+    const response = await fetch(`${API_BASE}/matches/team/batch`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ matches }),
+    });
+    if (!response.ok) throw new Error('Failed to batch create team matches');
+    return response.json();
+  },
+
+  async batchDeleteRoundMatches(tournamentId: string, round: number): Promise<{ deleted: number }> {
+    const response = await fetch(`${API_BASE}/matches/team/batch/${tournamentId}/${round}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    });
+    if (!response.ok) throw new ApiError('Failed to batch delete round matches', response.status);
+    return response.json();
+  },
+
   async deleteTeamMatch(id: string): Promise<void> {
     const response = await fetch(`${API_BASE}/matches/team/${id}`, {
       method: 'DELETE',
+      headers: authHeaders(),
     });
     if (!response.ok) throw new ApiError('Failed to delete team match', response.status);
   },
@@ -138,7 +201,7 @@ async updateTeam(id: string, data: { team: Partial<Team>; players: Player[] }): 
   async updateIndividualMatch(id: string, updates: Partial<IndividualMatch>): Promise<IndividualMatch> {
     const response = await fetch(`${API_BASE}/matches/individual/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify(updates),
     });
     if (!response.ok) throw new Error('Failed to update individual match');

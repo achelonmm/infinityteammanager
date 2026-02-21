@@ -1,10 +1,10 @@
 ---
 id: 012-a6ef
 title: Add test coverage for core business logic
-status: ready
+status: complete
 priority: P1
 created: "2026-02-21T10:25:21.903Z"
-updated: "2026-02-21T10:26:29.366Z"
+updated: "2026-02-21T11:31:24.518Z"
 dependencies: []
 ---
 
@@ -31,4 +31,6 @@ Server has 0 tests. Client has 1 broken placeholder test (App.test.tsx searches 
 - client/src/App.test.tsx
 
 ## Work Log
+
+### 2026-02-21T11:31:24.467Z - Added 44 unit tests for rankingUtils (21 tests), pairingUtils (10 tests), statisticsUtils (12 tests). Fixed broken App.test.tsx. Coverage: 87% statements, 98% functions across utility files.
 

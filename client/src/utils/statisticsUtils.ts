@@ -62,13 +62,25 @@ export const calculatePlayerPerformance = (
   players: Player[],
   teamMatches: TeamMatch[]
 ): PlayerPerformance[] => {
+  // Pre-index completed individual matches by playerId for O(n) lookup
+  const matchesByPlayer = new Map<string, { match: TeamMatch['individualMatches'][0]; isPlayer1: boolean }[]>();
+
+  for (const teamMatch of teamMatches) {
+    for (const indMatch of teamMatch.individualMatches) {
+      if (!indMatch.isCompleted) continue;
+
+      const p1Matches = matchesByPlayer.get(indMatch.player1Id) || [];
+      p1Matches.push({ match: indMatch, isPlayer1: true });
+      matchesByPlayer.set(indMatch.player1Id, p1Matches);
+
+      const p2Matches = matchesByPlayer.get(indMatch.player2Id) || [];
+      p2Matches.push({ match: indMatch, isPlayer1: false });
+      matchesByPlayer.set(indMatch.player2Id, p2Matches);
+    }
+  }
+
   return players.map(player => {
-    // Find all individual matches for this player
-    const playerMatches = teamMatches.flatMap(teamMatch =>
-      teamMatch.individualMatches.filter(indMatch =>
-        (indMatch.player1Id === player.id || indMatch.player2Id === player.id) && indMatch.isCompleted
-      )
-    );
+    const playerMatches = matchesByPlayer.get(player.id) || [];
 
     let wins = 0;
     let totalObjectivePoints = 0;
@@ -76,11 +88,10 @@ export const calculatePlayerPerformance = (
     let totalVictoryPointsAgainst = 0;
     let totalTournamentPoints = 0;
 
-    playerMatches.forEach(match => {
-      const isPlayer1 = match.player1Id === player.id;
+    for (const { match, isPlayer1 } of playerMatches) {
       const playerObjPoints = isPlayer1 ? match.objectivePoints1 : match.objectivePoints2;
       const opponentObjPoints = isPlayer1 ? match.objectivePoints2 : match.objectivePoints1;
-      
+
       if (playerObjPoints > opponentObjPoints) {
         wins++;
       }
@@ -89,12 +100,12 @@ export const calculatePlayerPerformance = (
       totalVictoryPointsFor += isPlayer1 ? match.victoryPointsFor1 : match.victoryPointsFor2;
       totalVictoryPointsAgainst += isPlayer1 ? match.victoryPointsAgainst1 : match.victoryPointsAgainst2;
       totalTournamentPoints += isPlayer1 ? match.tournamentPoints1 : match.tournamentPoints2;
-    });
+    }
 
     const gamesPlayed = playerMatches.length;
     const winRate = gamesPlayed > 0 ? (wins / gamesPlayed) * 100 : 0;
     const averageObjectivePoints = gamesPlayed > 0 ? totalObjectivePoints / gamesPlayed : 0;
-    const killRatio = totalVictoryPointsAgainst > 0 ? totalVictoryPointsFor / totalVictoryPointsAgainst : 
+    const killRatio = totalVictoryPointsAgainst > 0 ? totalVictoryPointsFor / totalVictoryPointsAgainst :
                      totalVictoryPointsFor > 0 ? totalVictoryPointsFor : 0;
 
     return {

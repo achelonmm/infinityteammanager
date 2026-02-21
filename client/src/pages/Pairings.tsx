@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTournament } from '../contexts/TournamentContext';
 import IndividualMatchResultForm from '../components/IndividualMatchResultForm';
-import { IndividualMatch, Player } from '../types';
+import { IndividualMatch, Player, Team, TeamMatch } from '../types';
 
 const Pairings: React.FC = () => {
   const { 
@@ -71,7 +71,7 @@ const Pairings: React.FC = () => {
     }
   };
 
-  const handleSaveMatchResult = async (matchId: string, results: any) => {
+  const handleSaveMatchResult = async (matchId: string, results: Partial<IndividualMatch>) => {
     try {
       await updateIndividualMatch(matchId, results);
       setSelectedMatch(null);
@@ -638,9 +638,9 @@ const Pairings: React.FC = () => {
 
 // Pairing Setup Component
 interface PairingSetupProps {
-  teamMatch: any;
-  team1: any;
-  team2: any;
+  teamMatch: TeamMatch;
+  team1: Team;
+  team2: Team;
   onSave: (teamMatchId: string, pairings: { player1Id: string; player2Id: string }[]) => void;
 }
 
@@ -662,7 +662,7 @@ const PairingSetup: React.FC<PairingSetupProps> = ({ teamMatch, team1, team2, on
     const selectedPlayerIds = pairings
       .map((p, idx) => idx !== currentIndex ? p.player1Id : null)
       .filter(Boolean);
-    return team1.players.filter((player: any) => !selectedPlayerIds.includes(player.id));
+    return team1.players.filter((player: Player) => !selectedPlayerIds.includes(player.id));
   };
 
   // Get available players for team 2 (exclude already selected)
@@ -670,7 +670,7 @@ const PairingSetup: React.FC<PairingSetupProps> = ({ teamMatch, team1, team2, on
     const selectedPlayerIds = pairings
       .map((p, idx) => idx !== currentIndex ? p.player2Id : null)
       .filter(Boolean);
-    return team2.players.filter((player: any) => !selectedPlayerIds.includes(player.id));
+    return team2.players.filter((player: Player) => !selectedPlayerIds.includes(player.id));
   };
 
   const handleSubmit = () => {
@@ -728,7 +728,7 @@ const PairingSetup: React.FC<PairingSetupProps> = ({ teamMatch, team1, team2, on
             className="form-input"
           >
             <option value="">Select {team1.name} Player</option>
-            {getAvailableTeam1Players(index).map((player: any) => (
+            {getAvailableTeam1Players(index).map((player: Player) => (
               <option key={player.id} value={player.id}>
                 {player.nickname} ({player.army})
               </option>
@@ -743,7 +743,7 @@ const PairingSetup: React.FC<PairingSetupProps> = ({ teamMatch, team1, team2, on
             className="form-input"
           >
             <option value="">Select {team2.name} Player</option>
-            {getAvailableTeam2Players(index).map((player: any) => (
+            {getAvailableTeam2Players(index).map((player: Player) => (
               <option key={player.id} value={player.id}>
                 {player.nickname} ({player.army})
               </option>

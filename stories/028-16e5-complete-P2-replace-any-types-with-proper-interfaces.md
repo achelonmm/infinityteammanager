@@ -1,10 +1,10 @@
 ---
 id: 028-16e5
 title: Replace any types with proper interfaces
-status: ready
+status: complete
 priority: P2
 created: "2026-02-21T10:26:16.473Z"
-updated: "2026-02-21T10:26:29.376Z"
+updated: "2026-02-21T11:17:04.149Z"
 dependencies: []
 ---
 
@@ -29,4 +29,6 @@ Extensive any usage: dbUpdates in routes, pairing parameter in matches.ts, playe
 - client/src/components/IndividualMatchResultForm.tsx
 
 ## Work Log
+
+### 2026-02-21T11:17:04.096Z - Replaced any types: PairingSetupProps uses Team/TeamMatch, player filters typed, onSave uses Partial<IndividualMatch>, captain find typed
 

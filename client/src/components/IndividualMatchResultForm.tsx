@@ -6,7 +6,7 @@ interface IndividualMatchResultFormProps {
   individualMatch: IndividualMatch;
   player1: Player;
   player2: Player;
-  onSave: (matchId: string, results: any) => void;
+  onSave: (matchId: string, results: Partial<IndividualMatch>) => void;
   onCancel: () => void;
 }
 

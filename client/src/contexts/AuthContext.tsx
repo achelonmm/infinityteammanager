@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { apiService, setToken, clearToken, hasToken } from '../services/api';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
-  login: (password: string) => boolean;
+  login: (password: string) => Promise<boolean>;
   logout: () => void;
   checkAdminAccess: () => boolean;
 }
@@ -22,60 +23,33 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Simple admin password - in production, this should be more secure
-const ADMIN_PASSWORD = 'Nano2025'; // Change this to your preferred password
-
-const AUTH_STORAGE_KEY = 'infinityTournamentAuth';
-
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Check for existing authentication on mount
   useEffect(() => {
-    const savedAuth = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (savedAuth) {
-      try {
-        const authData = JSON.parse(savedAuth);
-        if (authData.isAdmin && authData.timestamp) {
-          // Check if authentication is still valid (24 hours)
-          const now = Date.now();
-          const authTime = authData.timestamp;
-          const isValid = (now - authTime) < (24 * 60 * 60 * 1000); // 24 hours
-          
-          if (isValid) {
-            setIsAuthenticated(true);
-            setIsAdmin(true);
-          } else {
-            localStorage.removeItem(AUTH_STORAGE_KEY);
-          }
-        }
-      } catch (error) {
-        localStorage.removeItem(AUTH_STORAGE_KEY);
-      }
+    if (hasToken()) {
+      setIsAuthenticated(true);
+      setIsAdmin(true);
     }
   }, []);
 
-  const login = (password: string): boolean => {
-    if (password === ADMIN_PASSWORD) {
+  const login = async (password: string): Promise<boolean> => {
+    try {
+      const { token } = await apiService.login(password);
+      setToken(token);
       setIsAuthenticated(true);
       setIsAdmin(true);
-      
-      // Save authentication state
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify({
-        isAdmin: true,
-        timestamp: Date.now()
-      }));
-      
       return true;
+    } catch {
+      return false;
     }
-    return false;
   };
 
   const logout = () => {
+    clearToken();
     setIsAuthenticated(false);
     setIsAdmin(false);
-    localStorage.removeItem(AUTH_STORAGE_KEY);
   };
 
   const checkAdminAccess = (): boolean => {

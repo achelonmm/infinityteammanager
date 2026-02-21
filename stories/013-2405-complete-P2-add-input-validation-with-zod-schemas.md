@@ -1,10 +1,10 @@
 ---
 id: 013-2405
 title: Add input validation with zod schemas
-status: ready
+status: complete
 priority: P2
 created: "2026-02-21T10:25:40.367Z"
-updated: "2026-02-21T10:26:29.367Z"
+updated: "2026-02-21T11:21:27.116Z"
 dependencies: []
 ---
 
@@ -28,4 +28,6 @@ No request body validation on any server route. All routes trust client input co
 - server/src/routes/tournaments.ts
 
 ## Work Log
+
+### 2026-02-21T11:21:27.064Z - Implemented zod validation schemas for all request bodies with validate middleware on all mutation endpoints
 

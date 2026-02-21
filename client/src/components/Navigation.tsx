@@ -8,6 +8,7 @@ const Navigation: React.FC = () => {
   const { checkAdminAccess, logout } = useAuth();
   const isAdmin = checkAdminAccess();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   const publicNavItems = [
     { path: '/rankings', label: 'Rankings', icon: '🏆' },
@@ -26,22 +27,8 @@ const Navigation: React.FC = () => {
   const handleLogout = () => {
     if (window.confirm('Are you sure you want to logout?')) {
       logout();
-      
-      // Success notification
-      const successAlert = document.createElement('div');
-      successAlert.className = 'alert alert-success';
-      successAlert.style.position = 'fixed';
-      successAlert.style.top = '20px';
-      successAlert.style.right = '20px';
-      successAlert.style.zIndex = '1000';
-      successAlert.innerHTML = '<strong>👋 Goodbye!</strong> You have been logged out.';
-      document.body.appendChild(successAlert);
-      
-      setTimeout(() => {
-        if (document.body.contains(successAlert)) {
-          document.body.removeChild(successAlert);
-        }
-      }, 3000);
+      setToast('Goodbye! You have been logged out.');
+      setTimeout(() => setToast(null), 3000);
 
       // Redirect to rankings page
       window.location.href = '/rankings';
@@ -120,6 +107,16 @@ const Navigation: React.FC = () => {
 
   return (
     <>
+      {toast && (
+        <div className="alert alert-success" style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          zIndex: 1001,
+        }}>
+          <strong>👋 {toast}</strong>
+        </div>
+      )}
       <nav style={navStyle}>
         <div style={containerStyle}>
           <div style={navListStyle}>

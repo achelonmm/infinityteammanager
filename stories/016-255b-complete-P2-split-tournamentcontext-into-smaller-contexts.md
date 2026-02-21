@@ -1,10 +1,10 @@
 ---
 id: 016-255b
 title: Split TournamentContext into smaller contexts
-status: ready
+status: complete
 priority: P2
 created: "2026-02-21T10:25:40.371Z"
-updated: "2026-02-21T10:26:29.369Z"
+updated: "2026-02-21T11:26:21.485Z"
 dependencies: []
 ---
 
@@ -26,4 +26,6 @@ TournamentContext.tsx is 510+ lines with a 25-member interface. It mixes data fe
 - client/src/contexts/TournamentContext.tsx
 
 ## Work Log
+
+### 2026-02-21T11:26:21.434Z - Split TournamentContext into 3 domain-specific contexts: TournamentDataContext (core state), TeamsContext (team/player CRUD), MatchesContext (match operations). Combined useTournament hook maintained for backward compatibility.
 
