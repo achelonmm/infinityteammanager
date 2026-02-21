@@ -1,6 +1,20 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  UserPlus,
+  Tag,
+  Users,
+  Crown,
+  Gamepad2,
+  Swords,
+  Hash,
+  Rocket,
+  CheckCircle2,
+  AlertCircle,
+} from 'lucide-react';
 import { useTournament } from '../contexts/TournamentContext';
+import { useToast } from '../contexts/ToastContext';
+import styles from './Registration.module.css';
 
 interface PlayerForm {
   nickname: string;
@@ -12,6 +26,7 @@ interface PlayerForm {
 const Registration: React.FC = () => {
   const navigate = useNavigate();
   const { addTeam, loading, error } = useTournament();
+  const toast = useToast();
   const [teamName, setTeamName] = useState('');
   const [players, setPlayers] = useState<PlayerForm[]>([
     { nickname: '', itsPin: '', army: '', isCaptain: false },
@@ -22,50 +37,50 @@ const Registration: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
 
   const armies = [
-    'PanOceania', 'Acontecimiento','Órdenes Militares', 'Neoterra', 'Varuna', 
+    'PanOceania', 'Acontecimiento','Órdenes Militares', 'Neoterra', 'Varuna',
     'WinterFor', 'Kestrel', 'Yu Jing', 'Servicio Imperial', 'Ejército Invencible', 'Estandarte Blanco', 'Ariadna',
-    'Caledonia', 'Merovingia', 'USAriadna', 'Tartary Army Corps', 'Kosmoflot', 'Haqqislam', 
-    'Hassassin Bahram', 'Qapu Khalqi', 'Ramah Taskforce', 'Nómadas', 'Corregidor', 'Bakunin', 'Tunguska', 'Ejército Combinado', 'Morat', 'Shasvastii', 'Ónice', 
-    'Next Wave', 'ALEPH', 'Falange de Acero', 'SSO', 'Tohaa', 'O-12', 'Starmada', 'Torchlight', 'JSA', 'Shindenbutai', 'Oban', 'Druze Bayram Security', 
-    'Ikari Company', 'StarCo', 'WhiteCo', 'Dashat Company' 
+    'Caledonia', 'Merovingia', 'USAriadna', 'Tartary Army Corps', 'Kosmoflot', 'Haqqislam',
+    'Hassassin Bahram', 'Qapu Khalqi', 'Ramah Taskforce', 'Nómadas', 'Corregidor', 'Bakunin', 'Tunguska', 'Ejército Combinado', 'Morat', 'Shasvastii', 'Ónice',
+    'Next Wave', 'ALEPH', 'Falange de Acero', 'SSO', 'Tohaa', 'O-12', 'Starmada', 'Torchlight', 'JSA', 'Shindenbutai', 'Oban', 'Druze Bayram Security',
+    'Ikari Company', 'StarCo', 'WhiteCo', 'Dashat Company'
   ];
 
   const handlePlayerChange = (index: number, field: keyof PlayerForm, value: string | boolean) => {
     const newPlayers = [...players];
     newPlayers[index] = { ...newPlayers[index], [field]: value };
-    
+
     // If setting a captain, unset others
     if (field === 'isCaptain' && value === true) {
       newPlayers.forEach((player, i) => {
         if (i !== index) player.isCaptain = false;
       });
     }
-    
+
     setPlayers(newPlayers);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Basic validation
     if (!teamName.trim()) {
-      alert('Please enter a team name');
+      toast.warning('Please enter a team name');
       return;
     }
-    
+
     const captainCount = players.filter(p => p.isCaptain).length;
     if (captainCount !== 1) {
-      alert('Please select exactly one captain');
+      toast.warning('Please select exactly one captain');
       return;
     }
-    
+
     if (players.some(p => !p.nickname.trim() || !p.itsPin.trim() || !p.army)) {
-      alert('Please fill in all player information');
+      toast.warning('Please fill in all player information');
       return;
     }
-  
+
     setSubmitting(true);
-    
+
     try {
       const teamData = {
         name: teamName,
@@ -81,23 +96,11 @@ const Registration: React.FC = () => {
           isPainted: false
         }))
       };
-  
+
       await addTeam(teamData);
-      
-      // Success notification
-      const successAlert = document.createElement('div');
-      successAlert.className = 'alert alert-success';
-      successAlert.style.position = 'fixed';
-      successAlert.style.top = '20px';
-      successAlert.style.right = '20px';
-      successAlert.style.zIndex = '1000';
-      successAlert.innerHTML = '<strong>🎉 Success!</strong> Team registered successfully!';
-      document.body.appendChild(successAlert);
-      
-      setTimeout(() => {
-        document.body.removeChild(successAlert);
-      }, 3000);
-      
+
+      toast.success('Team registered successfully!');
+
       // Reset form
       setTeamName('');
       setPlayers([
@@ -106,164 +109,104 @@ const Registration: React.FC = () => {
         { nickname: '', itsPin: '', army: '', isCaptain: false }
       ]);
       setCurrentStep(0);
-      
+
       navigate('/teams');
-    } catch (error) {
-      console.error('Error registering team:', error);
-      alert('Error registering team. Please try again.');
+    } catch (err) {
+      console.error('Error registering team:', err);
+      toast.error('Error registering team. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
   const isFormValid = () => {
-    const basicValidation = teamName.trim() && 
+    const basicValidation = teamName.trim() &&
            players.filter(p => p.isCaptain).length === 1 &&
            players.every(p => p.nickname.trim() && p.itsPin.trim() && p.army);
-    
+
     return basicValidation;
   };
 
-  const playerCardStyle = (index: number) => ({
-    background: index === currentStep ? 
-      'linear-gradient(135deg, var(--color-primary-light), var(--color-secondary-light))' : 
-      'linear-gradient(135deg, white, var(--color-neutral-50))',
-    border: `2px solid ${index === currentStep ? 'var(--color-primary)' : 'var(--color-neutral-200)'}`,
-    borderRadius: 'var(--radius-xl)',
-    padding: 'var(--spacing-6)',
-    marginBottom: 'var(--spacing-4)',
-    transition: 'all var(--transition-base)',
-    position: 'relative' as const,
-    overflow: 'hidden',
-    color: index === currentStep ? 'white' : 'inherit',
-  });
-
-  const stepIndicatorStyle = {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: 'var(--spacing-4)',
-    marginBottom: 'var(--spacing-8)',
-  };
-
-  const stepStyle = (stepIndex: number) => ({
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: stepIndex <= currentStep ? 
-      'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' : 
-      'var(--color-neutral-300)',
-    color: stepIndex <= currentStep ? 'white' : 'var(--color-neutral-600)',
-    fontWeight: 'var(--font-weight-bold)',
-    transition: 'all var(--transition-base)',
-    cursor: 'pointer',
-    boxShadow: stepIndex === currentStep ? 'var(--shadow-lg)' : 'var(--shadow-sm)',
-  });
-
   return (
     <div className="container animate-fade-in">
-      <h2 style={{ 
-        marginBottom: 'var(--spacing-8)', 
-        color: 'var(--color-primary)',
-        fontSize: 'var(--font-size-3xl)',
-        fontWeight: 'var(--font-weight-bold)',
-        textAlign: 'center',
-        background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
-        backgroundClip: 'text',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-      }}>
-        ➕ Team Registration
+      <h2 className={styles.pageTitle}>
+        <UserPlus className={styles.pageTitleIcon} size={28} />
+        Team Registration
       </h2>
-      
+
       {error && (
         <div className="alert alert-error animate-slide-in">
-          <strong>⚠️ Error:</strong> {error}
+          <AlertCircle className={styles.errorIcon} size={18} />
+          <strong>Error:</strong> {error}
         </div>
       )}
 
       {/* Step Indicator */}
-      <div style={stepIndicatorStyle}>
-        <div 
-          style={stepStyle(-1)}
+      <div className={styles.stepIndicator}>
+        <button
+          type="button"
+          className={currentStep === -1 ? styles.stepActive : (currentStep > -1 ? styles.stepCompleted : styles.step)}
           onClick={() => setCurrentStep(-1)}
         >
-          🏷️
-        </div>
+          <span className={styles.stepIcon}><Tag size={18} /></span>
+        </button>
         {[0, 1, 2].map(index => (
-          <div 
+          <button
+            type="button"
             key={index}
-            style={stepStyle(index)}
+            className={
+              currentStep === index
+                ? styles.stepActive
+                : index < currentStep
+                  ? styles.stepCompleted
+                  : styles.step
+            }
             onClick={() => setCurrentStep(index)}
           >
             {index + 1}
-          </div>
+          </button>
         ))}
       </div>
-      
+
       <form onSubmit={handleSubmit}>
-        <div className="card" style={{ maxWidth: '900px', position: 'relative' }}>
+        <div className={styles.formCard}>
           {(loading || submitting) && (
             <div className="loading-overlay">
-              <div className="loading-spinner" style={{ width: '40px', height: '40px' }}></div>
+              <div className={`loading-spinner ${styles.loadingOverlaySpinner}`}></div>
             </div>
           )}
 
-          <h3 style={{ 
-            marginBottom: 'var(--spacing-6)',
-            fontSize: 'var(--font-size-2xl)',
-            fontWeight: 'var(--font-weight-bold)',
-            color: 'var(--color-primary)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--spacing-3)'
-          }}>
-            <span>🎪</span>
+          <h3 className={styles.formCardTitle}>
+            <Rocket className={styles.formCardTitleIcon} size={24} />
             Register Your Team
           </h3>
-          
+
           {/* Team Name Section */}
           {currentStep === -1 && (
-            <div className="animate-fade-in" style={{ marginBottom: 'var(--spacing-8)' }}>
+            <div className={`animate-fade-in ${styles.teamNameSection}`}>
               <div className="form-group">
-                <label className="form-label" style={{ 
-                  fontSize: 'var(--font-size-lg)',
-                  fontWeight: 'var(--font-weight-semibold)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--spacing-2)'
-                }}>
-                  <span>🏷️</span>
+                <label className={`form-label ${styles.teamNameLabel}`}>
+                  <Tag className={styles.labelIcon} size={18} />
                   Team Name:
                 </label>
                 <input
                   type="text"
                   value={teamName}
                   onChange={(e) => setTeamName(e.target.value)}
-                  className="form-input"
+                  className={`form-input ${styles.teamNameInput}`}
                   placeholder="Enter your team name (e.g., 'Steel Wolves')"
                   disabled={loading || submitting}
-                  style={{ 
-                    fontSize: 'var(--font-size-lg)',
-                    padding: 'var(--spacing-4) var(--spacing-6)'
-                  }}
                 />
               </div>
-              
-              <div style={{ textAlign: 'center' }}>
+
+              <div className={styles.ctaCenter}>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className={`btn btn-primary ${styles.ctaButton}`}
                   onClick={() => setCurrentStep(0)}
                   disabled={!teamName.trim()}
-                  style={{ 
-                    fontSize: 'var(--font-size-lg)',
-                    padding: 'var(--spacing-4) var(--spacing-8)'
-                  }}
                 >
-                  <span>🚀</span>
+                  <Rocket size={20} />
                   Continue to Players
                 </button>
               </div>
@@ -273,55 +216,35 @@ const Registration: React.FC = () => {
           {/* Players Section */}
           {currentStep >= 0 && (
             <div className="animate-fade-in">
-              <h4 style={{ 
-                marginBottom: 'var(--spacing-6)',
-                fontSize: 'var(--font-size-xl)',
-                fontWeight: 'var(--font-weight-semibold)',
-                color: 'var(--color-primary)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--spacing-2)'
-              }}>
-                <span>👥</span>
+              <h4 className={styles.playersTitle}>
+                <Users className={styles.playersTitleIcon} size={22} />
                 Players
               </h4>
-              
+
               {players.map((player, index) => (
-                <div 
-                  key={index} 
-                  style={playerCardStyle(index)}
+                <div
+                  key={index}
+                  className={currentStep === index ? styles.playerCardActive : styles.playerCard}
                   onClick={() => setCurrentStep(index)}
                 >
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: 'var(--spacing-3)',
-                    marginBottom: 'var(--spacing-4)'
-                  }}>
-                    <span style={{ fontSize: 'var(--font-size-2xl)' }}>
-                      {player.isCaptain ? '👑' : '🎮'}
-                    </span>
-                    <h5 style={{ 
-                      fontSize: 'var(--font-size-lg)',
-                      fontWeight: 'var(--font-weight-semibold)',
-                      margin: 0
-                    }}>
+                  <div className={styles.playerCardHeader}>
+                    {player.isCaptain ? (
+                      <Crown className={styles.playerCardHeaderIconCaptain} size={24} />
+                    ) : (
+                      <Gamepad2 className={styles.playerCardHeaderIcon} size={24} />
+                    )}
+                    <h5 className={styles.playerCardName}>
                       Player {index + 1}
-                      {player.isCaptain && <span style={{ marginLeft: 'var(--spacing-2)' }}>(Captain)</span>}
+                      {player.isCaptain && <span className={styles.captainTag}>(Captain)</span>}
                     </h5>
                   </div>
-                  
+
                   {currentStep === index && (
                     <div className="animate-fade-in">
-                      <div style={{ 
-                        display: 'grid', 
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-                        gap: 'var(--spacing-4)',
-                        marginBottom: 'var(--spacing-4)'
-                      }}>
+                      <div className={styles.fieldGrid}>
                         <div className="form-group">
                           <label className="form-label">
-                            <span>🏷️</span> Nickname:
+                            <Tag className={styles.labelIcon} size={16} /> Nickname:
                           </label>
                           <input
                             type="text"
@@ -332,10 +255,10 @@ const Registration: React.FC = () => {
                             disabled={loading || submitting}
                           />
                         </div>
-                        
+
                         <div className="form-group">
                           <label className="form-label">
-                            <span>🆔</span> ITS Pin:
+                            <Hash className={styles.labelIcon} size={16} /> ITS Pin:
                           </label>
                           <input
                             type="text"
@@ -347,10 +270,10 @@ const Registration: React.FC = () => {
                           />
                         </div>
                       </div>
-                      
+
                       <div className="form-group">
                         <label className="form-label">
-                          <span>⚔️</span> Army/Sectorial:
+                          <Swords className={styles.labelIcon} size={16} /> Army/Sectorial:
                         </label>
                         <select
                           value={player.army}
@@ -364,76 +287,49 @@ const Registration: React.FC = () => {
                           ))}
                         </select>
                       </div>
-                      
-                      <div style={{ marginTop: 'var(--spacing-4)' }}>
-                        <label style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: 'var(--spacing-3)',
-                          cursor: 'pointer',
-                          padding: 'var(--spacing-3)',
-                          borderRadius: 'var(--radius-lg)',
-                          background: 'rgba(255, 255, 255, 0.1)',
-                          backdropFilter: 'blur(10px)',
-                          border: '1px solid rgba(255, 255, 255, 0.2)'
-                        }}>
+
+                      <div className={styles.captainToggle}>
+                        <label className={styles.captainLabel}>
                           <input
                             type="radio"
                             checked={player.isCaptain}
                             onChange={(e) => handlePlayerChange(index, 'isCaptain', e.target.checked)}
                             disabled={loading || submitting}
-                            style={{ transform: 'scale(1.2)' }}
+                            className={styles.captainRadio}
                           />
-                          <span style={{ fontSize: 'var(--font-size-lg)' }}>👑</span>
-                          <span style={{ fontWeight: 'var(--font-weight-medium)' }}>
+                          <Crown className={styles.captainLabelIcon} size={22} />
+                          <span className={styles.captainLabelText}>
                             Team Captain
                           </span>
                         </label>
                       </div>
                     </div>
                   )}
-                  
+
                   {currentStep !== index && (
-                    <div style={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 'var(--spacing-4)',
-                      fontSize: 'var(--font-size-sm)',
-                      opacity: 0.8
-                    }}>
+                    <div className={styles.playerSummary}>
                       <span><strong>Nickname:</strong> {player.nickname || 'Not set'}</span>
                       <span><strong>Army:</strong> {player.army || 'Not selected'}</span>
                     </div>
                   )}
                 </div>
               ))}
-              
+
               {/* Navigation Buttons */}
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                marginTop: 'var(--spacing-8)',
-                paddingTop: 'var(--spacing-6)',
-                borderTop: '1px solid var(--color-neutral-200)'
-              }}>
+              <div className={styles.navFooter}>
                 <button
                   type="button"
                   className="btn btn-outline"
                   onClick={() => setCurrentStep(currentStep > 0 ? currentStep - 1 : -1)}
                   disabled={loading || submitting}
                 >
-                  <span>←</span>
                   Back
                 </button>
-                
-                <div style={{ 
-                  color: 'var(--color-neutral-600)',
-                  fontSize: 'var(--font-size-sm)'
-                }}>
+
+                <div className={styles.stepCounter}>
                   Step {currentStep + 2} of 4
                 </div>
-                
+
                 {currentStep < 2 ? (
                   <button
                     type="button"
@@ -441,18 +337,13 @@ const Registration: React.FC = () => {
                     onClick={() => setCurrentStep(currentStep + 1)}
                     disabled={loading || submitting}
                   >
-                    <span>→</span>
                     Next Player
                   </button>
                 ) : (
                   <button
                     type="submit"
-                    className="btn btn-success"
+                    className={`btn btn-success ${styles.submitButton}`}
                     disabled={loading || submitting || !isFormValid()}
-                    style={{ 
-                      fontSize: 'var(--font-size-lg)',
-                      padding: 'var(--spacing-4) var(--spacing-8)'
-                    }}
                   >
                     {submitting ? (
                       <>
@@ -461,7 +352,7 @@ const Registration: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        <span>🎉</span>
+                        <CheckCircle2 size={20} />
                         Register Team
                       </>
                     )}

@@ -1,39 +1,86 @@
 :root {
-    /* Colors */
-    --color-primary: #1a237e;
-    --color-primary-light: #3f51b5;
-    --color-primary-dark: #0d1458;
-    --color-secondary: #2196f3;
-    --color-secondary-light: #64b5f6;
-    --color-secondary-dark: #1565c0;
-    
-    --color-success: #4caf50;
-    --color-success-light: #81c784;
-    --color-success-dark: #388e3c;
-    
-    --color-warning: #ff9800;
-    --color-warning-light: #ffb74d;
-    --color-warning-dark: #f57c00;
-    
-    --color-error: #f44336;
-    --color-error-light: #e57373;
-    --color-error-dark: #d32f2f;
-    
-    --color-neutral-50: #fafafa;
-    --color-neutral-100: #f5f5f5;
-    --color-neutral-200: #eeeeee;
-    --color-neutral-300: #e0e0e0;
-    --color-neutral-400: #bdbdbd;
-    --color-neutral-500: #9e9e9e;
-    --color-neutral-600: #757575;
-    --color-neutral-700: #616161;
-    --color-neutral-800: #424242;
-    --color-neutral-900: #212121;
-    
+    /* =========================
+       Dark "Stealth Rank" Theme
+       ========================= */
+
+    /* Primary - Deep slate (base surfaces) */
+    --color-primary: #0f172a;
+    --color-primary-light: #1e293b;
+    --color-primary-dark: #020617;
+
+    /* Secondary - Electric cyan (sci-fi accent) */
+    --color-secondary: #06b6d4;
+    --color-secondary-light: #67e8f9;
+    --color-secondary-dark: #0891b2;
+
+    /* Accent - Amber/gold (trophies, highlights) */
+    --color-accent: #f59e0b;
+    --color-accent-light: #fcd34d;
+    --color-accent-dark: #d97706;
+
+    /* Status */
+    --color-success: #10b981;
+    --color-success-light: #6ee7b7;
+    --color-success-dark: #059669;
+
+    --color-warning: #f59e0b;
+    --color-warning-light: #fcd34d;
+    --color-warning-dark: #d97706;
+
+    --color-error: #ef4444;
+    --color-error-light: #fca5a5;
+    --color-error-dark: #dc2626;
+
+    /* Neutral scale (dark theme - low numbers are dark) */
+    --color-neutral-50: #020617;
+    --color-neutral-100: #0f172a;
+    --color-neutral-200: #1e293b;
+    --color-neutral-300: #334155;
+    --color-neutral-400: #475569;
+    --color-neutral-500: #64748b;
+    --color-neutral-600: #94a3b8;
+    --color-neutral-700: #cbd5e1;
+    --color-neutral-800: #e2e8f0;
+    --color-neutral-900: #f1f5f9;
+
+    /* Surface hierarchy */
+    --color-surface-base: #020617;
+    --color-surface-raised: #0f172a;
+    --color-surface-overlay: #1e293b;
+    --color-surface-elevated: #334155;
+
+    /* Navigation */
+    --color-nav-bg: #020617;
+    --color-nav-border: #1e293b;
+    --color-nav-text: #94a3b8;
+    --color-nav-text-active: #f1f5f9;
+    --color-nav-active-bg: rgba(6, 182, 212, 0.12);
+    --color-nav-active-border: #06b6d4;
+
+    /* Glow effects */
+    --color-glow-primary: rgba(6, 182, 212, 0.25);
+    --color-glow-accent: rgba(245, 158, 11, 0.25);
+
+    /* Rankings */
+    --color-rank-gold: #f59e0b;
+    --color-rank-silver: #94a3b8;
+    --color-rank-bronze: #b45309;
+
+    /* Tables */
+    --color-table-header: #0f172a;
+    --color-table-row-even: #020617;
+    --color-table-row-odd: #0b1120;
+    --color-table-row-hover: #1e293b;
+    --color-table-border: #1e293b;
+
+    /* Skeleton */
+    --skeleton-base: #1e293b;
+    --skeleton-shimmer: #334155;
+
     /* Typography */
     --font-family-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
     --font-family-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
-    
+
     --font-size-xs: 0.75rem;
     --font-size-sm: 0.875rem;
     --font-size-base: 1rem;
@@ -42,12 +89,12 @@
     --font-size-2xl: 1.5rem;
     --font-size-3xl: 1.875rem;
     --font-size-4xl: 2.25rem;
-    
+
     --font-weight-normal: 400;
     --font-weight-medium: 500;
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
-    
+
     /* Spacing */
     --spacing-1: 0.25rem;
     --spacing-2: 0.5rem;
@@ -59,89 +106,99 @@
     --spacing-10: 2.5rem;
     --spacing-12: 3rem;
     --spacing-16: 4rem;
-    
+
     /* Border radius */
     --radius-sm: 0.25rem;
     --radius-base: 0.5rem;
     --radius-lg: 0.75rem;
     --radius-xl: 1rem;
     --radius-full: 9999px;
-    
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-base: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    
+
+    /* Shadows (darker for dark theme) */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-base: 0 1px 3px 0 rgba(0, 0, 0, 0.4), 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+
     /* Transitions */
     --transition-fast: 150ms ease-in-out;
     --transition-base: 250ms ease-in-out;
     --transition-slow: 350ms ease-in-out;
-    
+
     /* Breakpoints */
     --breakpoint-sm: 640px;
     --breakpoint-md: 768px;
     --breakpoint-lg: 1024px;
     --breakpoint-xl: 1280px;
   }
-  
+
   /* Global animations */
   @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  
+
   @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateX(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
   }
-  
+
   @keyframes pulse {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.7;
-    }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
   }
-  
+
   @keyframes shimmer {
-    0% {
-      background-position: -200px 0;
-    }
-    100% {
-      background-position: calc(200px + 100%) 0;
-    }
+    0% { background-position: -600px 0; }
+    100% { background-position: 600px 0; }
   }
-  
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes toastSlideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  @keyframes toastSlideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+  }
+
+  @keyframes navSlideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes dialogIn {
+    from { opacity: 0; transform: scale(0.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  @keyframes backdropIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
   /* Utility classes */
   .animate-fade-in {
     animation: fadeIn var(--transition-base) ease-out;
   }
-  
+
   .animate-slide-in {
     animation: slideIn var(--transition-base) ease-out;
   }
-  
+
   .animate-pulse {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
-  
+
   .loading-shimmer {
-    background: linear-gradient(90deg, var(--color-neutral-200) 25%, var(--color-neutral-100) 50%, var(--color-neutral-200) 75%);
-    background-size: 200px 100%;
-    animation: shimmer 1.5s infinite;
+    background: linear-gradient(90deg, var(--skeleton-base) 25%, var(--skeleton-shimmer) 50%, var(--skeleton-base) 75%);
+    background-size: 600px 100%;
+    background-attachment: fixed;
+    animation: shimmer 1.5s infinite linear;
   }

@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
+import { Lock, KeyRound, BarChart3 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import LoginForm from './LoginForm';
+import styles from './ProtectedRoute.module.css';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
-  fallback 
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  fallback
 }) => {
   const { checkAdminAccess } = useAuth();
   const [showLogin, setShowLogin] = useState(!checkAdminAccess());
@@ -18,69 +20,41 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     if (fallback) {
       return <>{fallback}</>;
     }
-    
+
     if (showLogin) {
       return (
-        <LoginForm 
+        <LoginForm
           onClose={() => {
             setShowLogin(false);
-            // Redirect to public page
             window.location.href = '/rankings';
-          }} 
+          }}
         />
       );
     }
 
     return (
-      <div className="container" style={{ textAlign: 'center', padding: 'var(--spacing-12)' }}>
-        <div style={{
-          background: 'white',
-          borderRadius: 'var(--radius-xl)',
-          padding: 'var(--spacing-8)',
-          maxWidth: '500px',
-          margin: '0 auto',
-          boxShadow: 'var(--shadow-lg)',
-          border: '1px solid var(--color-neutral-200)'
-        }}>
-          <div style={{ fontSize: 'var(--font-size-4xl)', marginBottom: 'var(--spacing-4)' }}>
-            🔒
+      <div className={styles.container}>
+        <div className={styles.card}>
+          <div className={styles.iconWrapper}>
+            <Lock size={40} />
           </div>
-          <h2 style={{
-            color: 'var(--color-primary)',
-            marginBottom: 'var(--spacing-4)',
-            fontSize: 'var(--font-size-2xl)',
-            fontWeight: 'var(--font-weight-bold)'
-          }}>
-            Admin Access Required
-          </h2>
-          <p style={{
-            color: 'var(--color-neutral-600)',
-            marginBottom: 'var(--spacing-6)',
-            fontSize: 'var(--font-size-lg)'
-          }}>
+          <h2 className={styles.title}>Admin Access Required</h2>
+          <p className={styles.description}>
             This page requires admin authentication to access tournament management features.
           </p>
-          <div style={{ display: 'flex', gap: 'var(--spacing-4)', justifyContent: 'center' }}>
+          <div className={styles.actions}>
             <button
               onClick={() => setShowLogin(true)}
-              className="btn btn-primary"
-              style={{
-                fontSize: 'var(--font-size-lg)',
-                padding: 'var(--spacing-4) var(--spacing-8)'
-              }}
+              className={styles.loginButton}
             >
-              <span>🔑</span>
+              <KeyRound size={18} />
               Admin Login
             </button>
             <a
               href="/rankings"
-              className="btn btn-secondary"
-              style={{
-                fontSize: 'var(--font-size-lg)',
-                padding: 'var(--spacing-4) var(--spacing-8)'
-              }}
+              className={styles.rankingsLink}
             >
-              <span>📊</span>
+              <BarChart3 size={18} />
               View Rankings
             </a>
           </div>

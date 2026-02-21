@@ -1,0 +1,321 @@
+/* Registration — Stealth Rank dark theme */
+
+.pageTitle {
+  margin-bottom: var(--spacing-8);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+  background: linear-gradient(135deg, var(--color-secondary), var(--color-accent));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-3);
+}
+
+.pageTitleIcon {
+  color: var(--color-secondary);
+  -webkit-text-fill-color: var(--color-secondary);
+  flex-shrink: 0;
+}
+
+/* ---- Step Indicator ---- */
+
+.stepIndicator {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-8);
+}
+
+.step {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-neutral-300);
+  color: var(--color-neutral-600);
+  font-weight: var(--font-weight-bold);
+  transition: all var(--transition-base);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  border: none;
+  font-size: var(--font-size-base);
+}
+
+.stepActive {
+  composes: step;
+  background: linear-gradient(135deg, var(--color-secondary-dark), var(--color-secondary));
+  color: white;
+  box-shadow: 0 0 16px var(--color-glow-primary);
+}
+
+.stepCompleted {
+  composes: step;
+  background: linear-gradient(135deg, var(--color-secondary-dark), var(--color-secondary));
+  color: white;
+  box-shadow: var(--shadow-sm);
+}
+
+.stepIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepIcon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---- Form Card ---- */
+
+.formCard {
+  max-width: 900px;
+  position: relative;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-6);
+}
+
+.formCardTitle {
+  margin-bottom: var(--spacing-6);
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-neutral-900);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.formCardTitleIcon {
+  color: var(--color-secondary);
+  flex-shrink: 0;
+}
+
+/* ---- Team Name Section ---- */
+
+.teamNameSection {
+  margin-bottom: var(--spacing-8);
+}
+
+.teamNameLabel {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  color: var(--color-neutral-800);
+}
+
+.labelIcon {
+  color: var(--color-secondary);
+  flex-shrink: 0;
+}
+
+.labelIcon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.teamNameInput {
+  font-size: var(--font-size-lg);
+  padding: var(--spacing-4) var(--spacing-6);
+}
+
+.ctaCenter {
+  text-align: center;
+}
+
+.ctaButton {
+  font-size: var(--font-size-lg);
+  padding: var(--spacing-4) var(--spacing-8);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+/* ---- Players Section ---- */
+
+.playersTitle {
+  margin-bottom: var(--spacing-6);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-neutral-900);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.playersTitleIcon {
+  color: var(--color-secondary);
+  flex-shrink: 0;
+}
+
+/* ---- Player Card ---- */
+
+.playerCard {
+  background: var(--color-surface-overlay);
+  border: 2px solid var(--color-neutral-300);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-6);
+  margin-bottom: var(--spacing-4);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.playerCardActive {
+  composes: playerCard;
+  border-color: var(--color-secondary);
+  box-shadow: 0 0 20px var(--color-glow-primary);
+  background: var(--color-surface-elevated);
+}
+
+.playerCardHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+}
+
+.playerCardHeaderIcon {
+  color: var(--color-secondary);
+}
+
+.playerCardHeaderIconCaptain {
+  color: var(--color-accent);
+}
+
+.playerCardHeaderIcon svg,
+.playerCardHeaderIconCaptain svg {
+  width: 24px;
+  height: 24px;
+}
+
+.playerCardName {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  margin: 0;
+  color: var(--color-neutral-900);
+}
+
+.captainTag {
+  margin-left: var(--spacing-2);
+  color: var(--color-accent);
+  font-weight: var(--font-weight-normal);
+  font-size: var(--font-size-sm);
+}
+
+/* ---- Player Card Fields ---- */
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+}
+
+/* ---- Captain Toggle ---- */
+
+.captainToggle {
+  margin-top: var(--spacing-4);
+}
+
+.captainLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  cursor: pointer;
+  padding: var(--spacing-3);
+  border-radius: var(--radius-lg);
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid var(--color-neutral-300);
+  transition: all var(--transition-fast);
+}
+
+.captainLabel:hover {
+  border-color: var(--color-secondary);
+  background: rgba(6, 182, 212, 0.14);
+}
+
+.captainRadio {
+  transform: scale(1.2);
+  accent-color: var(--color-secondary);
+}
+
+.captainLabelIcon {
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.captainLabelIcon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.captainLabelText {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-neutral-800);
+}
+
+/* ---- Collapsed Player Summary ---- */
+
+.playerSummary {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-600);
+}
+
+/* ---- Navigation Footer ---- */
+
+.navFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--spacing-8);
+  padding-top: var(--spacing-6);
+  border-top: 1px solid var(--color-neutral-300);
+}
+
+.stepCounter {
+  color: var(--color-neutral-600);
+  font-size: var(--font-size-sm);
+}
+
+.submitButton {
+  font-size: var(--font-size-lg);
+  padding: var(--spacing-4) var(--spacing-8);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+/* ---- Loading Overlay ---- */
+
+.loadingOverlaySpinner {
+  width: 40px;
+  height: 40px;
+}
+
+/* ---- Error Alert ---- */
+
+.errorIcon {
+  color: var(--color-error);
+  flex-shrink: 0;
+  margin-right: var(--spacing-2);
+  vertical-align: middle;
+}
+
+.errorIcon svg {
+  width: 18px;
+  height: 18px;
+}

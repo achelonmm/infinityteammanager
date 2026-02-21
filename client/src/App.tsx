@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { TournamentProvider } from './contexts/TournamentContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 import Navigation from './components/Navigation';
 import Dashboard from './pages/Dashboard';
 import Registration from './pages/Registration';
@@ -14,6 +15,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 function App() {
   return (
     <AuthProvider>
+      <ToastProvider>
       <TournamentProvider>
         <Router>
           <div className="App">
@@ -48,6 +50,7 @@ function App() {
           </div>
         </Router>
       </TournamentProvider>
+      </ToastProvider>
     </AuthProvider>
   );
 }

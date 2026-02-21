@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import {
+  ClipboardList, AlertCircle, FileText, Trophy, Zap, Target,
+  Gamepad2, Palette, Flag, Swords, X, Save
+} from 'lucide-react';
 import { Player, IndividualMatch } from '../types';
 import { calculateTeamTournamentPoints } from '../utils/rankingUtils';
+import Modal from './Modal';
+import clsx from 'clsx';
+import styles from './IndividualMatchResultForm.module.css';
 
 interface IndividualMatchResultFormProps {
   individualMatch: IndividualMatch;
@@ -28,7 +35,6 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
 
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
-  // Auto-calculate tournament points when objective points or painted status changes
   const calculatedPoints = {
     points1: calculateTeamTournamentPoints(
       results.objectivePoints1, results.objectivePoints2,
@@ -40,7 +46,6 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
     ),
   };
 
-  // Update painted bonuses when component mounts or players change
   useEffect(() => {
     setResults(prev => ({
       ...prev,
@@ -51,11 +56,9 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Validate the form
   const validateForm = (): boolean => {
     const errors: string[] = [];
 
-    // Validate Objective Points (0-10)
     if (results.objectivePoints1 < 0 || results.objectivePoints1 > 10) {
       errors.push(`${player1.nickname}'s Objective Points must be between 0 and 10`);
     }
@@ -63,7 +66,6 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
       errors.push(`${player2.nickname}'s Objective Points must be between 0 and 10`);
     }
 
-    // Validate Victory Points (0-300)
     if (results.victoryPointsFor1 < 0 || results.victoryPointsFor1 > 300) {
       errors.push(`${player1.nickname}'s Victory Points must be between 0 and 300`);
     }
@@ -83,9 +85,8 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
     }
 
     setIsSubmitting(true);
-    
+
     try {
-      // Include calculated tournament points in the results
       const finalResults = {
         ...results,
         tournamentPoints1: calculatedPoints.points1,
@@ -95,7 +96,7 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
       onSave(individualMatch.id, finalResults);
     } catch (error) {
       console.error('Error saving results:', error);
-      alert('Error saving results. Please try again.');
+      setValidationErrors(['Error saving results. Please try again.']);
       setIsSubmitting(false);
     }
   };
@@ -105,60 +106,13 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
       ...prev,
       [field]: value
     }));
-    // Clear validation errors when user makes changes
     setValidationErrors([]);
   };
 
-  const containerStyle = {
-    position: 'fixed' as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'rgba(0,0,0,0.6)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    backdropFilter: 'blur(5px)'
-  };
-
-  const modalStyle = {
-    background: 'white',
-    borderRadius: 'var(--radius-xl)',
-    padding: 'var(--spacing-8)',
-    maxWidth: '900px',
-    width: '95%',
-    maxHeight: '95%',
-    overflow: 'auto',
-    boxShadow: 'var(--shadow-xl)',
-    border: '1px solid var(--color-neutral-200)'
-  };
-
-  const playerCardStyle = (playerNumber: number) => ({
-    background: `linear-gradient(135deg, ${
-      playerNumber === 1 ? 'var(--color-primary-light)' : 'var(--color-secondary-light)'
-    }, ${
-      playerNumber === 1 ? 'var(--color-primary)' : 'var(--color-secondary)'
-    })`,
-    color: 'white',
-    borderRadius: 'var(--radius-lg)',
-    padding: 'var(--spacing-6)',
-    marginBottom: 'var(--spacing-4)'
-  });
-
-  const inputGroupStyle = {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: 'var(--spacing-6)',
-    marginBottom: 'var(--spacing-6)'
-  };
-
-  // Get match outcome description
   const getMatchOutcome = () => {
     const obj1 = results.objectivePoints1;
     const obj2 = results.objectivePoints2;
-    
+
     if (obj1 > obj2) return `${player1.nickname} Victory (${obj1} vs ${obj2})`;
     if (obj2 > obj1) return `${player2.nickname} Victory (${obj2} vs ${obj1})`;
     if (obj1 === obj2 && obj1 > 0) return `Tie (${obj1} vs ${obj2})`;
@@ -166,431 +120,289 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
   };
 
   return (
-    <div style={containerStyle}>
-      <div style={modalStyle}>
-        <h3 style={{
-          fontSize: 'var(--font-size-2xl)',
-          fontWeight: 'var(--font-weight-bold)',
-          color: 'var(--color-primary)',
-          marginBottom: 'var(--spacing-6)',
-          textAlign: 'center',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 'var(--spacing-3)'
-        }}>
-          <span>📝</span>
-          Enter Match Results
-        </h3>
-
-        {/* Validation Errors */}
-        {validationErrors.length > 0 && (
-          <div className="alert alert-error" style={{ marginBottom: 'var(--spacing-6)' }}>
-            <strong>⚠️ Please fix the following errors:</strong>
-            <ul style={{ margin: 'var(--spacing-2) 0 0 var(--spacing-4)', paddingLeft: 'var(--spacing-4)' }}>
+    <Modal
+      isOpen={true}
+      onClose={onCancel}
+      title="Match Results"
+      titleIcon={<ClipboardList size={20} />}
+      size="xl"
+    >
+      {/* Validation Errors */}
+      {validationErrors.length > 0 && (
+        <div className={styles.errorBanner}>
+          <AlertCircle size={16} />
+          <div>
+            <strong>Please fix the following errors:</strong>
+            <ul className={styles.errorList}>
               {validationErrors.map((error, index) => (
                 <li key={index}>{error}</li>
               ))}
             </ul>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Scoring Guide */}
-        <div style={{
-          background: 'linear-gradient(135deg, var(--color-neutral-50), white)',
-          border: '1px solid var(--color-neutral-200)',
-          borderRadius: 'var(--radius-lg)',
-          padding: 'var(--spacing-6)',
-          marginBottom: 'var(--spacing-6)'
-        }}>
-          <h4 style={{
-            fontSize: 'var(--font-size-lg)',
-            fontWeight: 'var(--font-weight-bold)',
-            color: 'var(--color-primary)',
-            marginBottom: 'var(--spacing-4)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--spacing-2)'
-          }}>
-            <span>📋</span>
-            Infinity Tournament Scoring
-          </h4>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: 'var(--spacing-4)',
-            fontSize: 'var(--font-size-sm)'
-          }}>
-            <div>
-              <strong style={{ color: 'var(--color-primary)' }}>🏆 Base Tournament Points:</strong>
-              <ul style={{ margin: 'var(--spacing-2) 0', paddingLeft: 'var(--spacing-4)' }}>
-                <li><strong>Victory:</strong> 4 points (more Obj. Points)</li>
-                <li><strong>Tie:</strong> 2 points (same Obj. Points)</li>
-                <li><strong>Defeat:</strong> 0 points (less Obj. Points)</li>
-              </ul>
-            </div>
-            <div>
-              <strong style={{ color: 'var(--color-primary)' }}>⚡ Bonus Points:</strong>
-              <ul style={{ margin: 'var(--spacing-2) 0', paddingLeft: 'var(--spacing-4)' }}>
-                <li><strong>Offensive:</strong> +1 pt (5+ Obj. Points)</li>
-                <li><strong>Defensive:</strong> +1 pt (lose by ≤2 Obj.)</li>
-                <li><strong>Painted Army:</strong> +1 pt</li>
-              </ul>
-            </div>
-            <div>
-              <strong style={{ color: 'var(--color-primary)' }}>🎯 Tiebreakers:</strong>
-              <ul style={{ margin: 'var(--spacing-2) 0', paddingLeft: 'var(--spacing-4)' }}>
-                <li>1st: Objective Points</li>
-                <li>2nd: Victory Points Difference</li>
-                <li>3rd: Victory Points For</li>
-              </ul>
-            </div>
+      {/* Scoring Guide */}
+      <div className={styles.scoringGuide}>
+        <h4 className={styles.scoringGuideTitle}>
+          <FileText size={18} className={styles.scoringGuideIcon} />
+          Infinity Tournament Scoring
+        </h4>
+        <div className={styles.scoringGrid}>
+          <div>
+            <strong className={styles.scoringCategory}>
+              <Trophy size={14} /> Base Tournament Points:
+            </strong>
+            <ul className={styles.scoringList}>
+              <li><strong>Victory:</strong> 4 points (more Obj. Points)</li>
+              <li><strong>Tie:</strong> 2 points (same Obj. Points)</li>
+              <li><strong>Defeat:</strong> 0 points (less Obj. Points)</li>
+            </ul>
+          </div>
+          <div>
+            <strong className={styles.scoringCategory}>
+              <Zap size={14} /> Bonus Points:
+            </strong>
+            <ul className={styles.scoringList}>
+              <li><strong>Offensive:</strong> +1 pt (5+ Obj. Points)</li>
+              <li><strong>Defensive:</strong> +1 pt (lose by &le;2 Obj.)</li>
+              <li><strong>Painted Army:</strong> +1 pt</li>
+            </ul>
+          </div>
+          <div>
+            <strong className={styles.scoringCategory}>
+              <Target size={14} /> Tiebreakers:
+            </strong>
+            <ul className={styles.scoringList}>
+              <li>1st: Objective Points</li>
+              <li>2nd: Victory Points Difference</li>
+              <li>3rd: Victory Points For</li>
+            </ul>
           </div>
         </div>
-
-        <div style={inputGroupStyle}>
-          {/* Player 1 Card */}
-          <div style={playerCardStyle(1)}>
-            <h4 style={{ 
-              margin: '0 0 var(--spacing-3) 0',
-              fontSize: 'var(--font-size-xl)',
-              fontWeight: 'var(--font-weight-bold)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--spacing-2)'
-            }}>
-              <span>🎮</span>
-              {player1.nickname}
-            </h4>
-            <p style={{ 
-              margin: '0 0 var(--spacing-4) 0',
-              fontSize: 'var(--font-size-sm)',
-              opacity: 0.9
-            }}>
-              {player1.army}
-              {player1.isPainted && (
-                <span style={{ marginLeft: 'var(--spacing-2)' }}>
-                  🎨 (Army Painted)
-                </span>
-              )}
-            </p>
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.2)',
-              borderRadius: 'var(--radius-base)',
-              padding: 'var(--spacing-3)',
-              fontSize: 'var(--font-size-lg)',
-              fontWeight: 'var(--font-weight-bold)',
-              textAlign: 'center'
-            }}>
-              {calculatedPoints.points1} Tournament Points
-            </div>
-          </div>
-
-          {/* Player 2 Card */}
-          <div style={playerCardStyle(2)}>
-            <h4 style={{ 
-              margin: '0 0 var(--spacing-3) 0',
-              fontSize: 'var(--font-size-xl)',
-              fontWeight: 'var(--font-weight-bold)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--spacing-2)'
-            }}>
-              <span>🎮</span>
-              {player2.nickname}
-            </h4>
-            <p style={{ 
-              margin: '0 0 var(--spacing-4) 0',
-              fontSize: 'var(--font-size-sm)',
-              opacity: 0.9
-            }}>
-              {player2.army}
-              {player2.isPainted && (
-                <span style={{ marginLeft: 'var(--spacing-2)' }}>
-                  🎨 (Army Painted)
-                </span>
-              )}
-            </p>
-            <div style={{
-              background: 'rgba(255, 255, 255, 0.2)',
-              borderRadius: 'var(--radius-base)',
-              padding: 'var(--spacing-3)',
-              fontSize: 'var(--font-size-lg)',
-              fontWeight: 'var(--font-weight-bold)',
-              textAlign: 'center'
-            }}>
-              {calculatedPoints.points2} Tournament Points
-            </div>
-          </div>
-        </div>
-
-        {/* Match Outcome */}
-        <div style={{
-          background: 'linear-gradient(135deg, var(--color-success-light), var(--color-success))',
-          color: 'white',
-          borderRadius: 'var(--radius-lg)',
-          padding: 'var(--spacing-4)',
-          marginBottom: 'var(--spacing-6)',
-          textAlign: 'center',
-          fontSize: 'var(--font-size-lg)',
-          fontWeight: 'var(--font-weight-bold)'
-        }}>
-          🏁 {getMatchOutcome()}
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          {/* Objective Points */}
-          <div style={{ marginBottom: 'var(--spacing-6)' }}>
-            <h5 style={{
-              fontSize: 'var(--font-size-lg)',
-              fontWeight: 'var(--font-weight-semibold)',
-              color: 'var(--color-primary)',
-              marginBottom: 'var(--spacing-4)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--spacing-2)'
-            }}>
-              <span>🎯</span>
-              Objective Points (determines winner) - Range: 0-10
-            </h5>
-            <div style={inputGroupStyle}>
-              <div className="form-group">
-                <label className="form-label">
-                  {player1.nickname}:
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="10"
-                  value={results.objectivePoints1 === 0 ? '' : results.objectivePoints1}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value) || 0;
-                    handleChange('objectivePoints1', Math.min(10, Math.max(0, value)));
-                  }}
-                  className="form-input"
-                  disabled={isSubmitting}
-                  placeholder="0"
-                  autoFocus
-                />
-                <small style={{ color: 'var(--color-neutral-600)', fontSize: 'var(--font-size-xs)' }}>
-                  Must be between 0 and 10
-                </small>
-              </div>
-              <div className="form-group">
-                <label className="form-label">
-                  {player2.nickname}:
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="10"
-                  value={results.objectivePoints2 === 0 ? '' : results.objectivePoints2}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value) || 0;
-                    handleChange('objectivePoints2', Math.min(10, Math.max(0, value)));
-                  }}
-                  className="form-input"
-                  disabled={isSubmitting}
-                  placeholder="0"
-                />
-                <small style={{ color: 'var(--color-neutral-600)', fontSize: 'var(--font-size-xs)' }}>
-                  Must be between 0 and 10
-                </small>
-              </div>
-            </div>
-          </div>
-
-          {/* Victory Points */}
-          <div style={{ marginBottom: 'var(--spacing-6)' }}>
-            <h5 style={{
-              fontSize: 'var(--font-size-lg)',
-              fontWeight: 'var(--font-weight-semibold)',
-              color: 'var(--color-primary)',
-              marginBottom: 'var(--spacing-4)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--spacing-2)'
-            }}>
-              <span>⚔️</span>
-              Victory Points For (tiebreaker) - Range: 0-300
-            </h5>
-            <div style={inputGroupStyle}>
-              <div className="form-group">
-                <label className="form-label">
-                  {player1.nickname}:
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="300"
-                  value={results.victoryPointsFor1 === 0 ? '' : results.victoryPointsFor1}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value) || 0;
-                    handleChange('victoryPointsFor1', Math.min(300, Math.max(0, value)));
-                  }}
-                  className="form-input"
-                  disabled={isSubmitting}
-                  placeholder="0"
-                />
-                <small style={{ color: 'var(--color-neutral-600)', fontSize: 'var(--font-size-xs)' }}>
-                  Must be between 0 and 300
-                </small>
-              </div>
-              <div className="form-group">
-                <label className="form-label">
-                  {player2.nickname}:
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="300"
-                  value={results.victoryPointsFor2 === 0 ? '' : results.victoryPointsFor2}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value) || 0;
-                    handleChange('victoryPointsFor2', Math.min(300, Math.max(0, value)));
-                  }}
-                  className="form-input"
-                  disabled={isSubmitting}
-                  placeholder="0"
-                />
-                <small style={{ color: 'var(--color-neutral-600)', fontSize: 'var(--font-size-xs)' }}>
-                  Must be between 0 and 300
-                </small>
-              </div>
-            </div>
-          </div>
-
-          {/* Painted Army Bonus */}
-          <div style={{ marginBottom: 'var(--spacing-8)' }}>
-            <h5 style={{
-              fontSize: 'var(--font-size-lg)',
-              fontWeight: 'var(--font-weight-semibold)',
-              color: 'var(--color-primary)',
-              marginBottom: 'var(--spacing-4)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--spacing-2)'
-            }}>
-              <span>🎨</span>
-              Painted Army Bonus (+1 Tournament Point)
-            </h5>
-            <div style={inputGroupStyle}>
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--spacing-3)',
-                cursor: 'pointer',
-                padding: 'var(--spacing-4)',
-                borderRadius: 'var(--radius-lg)',
-                background: results.paintedBonus1 ? 
-                  'linear-gradient(135deg, var(--color-success-light), var(--color-success))' : 
-                  'var(--color-neutral-50)',
-                border: `2px solid ${results.paintedBonus1 ? 'var(--color-success)' : 'var(--color-neutral-200)'}`,
-                transition: 'all var(--transition-fast)',
-                color: results.paintedBonus1 ? 'white' : 'inherit'
-              }}>
-                <input
-                  type="checkbox"
-                  checked={results.paintedBonus1}
-                  onChange={(e) => handleChange('paintedBonus1', e.target.checked)}
-                  disabled={isSubmitting}
-                  style={{ transform: 'scale(1.2)' }}
-                />
-                <span style={{ fontSize: 'var(--font-size-lg)' }}>🎨</span>
-                <div>
-                  <strong>{player1.nickname}</strong>
-                  {player1.isPainted && (
-                    <div style={{ 
-                      fontSize: 'var(--font-size-xs)', 
-                      opacity: 0.8,
-                      marginTop: 'var(--spacing-1)'
-                    }}>
-                      ✓ Army marked as painted in profile
-                    </div>
-                  )}
-                </div>
-              </label>
-
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--spacing-3)',
-                cursor: 'pointer',
-                padding: 'var(--spacing-4)',
-                borderRadius: 'var(--radius-lg)',
-                background: results.paintedBonus2 ? 
-                  'linear-gradient(135deg, var(--color-success-light), var(--color-success))' : 
-                  'var(--color-neutral-50)',
-                border: `2px solid ${results.paintedBonus2 ? 'var(--color-success)' : 'var(--color-neutral-200)'}`,
-                transition: 'all var(--transition-fast)',
-                color: results.paintedBonus2 ? 'white' : 'inherit'
-              }}>
-                <input
-                  type="checkbox"
-                  checked={results.paintedBonus2}
-                  onChange={(e) => handleChange('paintedBonus2', e.target.checked)}
-                  disabled={isSubmitting}
-                  style={{ transform: 'scale(1.2)' }}
-                />
-                <span style={{ fontSize: 'var(--font-size-lg)' }}>🎨</span>
-                <div>
-                  <strong>{player2.nickname}</strong>
-                  {player2.isPainted && (
-                    <div style={{ 
-                      fontSize: 'var(--font-size-xs)', 
-                      opacity: 0.8,
-                      marginTop: 'var(--spacing-1)'
-                    }}>
-                      ✓ Army marked as painted in profile
-                    </div>
-                  )}
-                </div>
-              </label>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div style={{
-            display: 'flex',
-            gap: 'var(--spacing-4)',
-            justifyContent: 'center',
-            paddingTop: 'var(--spacing-6)',
-            borderTop: '1px solid var(--color-neutral-200)'
-          }}>
-            <button
-              type="button"
-              onClick={onCancel}
-              className="btn btn-outline"
-              disabled={isSubmitting}
-            >
-              <span>❌</span>
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="btn btn-success"
-              disabled={isSubmitting}
-              style={{
-                fontSize: 'var(--font-size-lg)',
-                padding: 'var(--spacing-4) var(--spacing-8)'
-              }}
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="loading-spinner"></div>
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <span>💾</span>
-                  Save Results
-                </>
-              )}
-            </button>
-          </div>
-        </form>
       </div>
-    </div>
+
+      {/* Player Cards */}
+      <div className={styles.playerCards}>
+        <div className={clsx(styles.playerCard, styles.playerCard1)}>
+          <h4 className={styles.playerName}>
+            <Gamepad2 size={18} />
+            {player1.nickname}
+          </h4>
+          <p className={styles.playerArmy}>
+            {player1.army}
+            {player1.isPainted && (
+              <span className={styles.paintedTag}>
+                <Palette size={12} /> Painted
+              </span>
+            )}
+          </p>
+          <div className={styles.pointsDisplay}>
+            {calculatedPoints.points1} Tournament Points
+          </div>
+        </div>
+
+        <div className={clsx(styles.playerCard, styles.playerCard2)}>
+          <h4 className={styles.playerName}>
+            <Gamepad2 size={18} />
+            {player2.nickname}
+          </h4>
+          <p className={styles.playerArmy}>
+            {player2.army}
+            {player2.isPainted && (
+              <span className={styles.paintedTag}>
+                <Palette size={12} /> Painted
+              </span>
+            )}
+          </p>
+          <div className={styles.pointsDisplay}>
+            {calculatedPoints.points2} Tournament Points
+          </div>
+        </div>
+      </div>
+
+      {/* Match Outcome */}
+      <div className={styles.outcomeBar}>
+        <Flag size={18} />
+        {getMatchOutcome()}
+      </div>
+
+      <form onSubmit={handleSubmit} className={styles.form}>
+        {/* Objective Points */}
+        <div className={styles.section}>
+          <h5 className={styles.sectionTitle}>
+            <Target size={18} className={styles.sectionIcon} />
+            Objective Points (determines winner) - Range: 0-10
+          </h5>
+          <div className={styles.inputRow}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel}>
+                {player1.nickname}:
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="10"
+                value={results.objectivePoints1 === 0 ? '' : results.objectivePoints1}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 0;
+                  handleChange('objectivePoints1', Math.min(10, Math.max(0, value)));
+                }}
+                className={styles.input}
+                disabled={isSubmitting}
+                placeholder="0"
+                autoFocus
+              />
+              <small className={styles.inputHint}>Must be between 0 and 10</small>
+            </div>
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel}>
+                {player2.nickname}:
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="10"
+                value={results.objectivePoints2 === 0 ? '' : results.objectivePoints2}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 0;
+                  handleChange('objectivePoints2', Math.min(10, Math.max(0, value)));
+                }}
+                className={styles.input}
+                disabled={isSubmitting}
+                placeholder="0"
+              />
+              <small className={styles.inputHint}>Must be between 0 and 10</small>
+            </div>
+          </div>
+        </div>
+
+        {/* Victory Points */}
+        <div className={styles.section}>
+          <h5 className={styles.sectionTitle}>
+            <Swords size={18} className={styles.sectionIcon} />
+            Victory Points For (tiebreaker) - Range: 0-300
+          </h5>
+          <div className={styles.inputRow}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel}>
+                {player1.nickname}:
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="300"
+                value={results.victoryPointsFor1 === 0 ? '' : results.victoryPointsFor1}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 0;
+                  handleChange('victoryPointsFor1', Math.min(300, Math.max(0, value)));
+                }}
+                className={styles.input}
+                disabled={isSubmitting}
+                placeholder="0"
+              />
+              <small className={styles.inputHint}>Must be between 0 and 300</small>
+            </div>
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel}>
+                {player2.nickname}:
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="300"
+                value={results.victoryPointsFor2 === 0 ? '' : results.victoryPointsFor2}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 0;
+                  handleChange('victoryPointsFor2', Math.min(300, Math.max(0, value)));
+                }}
+                className={styles.input}
+                disabled={isSubmitting}
+                placeholder="0"
+              />
+              <small className={styles.inputHint}>Must be between 0 and 300</small>
+            </div>
+          </div>
+        </div>
+
+        {/* Painted Army Bonus */}
+        <div className={styles.section}>
+          <h5 className={styles.sectionTitle}>
+            <Palette size={18} className={styles.sectionIcon} />
+            Painted Army Bonus (+1 Tournament Point)
+          </h5>
+          <div className={styles.inputRow}>
+            <label className={clsx(styles.paintedToggle, results.paintedBonus1 && styles.paintedToggleActive)}>
+              <input
+                type="checkbox"
+                checked={results.paintedBonus1}
+                onChange={(e) => handleChange('paintedBonus1', e.target.checked)}
+                disabled={isSubmitting}
+                className={styles.checkbox}
+              />
+              <Palette size={20} className={styles.paintedToggleIcon} />
+              <div>
+                <strong>{player1.nickname}</strong>
+                {player1.isPainted && (
+                  <div className={styles.paintedNote}>
+                    Army marked as painted in profile
+                  </div>
+                )}
+              </div>
+            </label>
+
+            <label className={clsx(styles.paintedToggle, results.paintedBonus2 && styles.paintedToggleActive)}>
+              <input
+                type="checkbox"
+                checked={results.paintedBonus2}
+                onChange={(e) => handleChange('paintedBonus2', e.target.checked)}
+                disabled={isSubmitting}
+                className={styles.checkbox}
+              />
+              <Palette size={20} className={styles.paintedToggleIcon} />
+              <div>
+                <strong>{player2.nickname}</strong>
+                {player2.isPainted && (
+                  <div className={styles.paintedNote}>
+                    Army marked as painted in profile
+                  </div>
+                )}
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className={styles.actions}>
+          <button
+            type="button"
+            onClick={onCancel}
+            className={styles.cancelButton}
+            disabled={isSubmitting}
+          >
+            <X size={16} />
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className={styles.submitButton}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <div className={styles.spinner} />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save size={16} />
+                Save Results
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 };
 

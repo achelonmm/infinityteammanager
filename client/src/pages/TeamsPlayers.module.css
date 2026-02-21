@@ -1,0 +1,383 @@
+/* ===================================
+   TeamsPlayers – Dark "Stealth Rank" Theme
+   =================================== */
+
+/* ---- Page header ---- */
+
+.pageTitle {
+  margin-bottom: var(--spacing-8);
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+  background: linear-gradient(135deg, var(--color-secondary), var(--color-accent));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-3);
+}
+
+.pageTitleIcon {
+  color: var(--color-secondary);
+  -webkit-text-fill-color: initial;
+  flex-shrink: 0;
+}
+
+/* ---- Search / Filter bar ---- */
+
+.filterBar {
+  margin-bottom: var(--spacing-6);
+}
+
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-4);
+  align-items: end;
+}
+
+.formGroupCompact {
+  margin: 0;
+}
+
+.labelWithIcon {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.labelIcon {
+  color: var(--color-secondary);
+}
+
+.clearBtn {
+  height: fit-content;
+}
+
+/* ---- Tabs ---- */
+
+.tabBar {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-2);
+}
+
+.tab {
+  padding: var(--spacing-3) var(--spacing-6);
+  border: none;
+  background: var(--color-surface-overlay);
+  color: var(--color-neutral-600);
+  cursor: pointer;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  font-family: inherit;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.tab:hover {
+  background: var(--color-surface-elevated);
+  color: var(--color-neutral-800);
+  transform: translateY(-2px);
+}
+
+.tabActive {
+  background: linear-gradient(135deg, var(--color-secondary-dark), var(--color-secondary));
+  color: var(--color-neutral-50);
+}
+
+.tabActive:hover {
+  background: linear-gradient(135deg, var(--color-secondary-dark), var(--color-secondary));
+  transform: none;
+}
+
+/* ---- Content card ---- */
+
+.contentCard {
+  max-width: 1200px;
+  position: relative;
+}
+
+/* ---- Section header ---- */
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-6);
+  padding-bottom: var(--spacing-4);
+  border-bottom: 1px solid var(--color-neutral-300);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-secondary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.sectionTitleIcon {
+  color: var(--color-secondary);
+  flex-shrink: 0;
+}
+
+/* ---- Empty state ---- */
+
+.emptyState {
+  text-align: center;
+  padding: var(--spacing-12);
+  background: var(--color-surface-overlay);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--color-neutral-300);
+}
+
+.emptyIcon {
+  color: var(--color-neutral-500);
+  margin-bottom: var(--spacing-4);
+  display: flex;
+  justify-content: center;
+}
+
+.emptyText {
+  color: var(--color-neutral-600);
+  font-size: var(--font-size-lg);
+  margin-bottom: var(--spacing-4);
+}
+
+/* ---- Team card ---- */
+
+.teamCard {
+  background: var(--color-surface-overlay);
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-6);
+  margin-bottom: var(--spacing-4);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.teamCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+  border-color: var(--color-secondary);
+}
+
+.teamCardGrid {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--spacing-4);
+  align-items: center;
+}
+
+.teamAvatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-secondary-dark), var(--color-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-2xl);
+  color: var(--color-neutral-50);
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+}
+
+.teamName {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-secondary);
+  margin: 0 0 var(--spacing-2) 0;
+}
+
+.teamMeta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-neutral-600);
+}
+
+.metaLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-neutral-700);
+}
+
+.metaIcon {
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.teamActions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.btnSm {
+  font-size: var(--font-size-sm);
+}
+
+/* ---- Player table ---- */
+
+.tableWrap {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+}
+
+.tableWrap::-webkit-scrollbar {
+  height: 6px;
+}
+
+.tableWrap::-webkit-scrollbar-track {
+  background: var(--color-surface-base);
+}
+
+.tableWrap::-webkit-scrollbar-thumb {
+  background: var(--color-neutral-300);
+  border-radius: var(--radius-full);
+}
+
+.playerCell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.playerAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-neutral-50);
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-sm);
+  flex-shrink: 0;
+}
+
+.playerAvatarDefault {
+  background: linear-gradient(135deg, var(--color-secondary-dark), var(--color-secondary));
+}
+
+.playerAvatarCaptain {
+  background: linear-gradient(135deg, var(--color-accent-dark), var(--color-accent));
+}
+
+.armyBadge {
+  background: var(--color-surface-elevated);
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-neutral-800);
+}
+
+.itsPin {
+  font-family: var(--font-family-mono);
+  color: var(--color-neutral-700);
+}
+
+.captainBadge {
+  background: linear-gradient(135deg, var(--color-accent-dark), var(--color-accent));
+  color: var(--color-neutral-50);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  width: fit-content;
+}
+
+.rolePlayer {
+  color: var(--color-neutral-600);
+}
+
+.paintedBadge {
+  background: linear-gradient(135deg, var(--color-success-dark), var(--color-success));
+  color: var(--color-neutral-50);
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  width: fit-content;
+}
+
+.unpaintedText {
+  color: var(--color-neutral-500);
+  font-size: var(--font-size-sm);
+}
+
+/* ---- Loading state ---- */
+
+.loadingCard {
+  text-align: center;
+  padding: var(--spacing-8);
+}
+
+.loadingSpinnerWrap {
+  margin: 0 auto var(--spacing-4);
+}
+
+.loadingText {
+  color: var(--color-neutral-600);
+}
+
+/* ---- Error state ---- */
+
+.errorIcon {
+  color: var(--color-error);
+  flex-shrink: 0;
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 768px) {
+  .teamCardGrid {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .teamAvatar {
+    margin: 0 auto;
+  }
+
+  .teamActions {
+    justify-content: center;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    gap: var(--spacing-4);
+    text-align: center;
+  }
+
+  .filterGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .tabBar {
+    flex-direction: column;
+  }
+
+  .tab {
+    border-radius: var(--radius-lg);
+  }
+}

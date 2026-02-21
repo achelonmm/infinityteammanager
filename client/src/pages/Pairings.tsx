@@ -1,13 +1,32 @@
 import React, { useState, useEffect } from 'react';
+import clsx from 'clsx';
+import {
+  Swords,
+  Shuffle,
+  Eye,
+  Info,
+  Save,
+  X,
+  Target,
+  CheckCircle2,
+  ClipboardEdit,
+  Pencil,
+  Trash2,
+  Gamepad2,
+  SkipForward,
+} from 'lucide-react';
 import { useTournament } from '../contexts/TournamentContext';
+import { useToast } from '../contexts/ToastContext';
+import LoadingSkeleton from '../components/LoadingSkeleton';
 import IndividualMatchResultForm from '../components/IndividualMatchResultForm';
 import { IndividualMatch, Player, Team, TeamMatch } from '../types';
+import styles from './Pairings.module.css';
 
 const Pairings: React.FC = () => {
-  const { 
-    getTeams, 
-    generatePairings, 
-    savePairings, 
+  const {
+    getTeams,
+    generatePairings,
+    savePairings,
     clearPairings,
     updatePairings,
     deleteRoundMatches,
@@ -23,6 +42,8 @@ const Pairings: React.FC = () => {
     loading,
     pairings
   } = useTournament();
+
+  const toast = useToast();
 
   const [selectedMatch, setSelectedMatch] = useState<{
     individualMatch: IndividualMatch;
@@ -49,7 +70,7 @@ const Pairings: React.FC = () => {
       await generatePairings();
     } catch (error) {
       console.error('Error generating pairings:', error);
-      alert('Error generating pairings: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      toast.error('Error generating pairings: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
@@ -62,10 +83,10 @@ const Pairings: React.FC = () => {
     }
   };
 
-  const handleSetIndividualPairings = async (teamMatchId: string, pairings: { player1Id: string; player2Id: string }[]) => {
+  const handleSetIndividualPairings = async (teamMatchId: string, pairingsData: { player1Id: string; player2Id: string }[]) => {
     try {
-      await setIndividualPairings(teamMatchId, pairings);
-      setLocalIndividualPairings(prev => ({ ...prev, [teamMatchId]: pairings }));
+      await setIndividualPairings(teamMatchId, pairingsData);
+      setLocalIndividualPairings(prev => ({ ...prev, [teamMatchId]: pairingsData }));
     } catch (error) {
       console.error('Error setting individual pairings:', error);
     }
@@ -78,12 +99,16 @@ const Pairings: React.FC = () => {
       setSelectedRound(selectedRound); // This will trigger a re-render
     } catch (error) {
       console.error('Error saving match result:', error);
-      alert('Error saving match result. Please try again.');
+      toast.error('Error saving match result. Please try again.');
     }
   };
 
   const handleAdvanceRound = async () => {
-    if (window.confirm('Are you sure you want to advance to the next round? This action cannot be undone.')) {
+    const confirmed = await toast.confirm(
+      'Are you sure you want to advance to the next round?',
+      { confirmLabel: 'Advance' }
+    );
+    if (confirmed) {
       try {
         await advanceToNextRound();
         setSelectedRound(currentRound + 1);
@@ -93,41 +118,33 @@ const Pairings: React.FC = () => {
     }
   };
 
+  const handleDeleteRound = async () => {
+    const confirmed = await toast.confirm(
+      'Are you sure you want to delete all matches for this round?',
+      { variant: 'danger', confirmLabel: 'Delete' }
+    );
+    if (confirmed) {
+      try {
+        await deleteRoundMatches(currentRound);
+      } catch (error) {
+        console.error('Error deleting round:', error);
+        toast.error('Failed to delete round matches');
+      }
+    }
+  };
+
   const displayedMatches = selectedRound !== null ? getRoundMatches(selectedRound) : currentRoundMatches;
   const isViewingCurrentRound = selectedRound === currentRound;
-
-  const cardStyle = {
-    background: 'white',
-    borderRadius: 'var(--radius-xl)',
-    boxShadow: 'var(--shadow-lg)',
-    padding: 'var(--spacing-6)',
-    marginBottom: 'var(--spacing-6)',
-    border: '1px solid var(--color-neutral-200)',
-  };
-
-  const teamCardStyle = {
-    background: 'linear-gradient(135deg, white, var(--color-neutral-50))',
-    border: '1px solid var(--color-neutral-200)',
-    borderRadius: 'var(--radius-lg)',
-    padding: 'var(--spacing-6)',
-    marginBottom: 'var(--spacing-4)',
-  };
 
   if (loading) {
     return (
       <div className="container">
-        <h2 style={{ 
-          marginBottom: 'var(--spacing-8)', 
-          color: 'var(--color-primary)',
-          fontSize: 'var(--font-size-3xl)',
-          fontWeight: 'var(--font-weight-bold)',
-          textAlign: 'center'
-        }}>
-          Pairings & Results
+        <h2 className={styles.pageTitle}>
+          <Swords size={28} className={styles.pageTitleIcon} />
+          Pairings &amp; Results
         </h2>
-        <div className="card" style={{ textAlign: 'center', padding: 'var(--spacing-8)' }}>
-          <div className="loading-spinner" style={{ margin: '0 auto var(--spacing-4)' }}></div>
-          <p style={{ color: 'var(--color-neutral-600)' }}>Loading pairings...</p>
+        <div className="card">
+          <LoadingSkeleton variant="card" count={3} />
         </div>
       </div>
     );
@@ -135,38 +152,27 @@ const Pairings: React.FC = () => {
 
   return (
     <div className="container animate-fade-in">
-      <h2 style={{ 
-        marginBottom: 'var(--spacing-8)', 
-        color: 'var(--color-primary)',
-        fontSize: 'var(--font-size-3xl)',
-        fontWeight: 'var(--font-weight-bold)',
-        textAlign: 'center',
-        background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
-        backgroundClip: 'text',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-      }}>
-        ⚔️ Pairings & Results
+      <h2 className={styles.pageTitle}>
+        <Swords size={28} className={styles.pageTitleIcon} />
+        Pairings &amp; Results
       </h2>
 
       {/* Round Selector */}
       {allRounds.length > 0 && (
-        <div style={cardStyle}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-4)', flexWrap: 'wrap' }}>
-            <h3 style={{
-              fontSize: 'var(--font-size-lg)',
-              fontWeight: 'var(--font-weight-semibold)',
-              color: 'var(--color-primary)',
-              margin: 0
-            }}>
+        <div className="card">
+          <div className={styles.roundSelector}>
+            <h3 className={styles.roundLabel}>
               View Round:
             </h3>
             {allRounds.map(round => (
               <button
                 key={round}
                 onClick={() => setSelectedRound(round)}
-                className={selectedRound === round ? 'btn btn-primary' : 'btn btn-outline'}
-                style={{ fontSize: 'var(--font-size-sm)' }}
+                className={clsx(
+                  'btn',
+                  selectedRound === round ? 'btn-primary' : 'btn-outline',
+                  styles.roundBtn
+                )}
               >
                 Round {round}
               </button>
@@ -177,31 +183,20 @@ const Pairings: React.FC = () => {
 
       {/* Generate Pairings Section (only show for current round) */}
       {isViewingCurrentRound && currentRoundMatches.length === 0 && pairings.length === 0 && (
-        <div style={cardStyle}>
-          <h3 style={{
-            fontSize: 'var(--font-size-2xl)',
-            fontWeight: 'var(--font-weight-bold)',
-            color: 'var(--color-primary)',
-            marginBottom: 'var(--spacing-6)',
-            textAlign: 'center'
-          }}>
+        <div className="card">
+          <h3 className={styles.generateTitle}>
             Round {currentRound} - Generate Pairings
           </h3>
-          
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ 
-              color: 'var(--color-neutral-600)', 
-              marginBottom: 'var(--spacing-6)',
-              fontSize: 'var(--font-size-base)'
-            }}>
+
+          <div className={styles.generateCenter}>
+            <p className={styles.generateDesc}>
               Generate pairings for round {currentRound}. Teams will be paired based on their current standings.
             </p>
             <button
               onClick={handleGeneratePairings}
-              className="btn btn-primary"
-              style={{ fontSize: 'var(--font-size-lg)', padding: 'var(--spacing-4) var(--spacing-8)' }}
+              className={clsx('btn btn-primary', styles.generateBtn)}
             >
-              <span>🎲</span>
+              <Shuffle size={20} />
               Generate Round {currentRound} Pairings
             </button>
           </div>
@@ -210,138 +205,120 @@ const Pairings: React.FC = () => {
 
       {/* Preview Generated Pairings */}
       {pairings.length > 0 && (
-        <div style={cardStyle}>
-          <h3 style={{
-            fontSize: 'var(--font-size-2xl)',
-            fontWeight: 'var(--font-weight-bold)',
-            color: 'var(--color-primary)',
-            marginBottom: 'var(--spacing-6)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 'var(--spacing-3)'
-          }}>
-            <span>👀</span>
+        <div className="card">
+          <h3 className={styles.previewTitle}>
+            <Eye size={22} className={styles.previewTitleIcon} />
             Preview Round {currentRound} Pairings
           </h3>
 
-          <div className="alert alert-info" style={{ marginBottom: 'var(--spacing-6)' }}>
-            <strong>ℹ️ Review the pairings below.</strong> You can adjust table assignments before saving. 
+          <div className={clsx('alert alert-info', styles.previewAlert)}>
+            <Info size={16} className={styles.previewAlertIcon} />
+            <strong>Review the pairings below.</strong> You can adjust table assignments before saving.
             Teams are paired to avoid previous opponents and tables when possible.
           </div>
 
           {pairings.map((pairing, index) => {
-          const team1 = teams.find(t => t.id === pairing.team1Id);
-          const team2 = teams.find(t => t.id === pairing.team2Id);
+            const team1 = teams.find(t => t.id === pairing.team1Id);
+            const team2 = teams.find(t => t.id === pairing.team2Id);
 
-          return (
-            <div key={index} style={teamCardStyle}>
-              <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'auto 1fr auto 1fr auto',
-                gap: 'var(--spacing-4)',
-                alignItems: 'center'
-              }}>
-                {/* Table selector */}
-                <div>
-                  <label style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)', display: 'block', marginBottom: 'var(--spacing-2)' }}>
-                    Table:
-                  </label>
-                  <select
-                    value={pairing.tableNumber}
-                    onChange={(e) => {
-                      const newPairings = [...pairings];
-                      newPairings[index] = { ...newPairings[index], tableNumber: parseInt(e.target.value) };
-                      updatePairings(newPairings);
-                    }}
-                    className="form-input"
-                    style={{ minWidth: '100px' }}
-                  >
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                      <option key={num} value={num}>Table {num}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Team 1 selector */}
-                <div>
-                  <label style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)', display: 'block', marginBottom: 'var(--spacing-2)' }}>
-                    Team 1:
-                  </label>
-                  <select
-                    value={pairing.team1Id}
-                    onChange={(e) => {
-                      const newPairings = [...pairings];
-                      newPairings[index] = { ...newPairings[index], team1Id: e.target.value };
-                      updatePairings(newPairings);
-                    }}
-                    className="form-input"
-                  >
-                    {teams.map(team => (
-                      <option key={team.id} value={team.id}>
-                        {team.name}
-                      </option>
-                    ))}
-                  </select>
-                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)', marginTop: 'var(--spacing-1)' }}>
-                    {team1?.players.map(p => p.nickname).join(', ')}
+            return (
+              <div key={index} className={styles.pairingCard}>
+                <div className={styles.pairingGrid}>
+                  {/* Table selector */}
+                  <div>
+                    <label className={styles.pairingLabel}>
+                      Table:
+                    </label>
+                    <select
+                      value={pairing.tableNumber}
+                      onChange={(e) => {
+                        const newPairings = [...pairings];
+                        newPairings[index] = { ...newPairings[index], tableNumber: parseInt(e.target.value) };
+                        updatePairings(newPairings);
+                      }}
+                      className={clsx('form-input', styles.tableSelect)}
+                    >
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
+                        <option key={num} value={num}>Table {num}</option>
+                      ))}
+                    </select>
                   </div>
-                </div>
 
-                {/* VS */}
-                <div style={{ 
-                  fontSize: 'var(--font-size-2xl)', 
-                  fontWeight: 'var(--font-weight-bold)',
-                  color: 'var(--color-neutral-400)'
-                }}>
-                  VS
-                </div>
-
-                {/* Team 2 selector */}
-                <div>
-                  <label style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)', display: 'block', marginBottom: 'var(--spacing-2)' }}>
-                    Team 2:
-                  </label>
-                  <select
-                    value={pairing.team2Id}
-                    onChange={(e) => {
-                      const newPairings = [...pairings];
-                      newPairings[index] = { ...newPairings[index], team2Id: e.target.value };
-                      updatePairings(newPairings);
-                    }}
-                    className="form-input"
-                  >
-                    {teams.map(team => (
-                      <option key={team.id} value={team.id}>
-                        {team.name}
-                      </option>
-                    ))}
-                  </select>
-                  <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)', marginTop: 'var(--spacing-1)' }}>
-                    {team2?.players.map(p => p.nickname).join(', ')}
+                  {/* Team 1 selector */}
+                  <div>
+                    <label className={styles.pairingLabel}>
+                      Team 1:
+                    </label>
+                    <select
+                      value={pairing.team1Id}
+                      onChange={(e) => {
+                        const newPairings = [...pairings];
+                        newPairings[index] = { ...newPairings[index], team1Id: e.target.value };
+                        updatePairings(newPairings);
+                      }}
+                      className="form-input"
+                    >
+                      {teams.map(team => (
+                        <option key={team.id} value={team.id}>
+                          {team.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className={styles.pairingPlayerList}>
+                      {team1?.players.map(p => p.nickname).join(', ')}
+                    </div>
                   </div>
-                </div>
 
-                {/* Empty column for layout balance */}
-                <div></div>
+                  {/* VS */}
+                  <div className={styles.vsDivider}>
+                    <Swords size={24} />
+                  </div>
+
+                  {/* Team 2 selector */}
+                  <div>
+                    <label className={styles.pairingLabel}>
+                      Team 2:
+                    </label>
+                    <select
+                      value={pairing.team2Id}
+                      onChange={(e) => {
+                        const newPairings = [...pairings];
+                        newPairings[index] = { ...newPairings[index], team2Id: e.target.value };
+                        updatePairings(newPairings);
+                      }}
+                      className="form-input"
+                    >
+                      {teams.map(team => (
+                        <option key={team.id} value={team.id}>
+                          {team.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className={styles.pairingPlayerList}>
+                      {team2?.players.map(p => p.nickname).join(', ')}
+                    </div>
+                  </div>
+
+                  {/* Empty column for layout balance */}
+                  <div></div>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
 
-          <div style={{ display: 'flex', gap: 'var(--spacing-4)', justifyContent: 'center', marginTop: 'var(--spacing-6)' }}>
+          <div className={styles.previewActions}>
             <button
               onClick={clearPairings}
               className="btn btn-outline"
             >
-              <span>❌</span>
+              <X size={18} />
               Cancel
             </button>
             <button
               onClick={handleSavePairings}
-              className="btn btn-success"
-              style={{ fontSize: 'var(--font-size-lg)', padding: 'var(--spacing-4) var(--spacing-8)' }}
+              className={clsx('btn btn-success', styles.savePairingsBtn)}
             >
-              <span>💾</span>
+              <Save size={20} />
               Save Pairings
             </button>
           </div>
@@ -350,57 +327,35 @@ const Pairings: React.FC = () => {
 
       {/* Display Current/Selected Round Matches */}
       {displayedMatches.length > 0 && (
-        <div style={cardStyle}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            marginBottom: 'var(--spacing-6)',
-            flexWrap: 'wrap',
-            gap: 'var(--spacing-4)'
-          }}>
-            <h3 style={{
-              fontSize: 'var(--font-size-2xl)',
-              fontWeight: 'var(--font-weight-bold)',
-              color: 'var(--color-primary)',
-              margin: 0,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--spacing-3)'
-            }}>
-              <span>🎯</span>
+        <div className="card">
+          <div className={styles.matchesHeader}>
+            <h3 className={styles.matchesTitle}>
+              <Target size={22} className={styles.matchesTitleIcon} />
               Round {selectedRound} Matches
             </h3>
 
-            {/* Advance to Next Round Button */}
-            {isViewingCurrentRound && canAdvanceToNextRound && (
-              <button
-                onClick={handleAdvanceRound}
-                className="btn btn-success"
-              >
-                <span>⏭️</span>
-                Advance to Round {currentRound + 1}
-              </button>
-            )}
+            <div className={styles.matchesActions}>
+              {/* Advance to Next Round Button */}
+              {isViewingCurrentRound && canAdvanceToNextRound && (
+                <button
+                  onClick={handleAdvanceRound}
+                  className="btn btn-success"
+                >
+                  <SkipForward size={18} />
+                  Advance to Round {currentRound + 1}
+                </button>
+              )}
 
-            {isViewingCurrentRound && currentRoundMatches.length > 0 && !currentRoundMatches.some(m => m.isCompleted) && (
-            <button
-              onClick={async () => {
-                if (window.confirm('Are you sure you want to delete all matches for this round? This cannot be undone.')) {
-                  try {
-                    await deleteRoundMatches(currentRound);
-                  } catch (error) {
-                    console.error('Error deleting round:', error);
-                    alert('Failed to delete round matches');
-                  }
-                }
-              }}
-              className="btn btn-warning"
-            >
-              <span>🗑️</span>
-              Delete Round {currentRound} Matches
-            </button>
-          )}
+              {isViewingCurrentRound && currentRoundMatches.length > 0 && !currentRoundMatches.some(m => m.isCompleted) && (
+                <button
+                  onClick={handleDeleteRound}
+                  className="btn btn-warning"
+                >
+                  <Trash2 size={18} />
+                  Delete Round {currentRound} Matches
+                </button>
+              )}
+            </div>
           </div>
 
           {displayedMatches.map((teamMatch) => {
@@ -409,67 +364,38 @@ const Pairings: React.FC = () => {
             const hasIndividualMatches = teamMatch.individualMatches && teamMatch.individualMatches.length > 0;
 
             return (
-              <div key={teamMatch.id} style={teamCardStyle}>
+              <div key={teamMatch.id} className={styles.pairingCard}>
                 {/* Team Match Header */}
-                <div style={{ 
-                  display: 'grid',
-                  gridTemplateColumns: 'auto 1fr auto 1fr auto',
-                  gap: 'var(--spacing-4)',
-                  alignItems: 'center',
-                  marginBottom: hasIndividualMatches ? 'var(--spacing-6)' : 0
-                }}>
-                  <div style={{
-                    background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-light))',
-                    color: 'white',
-                    borderRadius: 'var(--radius-lg)',
-                    padding: 'var(--spacing-3) var(--spacing-4)',
-                    fontWeight: 'var(--font-weight-bold)',
-                    fontSize: 'var(--font-size-sm)',
-                    minWidth: '100px',
-                    textAlign: 'center'
-                  }}>
+                <div className={styles.pairingGrid} style={hasIndividualMatches ? { marginBottom: 'var(--spacing-6)' } : undefined}>
+                  <div className={styles.tableBadge}>
                     Table {teamMatch.tableNumber}
                   </div>
 
                   <div>
-                    <strong style={{ fontSize: 'var(--font-size-lg)', color: 'var(--color-primary)' }}>
+                    <strong className={styles.teamNamePrimary}>
                       {team1?.name || 'Unknown Team'}
                     </strong>
-                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>
+                    <div className={styles.teamPlayers}>
                       {team1?.players.map(p => p.nickname).join(', ')}
                     </div>
                   </div>
 
-                  <div style={{ 
-                    fontSize: 'var(--font-size-2xl)', 
-                    fontWeight: 'var(--font-weight-bold)',
-                    color: 'var(--color-neutral-400)'
-                  }}>
-                    VS
+                  <div className={styles.vsDivider}>
+                    <Swords size={24} />
                   </div>
 
                   <div>
-                    <strong style={{ fontSize: 'var(--font-size-lg)', color: 'var(--color-secondary)' }}>
+                    <strong className={styles.teamNameSecondary}>
                       {team2?.name || 'Unknown Team'}
                     </strong>
-                    <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-neutral-600)' }}>
+                    <div className={styles.teamPlayers}>
                       {team2?.players.map(p => p.nickname).join(', ')}
                     </div>
                   </div>
 
                   {teamMatch.isCompleted && (
-                    <div style={{
-                      background: 'linear-gradient(135deg, var(--color-success), var(--color-success-light))',
-                      color: 'white',
-                      borderRadius: 'var(--radius-lg)',
-                      padding: 'var(--spacing-2) var(--spacing-4)',
-                      fontSize: 'var(--font-size-sm)',
-                      fontWeight: 'var(--font-weight-semibold)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 'var(--spacing-2)'
-                    }}>
-                      <span>✅</span>
+                    <div className={styles.completedBadge}>
+                      <CheckCircle2 size={16} />
                       Completed
                     </div>
                   )}
@@ -478,128 +404,101 @@ const Pairings: React.FC = () => {
                 {/* Individual Matches */}
                 {hasIndividualMatches ? (
                   <div>
-                    <h4 style={{
-                      fontSize: 'var(--font-size-base)',
-                      fontWeight: 'var(--font-weight-semibold)',
-                      color: 'var(--color-neutral-700)',
-                      marginBottom: 'var(--spacing-4)',
-                      paddingTop: 'var(--spacing-4)',
-                      borderTop: '1px solid var(--color-neutral-200)'
-                    }}>
+                    <h4 className={styles.individualHeader}>
                       Individual Matches:
                     </h4>
                     {teamMatch.individualMatches.map((indMatch) => {
-                    const player1 = team1?.players.find(p => p.id === indMatch.player1Id);
-                    const player2 = team2?.players.find(p => p.id === indMatch.player2Id);
+                      const player1 = team1?.players.find(p => p.id === indMatch.player1Id);
+                      const player2 = team2?.players.find(p => p.id === indMatch.player2Id);
 
                       return (
-                        <div 
+                        <div
                           key={indMatch.id}
-                          style={{
-                            background: indMatch.isCompleted ? 'var(--color-success-light)' : 'white',
-                            border: '1px solid var(--color-neutral-200)',
-                            borderRadius: 'var(--radius-base)',
-                            padding: 'var(--spacing-4)',
-                            marginBottom: 'var(--spacing-3)',
-                            display: 'grid',
-                            gridTemplateColumns: '1fr auto 1fr auto',
-                            gap: 'var(--spacing-4)',
-                            alignItems: 'center'
-                          }}
+                          className={clsx(
+                            styles.individualMatch,
+                            indMatch.isCompleted && styles.individualMatchCompleted
+                          )}
                         >
                           <div>
-                            <strong>{player1?.nickname || 'Unknown'}</strong>
-                            <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-neutral-600)' }}>
+                            <div className={styles.playerName}>{player1?.nickname || 'Unknown'}</div>
+                            <div className={styles.playerArmy}>
                               {player1?.army}
                             </div>
                             {indMatch.isCompleted && (
-                              <div style={{ fontSize: 'var(--font-size-sm)', marginTop: 'var(--spacing-2)' }}>
-                                <span style={{ fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-primary)' }}>
+                              <div className={styles.playerStats}>
+                                <span className={styles.statPrimary}>
                                   {indMatch.tournamentPoints1} pts
                                 </span>
-                                {' | '}
+                                <span className={styles.statDivider}>|</span>
                                 <span>{indMatch.objectivePoints1} obj</span>
-                                {' | '}
+                                <span className={styles.statDivider}>|</span>
                                 <span>{indMatch.victoryPointsFor1} VP</span>
                               </div>
                             )}
                           </div>
 
-                          <div style={{ 
-                            fontSize: 'var(--font-size-lg)', 
-                            fontWeight: 'var(--font-weight-bold)',
-                            color: 'var(--color-neutral-400)'
-                          }}>
-                            vs
+                          <div className={styles.vsSmall}>
+                            <Swords size={18} />
                           </div>
 
                           <div>
-                            <strong>{player2?.nickname || 'Unknown'}</strong>
-                            <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-neutral-600)' }}>
+                            <div className={styles.playerName}>{player2?.nickname || 'Unknown'}</div>
+                            <div className={styles.playerArmy}>
                               {player2?.army}
                             </div>
                             {indMatch.isCompleted && (
-                              <div style={{ fontSize: 'var(--font-size-sm)', marginTop: 'var(--spacing-2)' }}>
-                                <span style={{ fontWeight: 'var(--font-weight-semibold)', color: 'var(--color-secondary)' }}>
+                              <div className={styles.playerStats}>
+                                <span className={styles.statSecondary}>
                                   {indMatch.tournamentPoints2} pts
                                 </span>
-                                {' | '}
+                                <span className={styles.statDivider}>|</span>
                                 <span>{indMatch.objectivePoints2} obj</span>
-                                {' | '}
+                                <span className={styles.statDivider}>|</span>
                                 <span>{indMatch.victoryPointsFor2} VP</span>
                               </div>
                             )}
                           </div>
 
-                          {player1 && player2 && (
-                          !indMatch.isCompleted ? (
-                            <button
-                              onClick={() => setSelectedMatch({ individualMatch: indMatch, player1, player2 })}
-                              className="btn btn-primary"
-                              style={{ fontSize: 'var(--font-size-sm)' }}
-                            >
-                              <span>📝</span>
-                              Enter Results
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() => setSelectedMatch({ individualMatch: indMatch, player1, player2 })}
-                              className="btn btn-secondary"
-                              style={{ fontSize: 'var(--font-size-sm)' }}
-                            >
-                              <span>✏️</span>
-                              Edit Results
-                            </button>
-                          )
-                        )}
-                          
-                          {indMatch.isCompleted && (
-                            <div style={{
-                              color: 'var(--color-success)',
-                              fontWeight: 'var(--font-weight-semibold)',
-                              fontSize: 'var(--font-size-sm)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 'var(--spacing-2)'
-                            }}>
-                              <span>✅</span>
-                              Complete
-                            </div>
-                          )}
+                          <div>
+                            {player1 && player2 && (
+                              !indMatch.isCompleted ? (
+                                <button
+                                  onClick={() => setSelectedMatch({ individualMatch: indMatch, player1, player2 })}
+                                  className={clsx('btn btn-primary', styles.resultBtn)}
+                                >
+                                  <ClipboardEdit size={14} />
+                                  Enter Results
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => setSelectedMatch({ individualMatch: indMatch, player1, player2 })}
+                                  className={clsx('btn btn-secondary', styles.resultBtn)}
+                                >
+                                  <Pencil size={14} />
+                                  Edit Results
+                                </button>
+                              )
+                            )}
+
+                            {indMatch.isCompleted && (
+                              <div className={styles.completeLabel}>
+                                <CheckCircle2 size={14} />
+                                Complete
+                              </div>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
                   </div>
                 ) : (
                   team1 && team2 && !teamMatch.isCompleted && (
-                    <div style={{ marginTop: 'var(--spacing-4)' }}>
-                      <PairingSetup
-                        teamMatch={teamMatch}
-                        team1={team1}
-                        team2={team2}
-                        onSave={handleSetIndividualPairings}
-                      />
-                    </div>
+                    <PairingSetup
+                      teamMatch={teamMatch}
+                      team1={team1}
+                      team2={team2}
+                      onSave={handleSetIndividualPairings}
+                    />
                   )
                 )}
               </div>
@@ -610,12 +509,12 @@ const Pairings: React.FC = () => {
 
       {/* No matches state */}
       {displayedMatches.length === 0 && pairings.length === 0 && !isViewingCurrentRound && (
-        <div style={cardStyle}>
-          <div style={{ textAlign: 'center', padding: 'var(--spacing-8)' }}>
-            <div style={{ fontSize: 'var(--font-size-4xl)', marginBottom: 'var(--spacing-4)' }}>
-              🎮
+        <div className="card">
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>
+              <Gamepad2 size={48} />
             </div>
-            <p style={{ color: 'var(--color-neutral-600)', fontSize: 'var(--font-size-lg)' }}>
+            <p className={styles.emptyText}>
               No matches found for Round {selectedRound}.
             </p>
           </div>
@@ -645,6 +544,7 @@ interface PairingSetupProps {
 }
 
 const PairingSetup: React.FC<PairingSetupProps> = ({ teamMatch, team1, team2, onSave }) => {
+  const toast = useToast();
   const [pairings, setPairings] = useState<{ player1Id: string; player2Id: string }[]>([
     { player1Id: '', player2Id: '' },
     { player1Id: '', player2Id: '' },
@@ -676,16 +576,16 @@ const PairingSetup: React.FC<PairingSetupProps> = ({ teamMatch, team1, team2, on
   const handleSubmit = () => {
     // Validate all pairings are filled
     if (!pairings.every(p => p.player1Id && p.player2Id)) {
-      alert('Please select all players for all matches');
+      toast.warning('Please select all players for all matches');
       return;
     }
 
     // Check for duplicates
     const team1Players = pairings.map(p => p.player1Id);
     const team2Players = pairings.map(p => p.player2Id);
-    
+
     if (new Set(team1Players).size !== 3 || new Set(team2Players).size !== 3) {
-      alert('Each player can only be in one match');
+      toast.warning('Each player can only be in one match');
       return;
     }
 
@@ -695,33 +595,14 @@ const PairingSetup: React.FC<PairingSetupProps> = ({ teamMatch, team1, team2, on
   const isValid = pairings.every(p => p.player1Id && p.player2Id);
 
   return (
-    <div style={{
-      background: 'linear-gradient(135deg, var(--color-neutral-50), white)',
-      border: '2px dashed var(--color-primary)',
-      borderRadius: 'var(--radius-lg)',
-      padding: 'var(--spacing-6)'
-    }}>
-      <h4 style={{
-        fontSize: 'var(--font-size-lg)',
-        fontWeight: 'var(--font-weight-semibold)',
-        color: 'var(--color-primary)',
-        marginBottom: 'var(--spacing-4)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--spacing-2)'
-      }}>
-        <span>🎯</span>
+    <div className={styles.setupBox}>
+      <h4 className={styles.setupTitle}>
+        <Target size={18} className={styles.setupTitleIcon} />
         Set Individual Player Pairings
       </h4>
 
       {pairings.map((pairing, index) => (
-        <div key={index} style={{ 
-          display: 'grid', 
-          gridTemplateColumns: '1fr auto 1fr',
-          gap: 'var(--spacing-4)',
-          marginBottom: 'var(--spacing-4)',
-          alignItems: 'center'
-        }}>
+        <div key={index} className={styles.setupRow}>
           <select
             value={pairing.player1Id}
             onChange={(e) => handlePairingChange(index, 'player1Id', e.target.value)}
@@ -735,7 +616,9 @@ const PairingSetup: React.FC<PairingSetupProps> = ({ teamMatch, team1, team2, on
             ))}
           </select>
 
-          <span style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--color-neutral-500)' }}>VS</span>
+          <div className={styles.setupVs}>
+            <Swords size={18} />
+          </div>
 
           <select
             value={pairing.player2Id}
@@ -755,10 +638,9 @@ const PairingSetup: React.FC<PairingSetupProps> = ({ teamMatch, team1, team2, on
       <button
         onClick={handleSubmit}
         disabled={!isValid}
-        className="btn btn-primary"
-        style={{ marginTop: 'var(--spacing-4)', width: '100%' }}
+        className={clsx('btn btn-primary', styles.setupSaveBtn)}
       >
-        <span>💾</span>
+        <Save size={18} />
         Save Individual Pairings
       </button>
     </div>

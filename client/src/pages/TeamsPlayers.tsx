@@ -1,19 +1,39 @@
 import React, { useState } from 'react';
+import clsx from 'clsx';
+import {
+  Users,
+  Search,
+  Swords,
+  RotateCcw,
+  Building2,
+  Gamepad2,
+  UserPlus,
+  Trash2,
+  Pencil,
+  Crown,
+  Palette,
+  Rocket,
+  AlertCircle,
+} from 'lucide-react';
 import { useTournament } from '../contexts/TournamentContext';
+import { useToast } from '../contexts/ToastContext';
+import LoadingSkeleton from '../components/LoadingSkeleton';
 import EditTeamForm from '../components/EditTeamForm';
 import EditPlayerForm from '../components/EditPlayerForm';
 import { Team, Player } from '../types';
+import styles from './TeamsPlayers.module.css';
 
 const TeamsPlayers: React.FC = () => {
   const { tournament, getTeams, getPlayers, deleteTeam, updateTeam, updatePlayer, loading, error } = useTournament();
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<'teams' | 'players'>('teams');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterArmy, setFilterArmy] = useState('');
-  
+
   // Edit modal states
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
-  
+
   // Get fresh data - this will re-run whenever tournament context updates
   const teams = getTeams();
   const players = getPlayers();
@@ -30,34 +50,23 @@ const TeamsPlayers: React.FC = () => {
   });
 
   // Filter teams based on search
-  const filteredTeams = teams.filter(team => 
+  const filteredTeams = teams.filter(team =>
     team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     team.players.some(player => player.nickname.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleDeleteTeam = async (teamId: string, teamName: string) => {
-    if (window.confirm(`Are you sure you want to delete team "${teamName}"? This action cannot be undone.`)) {
+    const confirmed = await toast.confirm(
+      `Are you sure you want to delete team "${teamName}"? This action cannot be undone.`,
+      { variant: 'danger', confirmLabel: 'Delete' }
+    );
+    if (confirmed) {
       try {
         await deleteTeam(teamId);
-        
-        // Success notification
-        const successAlert = document.createElement('div');
-        successAlert.className = 'alert alert-success';
-        successAlert.style.position = 'fixed';
-        successAlert.style.top = '20px';
-        successAlert.style.right = '20px';
-        successAlert.style.zIndex = '1000';
-        successAlert.innerHTML = '<strong>🗑️ Deleted!</strong> Team removed successfully!';
-        document.body.appendChild(successAlert);
-        
-        setTimeout(() => {
-          if (document.body.contains(successAlert)) {
-            document.body.removeChild(successAlert);
-          }
-        }, 3000);
-      } catch (error) {
-        console.error('Error deleting team:', error);
-        alert('Error deleting team. Please try again.');
+        toast.success('Team removed successfully!');
+      } catch (err) {
+        console.error('Error deleting team:', err);
+        toast.error('Error deleting team. Please try again.');
       }
     }
   };
@@ -70,25 +79,10 @@ const TeamsPlayers: React.FC = () => {
     try {
       await updateTeam(teamId, updates);
       setEditingTeam(null);
-      
-      // Success notification
-      const successAlert = document.createElement('div');
-      successAlert.className = 'alert alert-success';
-      successAlert.style.position = 'fixed';
-      successAlert.style.top = '20px';
-      successAlert.style.right = '20px';
-      successAlert.style.zIndex = '1000';
-      successAlert.innerHTML = '<strong>✏️ Updated!</strong> Team updated successfully!';
-      document.body.appendChild(successAlert);
-      
-      setTimeout(() => {
-        if (document.body.contains(successAlert)) {
-          document.body.removeChild(successAlert);
-        }
-      }, 3000);
-    } catch (error) {
-      console.error('Error updating team:', error);
-      throw error;
+      toast.success('Team updated successfully!');
+    } catch (err) {
+      console.error('Error updating team:', err);
+      throw err;
     }
   };
 
@@ -100,80 +94,22 @@ const TeamsPlayers: React.FC = () => {
     try {
       await updatePlayer(playerId, updates);
       setEditingPlayer(null);
-      
-      // Success notification
-      const successAlert = document.createElement('div');
-      successAlert.className = 'alert alert-success';
-      successAlert.style.position = 'fixed';
-      successAlert.style.top = '20px';
-      successAlert.style.right = '20px';
-      successAlert.style.zIndex = '1000';
-      successAlert.innerHTML = '<strong>✏️ Updated!</strong> Player updated successfully!';
-      document.body.appendChild(successAlert);
-      
-      setTimeout(() => {
-        if (document.body.contains(successAlert)) {
-          document.body.removeChild(successAlert);
-        }
-      }, 3000);
-    } catch (error) {
-      console.error('Error updating player:', error);
-      throw error;
+      toast.success('Player updated successfully!');
+    } catch (err) {
+      console.error('Error updating player:', err);
+      throw err;
     }
   };
-
-  const tabStyle = (isActive: boolean) => ({
-    padding: 'var(--spacing-4) var(--spacing-6)',
-    border: 'none',
-    background: isActive ? 
-      'linear-gradient(135deg, var(--color-primary), var(--color-primary-light))' : 
-      'var(--color-neutral-200)',
-    color: isActive ? 'white' : 'var(--color-neutral-700)',
-    cursor: 'pointer',
-    borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
-    marginRight: 'var(--spacing-2)',
-    fontSize: 'var(--font-size-base)',
-    fontWeight: 'var(--font-weight-medium)',
-    transition: 'all var(--transition-fast)',
-    position: 'relative' as const,
-    overflow: 'hidden',
-    display: 'flex',
-    alignItems: 'center',
-    gap: 'var(--spacing-2)'
-  });
-
-  const teamCardStyle = {
-    background: 'linear-gradient(135deg, white, var(--color-neutral-50))',
-    border: '1px solid var(--color-neutral-200)',
-    borderRadius: 'var(--radius-xl)',
-    padding: 'var(--spacing-6)',
-    marginBottom: 'var(--spacing-4)',
-    transition: 'all var(--transition-base)',
-    position: 'relative' as const,
-    overflow: 'hidden'
-  };
-
-  const playerRowStyle = (index: number) => ({
-    background: index % 2 === 0 ? 'white' : 'var(--color-neutral-50)',
-    transition: 'all var(--transition-fast)',
-    borderRadius: 'var(--radius-base)'
-  });
 
   if (loading) {
     return (
       <div className="container">
-        <h2 style={{ 
-          marginBottom: 'var(--spacing-8)', 
-          color: 'var(--color-primary)',
-          fontSize: 'var(--font-size-3xl)',
-          fontWeight: 'var(--font-weight-bold)',
-          textAlign: 'center'
-        }}>
-          Teams & Players Management
+        <h2 className={styles.pageTitle}>
+          <Users size={28} className={styles.pageTitleIcon} />
+          Teams &amp; Players Management
         </h2>
-        <div className="card" style={{ textAlign: 'center', padding: 'var(--spacing-8)' }}>
-          <div className="loading-spinner" style={{ margin: '0 auto var(--spacing-4)' }}></div>
-          <p style={{ color: 'var(--color-neutral-600)' }}>Loading teams and players...</p>
+        <div className="card">
+          <LoadingSkeleton variant="table-rows" count={5} columns={7} />
         </div>
       </div>
     );
@@ -182,17 +118,13 @@ const TeamsPlayers: React.FC = () => {
   if (error) {
     return (
       <div className="container">
-        <h2 style={{ 
-          marginBottom: 'var(--spacing-8)', 
-          color: 'var(--color-primary)',
-          fontSize: 'var(--font-size-3xl)',
-          fontWeight: 'var(--font-weight-bold)',
-          textAlign: 'center'
-        }}>
-          Teams & Players Management
+        <h2 className={styles.pageTitle}>
+          <Users size={28} className={styles.pageTitleIcon} />
+          Teams &amp; Players Management
         </h2>
         <div className="alert alert-error">
-          <strong>⚠️ Error:</strong> {error}
+          <AlertCircle size={18} className={styles.errorIcon} />
+          <strong>Error:</strong> {error}
         </div>
       </div>
     );
@@ -201,31 +133,18 @@ const TeamsPlayers: React.FC = () => {
   return (
     <>
       <div className="container animate-fade-in">
-        <h2 style={{ 
-          marginBottom: 'var(--spacing-8)', 
-          color: 'var(--color-primary)',
-          fontSize: 'var(--font-size-3xl)',
-          fontWeight: 'var(--font-weight-bold)',
-          textAlign: 'center',
-          background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
-          backgroundClip: 'text',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-        }}>
-          👥 Teams & Players Management
+        <h2 className={styles.pageTitle}>
+          <Users size={28} className={styles.pageTitleIcon} />
+          Teams &amp; Players Management
         </h2>
-        
+
         {/* Search and Filter Bar */}
-        <div className="card" style={{ marginBottom: 'var(--spacing-6)' }}>
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-            gap: 'var(--spacing-4)',
-            alignItems: 'end'
-          }}>
-            <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label">
-                <span>🔍</span> Search:
+        <div className={clsx('card', styles.filterBar)}>
+          <div className={styles.filterGrid}>
+            <div className={clsx('form-group', styles.formGroupCompact)}>
+              <label className={clsx('form-label', styles.labelWithIcon)}>
+                <Search size={14} className={styles.labelIcon} />
+                Search:
               </label>
               <input
                 type="text"
@@ -235,11 +154,12 @@ const TeamsPlayers: React.FC = () => {
                 placeholder="Search teams or players..."
               />
             </div>
-            
+
             {activeTab === 'players' && (
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">
-                  <span>⚔️</span> Filter by Army:
+              <div className={clsx('form-group', styles.formGroupCompact)}>
+                <label className={clsx('form-label', styles.labelWithIcon)}>
+                  <Swords size={14} className={styles.labelIcon} />
+                  Filter by Army:
                 </label>
                 <select
                   value={filterArmy}
@@ -253,122 +173,76 @@ const TeamsPlayers: React.FC = () => {
                 </select>
               </div>
             )}
-            
+
             <button
               onClick={() => {
                 setSearchTerm('');
                 setFilterArmy('');
               }}
-              className="btn btn-outline"
-              style={{ height: 'fit-content' }}
+              className={clsx('btn btn-outline', styles.clearBtn)}
             >
-              <span>🔄</span>
+              <RotateCcw size={16} />
               Clear Filters
             </button>
           </div>
         </div>
-        
+
         {/* Tab Navigation */}
-        <div style={{ marginBottom: 'var(--spacing-2)' }}>
-          <button 
-            style={tabStyle(activeTab === 'teams')}
+        <div className={styles.tabBar} role="tablist">
+          <button
+            className={clsx(styles.tab, activeTab === 'teams' && styles.tabActive)}
             onClick={() => setActiveTab('teams')}
-            onMouseEnter={(e) => {
-              if (activeTab !== 'teams') {
-                e.currentTarget.style.background = 'var(--color-neutral-300)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (activeTab !== 'teams') {
-                e.currentTarget.style.background = 'var(--color-neutral-200)';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }
-            }}
+            role="tab"
+            aria-selected={activeTab === 'teams'}
           >
-            <span>🏢</span>
+            <Building2 size={18} />
             Teams ({filteredTeams.length})
           </button>
-          <button 
-            style={tabStyle(activeTab === 'players')}
+          <button
+            className={clsx(styles.tab, activeTab === 'players' && styles.tabActive)}
             onClick={() => setActiveTab('players')}
-            onMouseEnter={(e) => {
-              if (activeTab !== 'players') {
-                e.currentTarget.style.background = 'var(--color-neutral-300)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (activeTab !== 'players') {
-                e.currentTarget.style.background = 'var(--color-neutral-200)';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }
-            }}
+            role="tab"
+            aria-selected={activeTab === 'players'}
           >
-            <span>🎮</span>
+            <Gamepad2 size={18} />
             Players ({filteredPlayers.length})
           </button>
         </div>
 
-        <div className="card" style={{ maxWidth: '1200px', position: 'relative' }}>
+        <div className={clsx('card', styles.contentCard)}>
           {loading && (
             <div className="loading-overlay">
-              <div className="loading-spinner" style={{ width: '40px', height: '40px' }}></div>
+              <div className="loading-spinner"></div>
             </div>
           )}
 
           {activeTab === 'teams' ? (
             <div className="animate-fade-in">
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                marginBottom: 'var(--spacing-6)',
-                paddingBottom: 'var(--spacing-4)',
-                borderBottom: '2px solid var(--color-neutral-200)'
-              }}>
-                <h3 style={{
-                  fontSize: 'var(--font-size-2xl)',
-                  fontWeight: 'var(--font-weight-bold)',
-                  color: 'var(--color-primary)',
-                  margin: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--spacing-3)'
-                }}>
-                  <span>🏢</span>
+              <div className={styles.sectionHeader}>
+                <h3 className={styles.sectionTitle}>
+                  <Building2 size={22} className={styles.sectionTitleIcon} />
                   Teams Management
                 </h3>
                 <a
                   href="/registration"
                   className="btn btn-success"
                 >
-                  <span>➕</span>
+                  <UserPlus size={18} />
                   Add New Team
                 </a>
               </div>
-              
+
               {filteredTeams.length === 0 ? (
-                <div style={{ 
-                  textAlign: 'center', 
-                  padding: 'var(--spacing-12)',
-                  background: 'linear-gradient(135deg, var(--color-neutral-50), white)',
-                  borderRadius: 'var(--radius-lg)',
-                  border: '2px dashed var(--color-neutral-300)'
-                }}>
-                  <div style={{ fontSize: 'var(--font-size-4xl)', marginBottom: 'var(--spacing-4)' }}>
-                    {searchTerm ? '🔍' : '🎪'}
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyIcon}>
+                    {searchTerm ? <Search size={48} /> : <Rocket size={48} />}
                   </div>
-                  <p style={{ 
-                    color: 'var(--color-neutral-600)',
-                    fontSize: 'var(--font-size-lg)',
-                    marginBottom: 'var(--spacing-4)'
-                  }}>
+                  <p className={styles.emptyText}>
                     {searchTerm ? 'No teams found matching your search.' : 'No teams registered yet.'}
                   </p>
                   {!searchTerm && (
                     <a href="/registration" className="btn btn-primary">
-                      <span>🚀</span>
+                      <Rocket size={18} />
                       Register the first team
                     </a>
                   )}
@@ -378,79 +252,50 @@ const TeamsPlayers: React.FC = () => {
                   {filteredTeams.map((team) => {
                     const captain = team.players.find(p => p.isCaptain);
                     return (
-                      <div 
-                        key={team.id} 
-                        style={teamCardStyle}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-2px)';
-                          e.currentTarget.style.boxShadow = 'var(--shadow-xl)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = 'none';
-                        }}
+                      <div
+                        key={team.id}
+                        className={styles.teamCard}
                       >
-                        <div style={{ 
-                          display: 'grid', 
-                          gridTemplateColumns: 'auto 1fr auto', 
-                          gap: 'var(--spacing-4)',
-                          alignItems: 'center'
-                        }}>
-                          <div style={{ 
-                            width: '60px', 
-                            height: '60px', 
-                            borderRadius: '50%',
-                            background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: 'var(--font-size-2xl)',
-                            color: 'white',
-                            fontWeight: 'var(--font-weight-bold)'
-                          }}>
+                        <div className={styles.teamCardGrid}>
+                          <div className={styles.teamAvatar}>
                             {team.name.charAt(0).toUpperCase()}
                           </div>
-                          
+
                           <div>
-                            <h4 style={{ 
-                              fontSize: 'var(--font-size-xl)',
-                              fontWeight: 'var(--font-weight-bold)',
-                              color: 'var(--color-primary)',
-                              margin: '0 0 var(--spacing-2) 0'
-                            }}>
+                            <h4 className={styles.teamName}>
                               {team.name}
                             </h4>
-                            <div style={{ 
-                              display: 'grid', 
-                              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-                              gap: 'var(--spacing-4)',
-                              fontSize: 'var(--font-size-sm)',
-                              color: 'var(--color-neutral-600)'
-                            }}>
+                            <div className={styles.teamMeta}>
                               <div>
-                                <strong>👑 Captain:</strong> {captain?.nickname || 'No captain assigned'}
+                                <span className={styles.metaLabel}>
+                                  <Crown size={14} className={styles.metaIcon} />
+                                  Captain:
+                                </span>{' '}
+                                {captain?.nickname || 'No captain assigned'}
                               </div>
                               <div>
-                                <strong>👥 Players:</strong> {team.players.map(p => p.nickname).join(', ')}
+                                <span className={styles.metaLabel}>
+                                  <Users size={14} className={styles.metaIcon} />
+                                  Players:
+                                </span>{' '}
+                                {team.players.map(p => p.nickname).join(', ')}
                               </div>
                             </div>
                           </div>
-                          
-                          <div style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
+
+                          <div className={styles.teamActions}>
                             <button
-                              className="btn btn-secondary"
+                              className={clsx('btn btn-secondary', styles.btnSm)}
                               onClick={() => handleEditTeam(team)}
-                              style={{ fontSize: 'var(--font-size-sm)' }}
                             >
-                              <span>✏️</span>
+                              <Pencil size={14} />
                               Edit
                             </button>
                             <button
-                              className="btn btn-warning"
+                              className={clsx('btn btn-warning', styles.btnSm)}
                               onClick={() => handleDeleteTeam(team.id, team.name)}
-                              style={{ fontSize: 'var(--font-size-sm)' }}
                             >
-                              <span>🗑️</span>
+                              <Trash2 size={14} />
                               Delete
                             </button>
                           </div>
@@ -463,55 +308,31 @@ const TeamsPlayers: React.FC = () => {
             </div>
           ) : (
             <div className="animate-fade-in">
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                marginBottom: 'var(--spacing-6)',
-                paddingBottom: 'var(--spacing-4)',
-                borderBottom: '2px solid var(--color-neutral-200)'
-              }}>
-                <h3 style={{
-                  fontSize: 'var(--font-size-2xl)',
-                  fontWeight: 'var(--font-weight-bold)',
-                  color: 'var(--color-primary)',
-                  margin: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--spacing-3)'
-                }}>
-                  <span>🎮</span>
+              <div className={styles.sectionHeader}>
+                <h3 className={styles.sectionTitle}>
+                  <Gamepad2 size={22} className={styles.sectionTitleIcon} />
                   Players Management
                 </h3>
                 <button
                   className="btn btn-success"
-                  onClick={() => alert('Add individual player functionality coming soon!')}
+                  onClick={() => toast.info('Add individual player functionality coming soon!')}
                 >
-                  <span>➕</span>
+                  <UserPlus size={18} />
                   Add New Player
                 </button>
               </div>
-              
+
               {filteredPlayers.length === 0 ? (
-                <div style={{ 
-                  textAlign: 'center', 
-                  padding: 'var(--spacing-12)',
-                  background: 'linear-gradient(135deg, var(--color-neutral-50), white)',
-                  borderRadius: 'var(--radius-lg)',
-                  border: '2px dashed var(--color-neutral-300)'
-                }}>
-                  <div style={{ fontSize: 'var(--font-size-4xl)', marginBottom: 'var(--spacing-4)' }}>
-                    {searchTerm || filterArmy ? '🔍' : '🎮'}
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyIcon}>
+                    {searchTerm || filterArmy ? <Search size={48} /> : <Gamepad2 size={48} />}
                   </div>
-                  <p style={{ 
-                    color: 'var(--color-neutral-600)',
-                    fontSize: 'var(--font-size-lg)'
-                  }}>
+                  <p className={styles.emptyText}>
                     {searchTerm || filterArmy ? 'No players found matching your filters.' : 'No players registered yet. Register teams first to see players here.'}
                   </p>
                 </div>
               ) : (
-                <div style={{ overflowX: 'auto' }}>
+                <div className={styles.tableWrap}>
                   <table className="table">
                     <thead>
                       <tr>
@@ -525,111 +346,58 @@ const TeamsPlayers: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredPlayers.map((player, index) => {
+                      {filteredPlayers.map((player) => {
                         const team = teams.find(t => t.id === player.teamId);
                         return (
-                          <tr 
-                            key={player.id} 
-                            style={playerRowStyle(index)}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = 'var(--color-primary-light)';
-                              e.currentTarget.style.color = 'white';
-                              e.currentTarget.style.transform = 'scale(1.01)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = index % 2 === 0 ? 'white' : 'var(--color-neutral-50)';
-                              e.currentTarget.style.color = 'inherit';
-                              e.currentTarget.style.transform = 'scale(1)';
-                            }}
-                          >
+                          <tr key={player.id}>
                             <td>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
-                                <div style={{
-                                  width: '40px',
-                                  height: '40px',
-                                  borderRadius: '50%',
-                                  background: player.isCaptain ? 
-                                    'linear-gradient(135deg, var(--color-warning), var(--color-warning-light))' :
-                                    'linear-gradient(135deg, var(--color-secondary), var(--color-secondary-light))',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  color: 'white',
-                                  fontWeight: 'var(--font-weight-bold)',
-                                  fontSize: 'var(--font-size-sm)'
-                                }}>
-                                  {player.isCaptain ? '👑' : player.nickname.charAt(0).toUpperCase()}
+                              <div className={styles.playerCell}>
+                                <div className={clsx(
+                                  styles.playerAvatar,
+                                  player.isCaptain ? styles.playerAvatarCaptain : styles.playerAvatarDefault
+                                )}>
+                                  {player.isCaptain
+                                    ? <Crown size={16} />
+                                    : player.nickname.charAt(0).toUpperCase()}
                                 </div>
                                 <strong>{player.nickname}</strong>
                               </div>
                             </td>
                             <td>{team?.name || 'Unknown'}</td>
                             <td>
-                              <span style={{ 
-                                background: 'var(--color-neutral-100)',
-                                padding: 'var(--spacing-1) var(--spacing-3)',
-                                borderRadius: 'var(--radius-full)',
-                                fontSize: 'var(--font-size-sm)',
-                                fontWeight: 'var(--font-weight-medium)'
-                              }}>
+                              <span className={styles.armyBadge}>
                                 {player.army}
                               </span>
                             </td>
-                            <td style={{ fontFamily: 'var(--font-family-mono)' }}>{player.itsPin}</td>
+                            <td className={styles.itsPin}>{player.itsPin}</td>
                             <td>
                               {player.isCaptain ? (
-                                <span style={{ 
-                                  background: 'linear-gradient(135deg, var(--color-warning), var(--color-warning-light))', 
-                                  color: 'white', 
-                                  padding: 'var(--spacing-2) var(--spacing-3)', 
-                                  borderRadius: 'var(--radius-full)', 
-                                  fontSize: 'var(--font-size-sm)',
-                                  fontWeight: 'var(--font-weight-medium)',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 'var(--spacing-1)',
-                                  width: 'fit-content'
-                                }}>
-                                  <span>👑</span>
+                                <span className={styles.captainBadge}>
+                                  <Crown size={14} />
                                   Captain
                                 </span>
                               ) : (
-                                <span style={{ color: 'var(--color-neutral-600)' }}>Player</span>
+                                <span className={styles.rolePlayer}>Player</span>
                               )}
                             </td>
                             <td>
                               {player.isPainted ? (
-                                <span style={{ 
-                                  background: 'linear-gradient(135deg, var(--color-success), var(--color-success-light))', 
-                                  color: 'white', 
-                                  padding: 'var(--spacing-1) var(--spacing-3)', 
-                                  borderRadius: 'var(--radius-full)', 
-                                  fontSize: 'var(--font-size-xs)',
-                                  fontWeight: 'var(--font-weight-medium)',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 'var(--spacing-1)',
-                                  width: 'fit-content'
-                                }}>
-                                  <span>🎨</span>
+                                <span className={styles.paintedBadge}>
+                                  <Palette size={14} />
                                   Painted
                                 </span>
                               ) : (
-                                <span style={{ 
-                                  color: 'var(--color-neutral-500)',
-                                  fontSize: 'var(--font-size-sm)'
-                                }}>
+                                <span className={styles.unpaintedText}>
                                   Unpainted
                                 </span>
                               )}
                             </td>
                             <td>
                               <button
-                                className="btn btn-secondary"
+                                className={clsx('btn btn-secondary', styles.btnSm)}
                                 onClick={() => handleEditPlayer(player)}
-                                style={{ fontSize: 'var(--font-size-sm)' }}
                               >
-                                <span>✏️</span>
+                                <Pencil size={14} />
                                 Edit
                               </button>
                             </td>

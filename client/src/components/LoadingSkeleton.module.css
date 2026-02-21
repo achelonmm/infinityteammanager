@@ -1,0 +1,117 @@
+.skeleton {
+  border-radius: var(--radius-base);
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-base) 25%,
+    var(--skeleton-shimmer) 50%,
+    var(--skeleton-base) 75%
+  );
+  background-size: 600px 100%;
+  background-attachment: fixed;
+  animation: shimmer 1.5s infinite linear;
+}
+
+/* Stat card skeleton */
+.statCardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-6);
+  padding: var(--spacing-4) 0;
+}
+
+.statCardItem {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.statCardIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+}
+
+.statCardLabel {
+  width: 120px;
+  height: 16px;
+}
+
+.statCardValue {
+  width: 80px;
+  height: 36px;
+}
+
+/* Table rows skeleton */
+.tableContainer {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.tableHeader {
+  display: flex;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+  background: var(--color-table-header);
+  border-bottom: 1px solid var(--color-table-border);
+}
+
+.tableHeaderCell {
+  height: 14px;
+  flex: 1;
+}
+
+.tableRow {
+  display: flex;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+  border-bottom: 1px solid var(--color-table-border);
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.tableCell {
+  height: 16px;
+  flex: 1;
+}
+
+.tableCellNarrow {
+  height: 16px;
+  width: 40px;
+  flex: none;
+}
+
+/* Card skeleton */
+.cardItem {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-6);
+  margin: var(--spacing-4) 0;
+}
+
+.cardLine {
+  height: 14px;
+  margin-bottom: var(--spacing-3);
+}
+
+.cardLine:last-child {
+  margin-bottom: 0;
+  width: 60%;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+    background: var(--skeleton-base);
+  }
+}
