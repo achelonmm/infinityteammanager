@@ -35,3 +35,9 @@ pids
 # OS
 .DS_Store
 Thumbs.db
+
+# Test screenshots
+test-*.png
+
+# Playwright MCP logs
+.playwright-mcp/
