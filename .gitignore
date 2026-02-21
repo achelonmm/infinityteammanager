@@ -28,6 +28,10 @@ pids
 .vscode/
 .idea/
 
+# Database files
+*.db
+*.sqlite
+
 # OS
 .DS_Store
 Thumbs.db

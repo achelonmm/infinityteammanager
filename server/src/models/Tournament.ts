@@ -2,14 +2,10 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 
-/* const dbDir = path.join(__dirname, '../../data');
+const dbDir = process.env.DATA_DIR || path.join(__dirname, '../../data');
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
-} */
-  const dbDir = process.env.DATA_DIR || path.join(__dirname, '../../data');
-  if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
-  }
+}
 
 const db = new Database(path.join(dbDir, 'tournament.db'));
 
@@ -86,6 +82,12 @@ db.exec(`
     FOREIGN KEY (player1_id) REFERENCES players(id) ON DELETE CASCADE,
     FOREIGN KEY (player2_id) REFERENCES players(id) ON DELETE CASCADE
   );
+
+  CREATE INDEX IF NOT EXISTS idx_teams_tournament_id ON teams(tournament_id);
+  CREATE INDEX IF NOT EXISTS idx_players_team_id ON players(team_id);
+  CREATE INDEX IF NOT EXISTS idx_team_matches_tournament_id ON team_matches(tournament_id);
+  CREATE INDEX IF NOT EXISTS idx_team_matches_round ON team_matches(tournament_id, round);
+  CREATE INDEX IF NOT EXISTS idx_individual_matches_team_match_id ON individual_matches(team_match_id);
 `);
 
 // Model interfaces
@@ -150,6 +152,30 @@ interface IndividualMatch {
   updated_at?: string;
 }
 
+// Allowed updatable columns per table (prevents SQL injection via dynamic column names)
+const TOURNAMENT_COLUMNS = new Set(['name', 'current_round']);
+const TEAM_COLUMNS = new Set(['tournament_id', 'name', 'captain_id']);
+const PLAYER_COLUMNS = new Set(['team_id', 'nickname', 'its_pin', 'army', 'is_captain', 'is_painted']);
+const TEAM_MATCH_COLUMNS = new Set(['tournament_id', 'round', 'team1_id', 'team2_id', 'table_number', 'is_completed']);
+const INDIVIDUAL_MATCH_COLUMNS = new Set([
+  'team_match_id', 'player1_id', 'player2_id',
+  'tournament_points1', 'tournament_points2',
+  'objective_points1', 'objective_points2',
+  'victory_points_for1', 'victory_points_against1',
+  'victory_points_for2', 'victory_points_against2',
+  'painted_bonus1', 'painted_bonus2', 'is_completed'
+]);
+
+function buildUpdate(updates: Record<string, unknown>, allowedColumns: Set<string>): { fields: string[]; values: unknown[] } {
+  const entries = Object.entries(updates).filter(
+    ([key]) => key !== 'id' && key !== 'created_at' && allowedColumns.has(key)
+  );
+  return {
+    fields: entries.map(([key]) => `${key} = ?`),
+    values: entries.map(([, value]) => value),
+  };
+}
+
 // Tournament Model
 export const TournamentModel = {
   create: (tournament: Omit<Tournament, 'created_at' | 'updated_at'>): Tournament => {
@@ -158,7 +184,9 @@ export const TournamentModel = {
       VALUES (?, ?, ?)
     `);
     stmt.run(tournament.id, tournament.name, tournament.current_round);
-    return TournamentModel.findById(tournament.id)!;
+    const created = TournamentModel.findById(tournament.id);
+    if (!created) throw new Error(`Failed to create tournament with id ${tournament.id}`);
+    return created;
   },
 
   findById: (id: string): Tournament | null => {
@@ -173,18 +201,11 @@ export const TournamentModel = {
   },
 
   update: (id: string, updates: Partial<Tournament>): Tournament | null => {
-    const fields = Object.keys(updates)
-      .filter(key => key !== 'id' && key !== 'created_at')
-      .map(key => `${key} = ?`);
-    
+    const { fields, values } = buildUpdate(updates as Record<string, unknown>, TOURNAMENT_COLUMNS);
     if (fields.length === 0) return TournamentModel.findById(id);
 
-    const values = Object.entries(updates)
-      .filter(([key]) => key !== 'id' && key !== 'created_at')
-      .map(([, value]) => value);
-
     const stmt = db.prepare(`
-      UPDATE tournaments 
+      UPDATE tournaments
       SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `);
@@ -207,7 +228,9 @@ export const TeamModel = {
       VALUES (?, ?, ?, ?)
     `);
     stmt.run(team.id, team.tournament_id, team.name, team.captain_id);
-    return TeamModel.findById(team.id)!;
+    const created = TeamModel.findById(team.id);
+    if (!created) throw new Error(`Failed to create team with id ${team.id}`);
+    return created;
   },
 
   findById: (id: string): Team | null => {
@@ -222,18 +245,11 @@ export const TeamModel = {
   },
 
   update: (id: string, updates: Partial<Team>): Team | null => {
-    const fields = Object.keys(updates)
-      .filter(key => key !== 'id' && key !== 'created_at')
-      .map(key => `${key} = ?`);
-    
+    const { fields, values } = buildUpdate(updates as Record<string, unknown>, TEAM_COLUMNS);
     if (fields.length === 0) return TeamModel.findById(id);
 
-    const values = Object.entries(updates)
-      .filter(([key]) => key !== 'id' && key !== 'created_at')
-      .map(([, value]) => value);
-
     const stmt = db.prepare(`
-      UPDATE teams 
+      UPDATE teams
       SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `);
@@ -264,7 +280,9 @@ export const PlayerModel = {
       player.is_captain ? 1 : 0,
       player.is_painted ? 1 : 0
     );
-    return PlayerModel.findById(player.id)!;
+    const created = PlayerModel.findById(player.id);
+    if (!created) throw new Error(`Failed to create player with id ${player.id}`);
+    return created;
   },
 
   findById: (id: string): Player | null => {
@@ -279,18 +297,11 @@ export const PlayerModel = {
   },
 
   update: (id: string, updates: Partial<Player>): Player | null => {
-    const fields = Object.keys(updates)
-      .filter(key => key !== 'id' && key !== 'created_at')
-      .map(key => `${key} = ?`);
-    
+    const { fields, values } = buildUpdate(updates as Record<string, unknown>, PLAYER_COLUMNS);
     if (fields.length === 0) return PlayerModel.findById(id);
 
-    const values = Object.entries(updates)
-      .filter(([key]) => key !== 'id' && key !== 'created_at')
-      .map(([, value]) => value);
-
     const stmt = db.prepare(`
-      UPDATE players 
+      UPDATE players
       SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `);
@@ -321,7 +332,9 @@ export const TeamMatchModel = {
       teamMatch.table_number,
       teamMatch.is_completed ? 1 : 0
     );
-    return TeamMatchModel.findById(teamMatch.id)!;
+    const created = TeamMatchModel.findById(teamMatch.id);
+    if (!created) throw new Error(`Failed to create team match with id ${teamMatch.id}`);
+    return created;
   },
 
   findById: (id: string): TeamMatch | null => {
@@ -341,18 +354,11 @@ export const TeamMatchModel = {
   },
 
   update: (id: string, updates: Partial<TeamMatch>): TeamMatch | null => {
-    const fields = Object.keys(updates)
-      .filter(key => key !== 'id' && key !== 'created_at')
-      .map(key => `${key} = ?`);
-    
+    const { fields, values } = buildUpdate(updates as Record<string, unknown>, TEAM_MATCH_COLUMNS);
     if (fields.length === 0) return TeamMatchModel.findById(id);
 
-    const values = Object.entries(updates)
-      .filter(([key]) => key !== 'id' && key !== 'created_at')
-      .map(([, value]) => value);
-
     const stmt = db.prepare(`
-      UPDATE team_matches 
+      UPDATE team_matches
       SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `);
@@ -398,7 +404,9 @@ export const IndividualMatchModel = {
       match.painted_bonus2 ? 1 : 0,
       match.is_completed ? 1 : 0
     );
-    return IndividualMatchModel.findById(match.id)!;
+    const created = IndividualMatchModel.findById(match.id);
+    if (!created) throw new Error(`Failed to create individual match with id ${match.id}`);
+    return created;
   },
 
   findById: (id: string): IndividualMatch | null => {
@@ -413,18 +421,11 @@ export const IndividualMatchModel = {
   },
 
   update: (id: string, updates: Partial<IndividualMatch>): IndividualMatch | null => {
-    const fields = Object.keys(updates)
-      .filter(key => key !== 'id' && key !== 'created_at')
-      .map(key => `${key} = ?`);
-    
+    const { fields, values } = buildUpdate(updates as Record<string, unknown>, INDIVIDUAL_MATCH_COLUMNS);
     if (fields.length === 0) return IndividualMatchModel.findById(id);
 
-    const values = Object.entries(updates)
-      .filter(([key]) => key !== 'id' && key !== 'created_at')
-      .map(([, value]) => value);
-
     const stmt = db.prepare(`
-      UPDATE individual_matches 
+      UPDATE individual_matches
       SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `);

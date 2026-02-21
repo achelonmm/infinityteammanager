@@ -29,8 +29,6 @@ router.get('/:id', async (req: Request, res: Response) => {
     
     // Get all players for this tournament
     const allPlayers = teams.flatMap(team => PlayerModel.findByTeamId(team.id));
-    console.log('RAW PLAYERS FROM DB:', allPlayers);
-
 
     // Convert snake_case to camelCase for frontend
     const camelCasePlayers = allPlayers.map(player => ({

@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { TeamMatchModel, IndividualMatchModel } from '../models/Tournament';
+import db, { TeamMatchModel, IndividualMatchModel } from '../models/Tournament';
 
 const router = Router();
 
@@ -140,48 +140,54 @@ router.put('/individual/:id', async (req: Request, res: Response) => {
 router.post('/individual/batch', async (req: Request, res: Response) => {
   try {
     const { teamMatchId, pairings } = req.body;
-    
-    const createdMatches = pairings.map((pairing: any) => {
-      const individualMatch = IndividualMatchModel.create({
-        id: pairing.id || crypto.randomUUID(),
-        team_match_id: teamMatchId,
-        player1_id: pairing.player1Id,
-        player2_id: pairing.player2Id,
-        tournament_points1: 0,
-        tournament_points2: 0,
-        objective_points1: 0,
-        objective_points2: 0,
-        victory_points_for1: 0,
-        victory_points_against1: 0,
-        victory_points_for2: 0,
-        victory_points_against2: 0,
-        painted_bonus1: 0,
-        painted_bonus2: 0,
-        is_completed: 0
+
+    if (!Array.isArray(pairings)) {
+      return res.status(400).json({ error: 'pairings must be an array' });
+    }
+
+    // Wrap batch creation in a transaction
+    const createdMatches = db.transaction(() => {
+      return pairings.map((pairing: any) => {
+        const individualMatch = IndividualMatchModel.create({
+          id: pairing.id || crypto.randomUUID(),
+          team_match_id: teamMatchId,
+          player1_id: pairing.player1Id,
+          player2_id: pairing.player2Id,
+          tournament_points1: 0,
+          tournament_points2: 0,
+          objective_points1: 0,
+          objective_points2: 0,
+          victory_points_for1: 0,
+          victory_points_against1: 0,
+          victory_points_for2: 0,
+          victory_points_against2: 0,
+          painted_bonus1: 0,
+          painted_bonus2: 0,
+          is_completed: 0
+        });
+
+        return {
+          id: individualMatch.id,
+          teamMatchId: individualMatch.team_match_id,
+          player1Id: individualMatch.player1_id,
+          player2Id: individualMatch.player2_id,
+          tournamentPoints1: individualMatch.tournament_points1,
+          tournamentPoints2: individualMatch.tournament_points2,
+          objectivePoints1: individualMatch.objective_points1,
+          objectivePoints2: individualMatch.objective_points2,
+          victoryPointsFor1: individualMatch.victory_points_for1,
+          victoryPointsAgainst1: individualMatch.victory_points_against1,
+          victoryPointsFor2: individualMatch.victory_points_for2,
+          victoryPointsAgainst2: individualMatch.victory_points_against2,
+          paintedBonus1: Boolean(individualMatch.painted_bonus1),
+          paintedBonus2: Boolean(individualMatch.painted_bonus2),
+          isCompleted: Boolean(individualMatch.is_completed),
+          createdAt: individualMatch.created_at,
+          updatedAt: individualMatch.updated_at
+        };
       });
-      
-      // Convert to camelCase for response
-      return {
-        id: individualMatch.id,
-        teamMatchId: individualMatch.team_match_id,
-        player1Id: individualMatch.player1_id,
-        player2Id: individualMatch.player2_id,
-        tournamentPoints1: individualMatch.tournament_points1,
-        tournamentPoints2: individualMatch.tournament_points2,
-        objectivePoints1: individualMatch.objective_points1,
-        objectivePoints2: individualMatch.objective_points2,
-        victoryPointsFor1: individualMatch.victory_points_for1,
-        victoryPointsAgainst1: individualMatch.victory_points_against1,
-        victoryPointsFor2: individualMatch.victory_points_for2,
-        victoryPointsAgainst2: individualMatch.victory_points_against2,
-        paintedBonus1: Boolean(individualMatch.painted_bonus1),
-        paintedBonus2: Boolean(individualMatch.painted_bonus2),
-        isCompleted: Boolean(individualMatch.is_completed),
-        createdAt: individualMatch.created_at,
-        updatedAt: individualMatch.updated_at
-      };
-    });
-    
+    })();
+
     res.status(201).json(createdMatches);
   } catch (error) {
     console.error('Error creating individual matches:', error);
