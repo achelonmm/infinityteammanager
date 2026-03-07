@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import { requireAuth } from './middleware/auth';
@@ -46,6 +47,13 @@ app.use('/api/matches', requireAuth, matchRoutes);
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ message: 'Server is running!' });
+});
+
+// Serve React static build in production
+const clientBuildPath = path.join(__dirname, '../../client/build');
+app.use(express.static(clientBuildPath));
+app.get('/{*splat}', (req, res) => {
+  res.sendFile(path.join(clientBuildPath, 'index.html'));
 });
 
 app.listen(PORT, () => {
