@@ -33,7 +33,6 @@ const Pairings: React.FC = () => {
     getCurrentRoundMatches,
     setIndividualPairings,
     updateIndividualMatch,
-    updateTeamMatch,
     canAdvanceToNextRound,
     advanceToNextRound,
     getCurrentRound,
@@ -51,7 +50,7 @@ const Pairings: React.FC = () => {
     player2: Player;
   } | null>(null);
 
-  const [individualPairings, setLocalIndividualPairings] = useState<{ [key: string]: { player1Id: string; player2Id: string }[] }>({});
+  const [, setLocalIndividualPairings] = useState<{ [key: string]: { player1Id: string; player2Id: string }[] }>({});
   const [selectedRound, setSelectedRound] = useState<number | null>(null);
 
   const teams = getTeams();

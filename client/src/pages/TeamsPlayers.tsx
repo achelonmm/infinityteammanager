@@ -24,7 +24,7 @@ import { Team, Player } from '../types';
 import styles from './TeamsPlayers.module.css';
 
 const TeamsPlayers: React.FC = () => {
-  const { tournament, getTeams, getPlayers, deleteTeam, updateTeam, updatePlayer, loading, error } = useTournament();
+  const { getTeams, getPlayers, deleteTeam, updateTeam, updatePlayer, loading, error } = useTournament();
   const toast = useToast();
   const [activeTab, setActiveTab] = useState<'teams' | 'players'>('teams');
   const [searchTerm, setSearchTerm] = useState('');

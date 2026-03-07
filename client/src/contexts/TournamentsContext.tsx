@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { TournamentSummary } from '../types';
-import { apiService, ApiError } from '../services/api';
+import { apiService } from '../services/api';
 import { useTournamentData } from './TournamentDataContext';
 
 interface TournamentsContextType {
