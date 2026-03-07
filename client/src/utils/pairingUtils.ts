@@ -146,6 +146,63 @@ const generateRandomPairings = (
   return pairings;
 };
 
+// Build a lookup from team id to its previous opponents set
+const buildOpponentLookup = (teamsWithStats: TeamWithStats[]): Map<string, Set<string>> => {
+  const lookup = new Map<string, Set<string>>();
+  teamsWithStats.forEach((t) => lookup.set(t.team.id, t.previousOpponents));
+  return lookup;
+};
+
+// Resolve rematches by swapping opponents between pairings
+const resolveRematches = (
+  pairings: { team1Id: string; team2Id: string; tableNumber: number }[],
+  opponentLookup: Map<string, Set<string>>
+): { team1Id: string; team2Id: string; tableNumber: number }[] => {
+  const havePlayed = (a: string, b: string): boolean =>
+    opponentLookup.get(a)?.has(b) ?? false;
+
+  // Iterate until no rematches remain (max passes = pairings.length to prevent infinite loop)
+  for (let pass = 0; pass < pairings.length; pass++) {
+    // Find a pairing that is a rematch
+    const rematchIdx = pairings.findIndex((p) =>
+      havePlayed(p.team1Id, p.team2Id)
+    );
+    if (rematchIdx === -1) break; // No rematches, done
+
+    const bad = pairings[rematchIdx];
+    let resolved = false;
+
+    // Try swapping with every other pairing
+    for (let j = 0; j < pairings.length && !resolved; j++) {
+      if (j === rematchIdx) continue;
+      const other = pairings[j];
+
+      // Option A: swap team2s → (bad.t1, other.t2) and (other.t1, bad.t2)
+      if (
+        !havePlayed(bad.team1Id, other.team2Id) &&
+        !havePlayed(other.team1Id, bad.team2Id)
+      ) {
+        pairings[rematchIdx] = { team1Id: bad.team1Id, team2Id: other.team2Id, tableNumber: bad.tableNumber };
+        pairings[j] = { team1Id: other.team1Id, team2Id: bad.team2Id, tableNumber: other.tableNumber };
+        resolved = true;
+      }
+      // Option B: cross-swap → (bad.t1, other.t1) and (bad.t2, other.t2)
+      else if (
+        !havePlayed(bad.team1Id, other.team1Id) &&
+        !havePlayed(bad.team2Id, other.team2Id)
+      ) {
+        pairings[rematchIdx] = { team1Id: bad.team1Id, team2Id: other.team1Id, tableNumber: bad.tableNumber };
+        pairings[j] = { team1Id: bad.team2Id, team2Id: other.team2Id, tableNumber: other.tableNumber };
+        resolved = true;
+      }
+    }
+    // If no swap resolved it, the rematch stays (mathematically impossible to avoid)
+    if (!resolved) break;
+  }
+
+  return pairings;
+};
+
 // Generate Swiss system pairings for Round 2+
 const generateSwissPairings = (
   teamsWithStats: TeamWithStats[]
@@ -169,24 +226,22 @@ const generateSwissPairings = (
   // Pair lowest ranked teams first, moving up
   for (let i = teamsWithStats.length - 1; i >= 0; i--) {
     const team1 = teamsWithStats[i];
-    
+
     if (paired.has(team1.team.id)) continue;
 
     // Try to find best opponent (close in ranking, haven't played before)
     let bestOpponent: TeamWithStats | null = null;
-    let bestOpponentIndex = -1;
 
     // First pass: try to find opponent with similar ranking who hasn't been played
     // Search upward from current position (toward better teams)
     for (let j = i - 1; j >= 0; j--) {
       const team2 = teamsWithStats[j];
-      
+
       if (paired.has(team2.team.id)) continue;
 
       // Check if teams have played before
       if (!team1.previousOpponents.has(team2.team.id)) {
         bestOpponent = team2;
-        bestOpponentIndex = j;
         break;
       }
     }
@@ -197,7 +252,6 @@ const generateSwissPairings = (
         const team2 = teamsWithStats[j];
         if (!paired.has(team2.team.id)) {
           bestOpponent = team2;
-          bestOpponentIndex = j;
           break;
         }
       }
@@ -223,7 +277,9 @@ const generateSwissPairings = (
     }
   }
 
-  return pairings;
+  // Post-processing: resolve any rematches caused by greedy pairing
+  const opponentLookup = buildOpponentLookup(teamsWithStats);
+  return resolveRematches(pairings, opponentLookup);
 };
 
 export const generatePairings = (
