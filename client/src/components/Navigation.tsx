@@ -77,12 +77,6 @@ const Navigation: React.FC = () => {
           <span className={styles.brand}>
             <Swords size={24} />
             Infinity TM
-            {isAdmin && tournament && (
-              <span className={styles.tournamentIndicator}>
-                <Trophy size={12} />
-                {tournament.name}
-              </span>
-            )}
           </span>
 
           {/* Desktop nav links */}
@@ -142,6 +136,17 @@ const Navigation: React.FC = () => {
             {menuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
+
+        {/* Active tournament bar */}
+        {isAdmin && tournament && (
+          <div className={styles.tournamentBar}>
+            <div className={styles.tournamentBarContent}>
+              <Trophy size={14} />
+              <span className={styles.tournamentBarLabel}>Active Tournament:</span>
+              <span className={styles.tournamentBarName}>{tournament.name}</span>
+            </div>
+          </div>
+        )}
 
         {/* Mobile dropdown menu */}
         <div

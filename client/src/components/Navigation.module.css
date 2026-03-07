@@ -32,21 +32,32 @@
   text-decoration: none;
 }
 
-.tournamentIndicator {
-  display: inline-flex;
+/* ---- Active tournament bar ---- */
+
+.tournamentBar {
+  border-top: 1px solid rgba(245, 158, 11, 0.15);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.tournamentBarContent {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--spacing-1) var(--spacing-4);
+  display: flex;
   align-items: center;
-  gap: var(--spacing-1);
+  gap: var(--spacing-2);
   font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
   color: var(--color-accent);
-  background: rgba(245, 158, 11, 0.1);
-  padding: 2px var(--spacing-2);
-  border-radius: var(--radius-full);
-  margin-left: var(--spacing-2);
-  max-width: 150px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.tournamentBarLabel {
+  color: var(--color-neutral-500);
+  font-weight: var(--font-weight-medium);
+}
+
+.tournamentBarName {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-accent);
 }
 
 /* ---- Desktop nav list ---- */
@@ -258,5 +269,9 @@
 
   .hamburger {
     display: flex;
+  }
+
+  .tournamentBar {
+    display: none;
   }
 }
