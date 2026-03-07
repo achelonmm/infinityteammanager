@@ -86,6 +86,15 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_team_matches_tournament_id ON team_matches(tournament_id);
   CREATE INDEX IF NOT EXISTS idx_team_matches_round ON team_matches(tournament_id, round);
   CREATE INDEX IF NOT EXISTS idx_individual_matches_team_match_id ON individual_matches(team_match_id);
+
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_tournaments_name ON tournaments(name);
 `);
+
+// Migration: add status column to tournaments (safe to re-run)
+try {
+  db.exec(`ALTER TABLE tournaments ADD COLUMN status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'completed'))`);
+} catch {
+  // Column already exists — ignore
+}
 
 export default db;

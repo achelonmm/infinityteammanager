@@ -1,4 +1,4 @@
-import { Tournament, Team, Player, TeamMatch, IndividualMatch } from '../types';
+import { Tournament, TournamentSummary, Team, Player, TeamMatch, IndividualMatch } from '../types';
 
 const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
@@ -52,9 +52,15 @@ export const apiService = {
   },
 
   // Tournament endpoints
-  async getTournaments(): Promise<Tournament[]> {
+  async getTournaments(): Promise<TournamentSummary[]> {
     const response = await fetch(`${API_BASE}/tournaments`);
     if (!response.ok) throw new Error('Failed to fetch tournaments');
+    return response.json();
+  },
+
+  async getActiveTournament(): Promise<TournamentSummary> {
+    const response = await fetch(`${API_BASE}/tournaments/active`);
+    if (!response.ok) throw new ApiError('No active tournament found', response.status);
     return response.json();
   },
 
@@ -64,12 +70,16 @@ export const apiService = {
     return response.json();
   },
 
-  async createTournament(tournament: Omit<Tournament, 'teams' | 'teamMatches'>): Promise<Tournament> {
+  async createTournament(data: { id: string; name: string }): Promise<Tournament> {
     const response = await fetch(`${API_BASE}/tournaments`, {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify(tournament),
+      body: JSON.stringify(data),
     });
+    if (response.status === 409) {
+      const err = await response.json().catch(() => ({ error: 'Tournament name already exists' }));
+      throw new ApiError(err.error || 'Tournament name already exists', 409);
+    }
     if (!response.ok) throw new Error('Failed to create tournament');
     return response.json();
   },
@@ -80,7 +90,29 @@ export const apiService = {
       headers: authHeaders(),
       body: JSON.stringify(updates),
     });
+    if (response.status === 409) {
+      const err = await response.json().catch(() => ({ error: 'Tournament name already exists' }));
+      throw new ApiError(err.error || 'Tournament name already exists', 409);
+    }
     if (!response.ok) throw new Error('Failed to update tournament');
+    return response.json();
+  },
+
+  async activateTournament(id: string): Promise<Tournament> {
+    const response = await fetch(`${API_BASE}/tournaments/${id}/activate`, {
+      method: 'POST',
+      headers: authHeaders(),
+    });
+    if (!response.ok) throw new ApiError('Failed to activate tournament', response.status);
+    return response.json();
+  },
+
+  async completeTournament(id: string): Promise<Tournament> {
+    const response = await fetch(`${API_BASE}/tournaments/${id}/complete`, {
+      method: 'POST',
+      headers: authHeaders(),
+    });
+    if (!response.ok) throw new ApiError('Failed to complete tournament', response.status);
     return response.json();
   },
 

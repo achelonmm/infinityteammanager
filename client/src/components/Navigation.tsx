@@ -13,8 +13,10 @@ import {
   KeyRound,
   Menu,
   X,
+  ListTodo,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTournamentData } from '../contexts/TournamentDataContext';
 import { useToast } from '../contexts/ToastContext';
 import LoginForm from './LoginForm';
 import styles from './Navigation.module.css';
@@ -28,6 +30,7 @@ interface NavItem {
 const Navigation: React.FC = () => {
   const location = useLocation();
   const { checkAdminAccess, logout } = useAuth();
+  const { tournament } = useTournamentData();
   const toast = useToast();
   const isAdmin = checkAdminAccess();
 
@@ -46,6 +49,7 @@ const Navigation: React.FC = () => {
 
   const adminNavItems: NavItem[] = [
     { path: '/', label: 'Dashboard', icon: <LayoutDashboard size={16} /> },
+    { path: '/tournaments', label: 'Tournaments', icon: <ListTodo size={16} /> },
     { path: '/registration', label: 'Register Team', icon: <UserPlus size={16} /> },
     { path: '/teams', label: 'Teams & Players', icon: <Users size={16} /> },
     { path: '/pairings', label: 'Pairings', icon: <Swords size={16} /> },
@@ -73,6 +77,12 @@ const Navigation: React.FC = () => {
           <span className={styles.brand}>
             <Swords size={24} />
             Infinity TM
+            {isAdmin && tournament && (
+              <span className={styles.tournamentIndicator}>
+                <Trophy size={12} />
+                {tournament.name}
+              </span>
+            )}
           </span>
 
           {/* Desktop nav links */}

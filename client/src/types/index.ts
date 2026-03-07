@@ -2,8 +2,20 @@ export interface Tournament {
   id: string;
   name: string;
   currentRound: number;
+  status: 'active' | 'completed';
   teams: Team[];
   teamMatches: TeamMatch[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface TournamentSummary {
+  id: string;
+  name: string;
+  currentRound: number;
+  status: 'active' | 'completed';
+  teamCount: number;
+  matchCount: number;
   created_at?: string;
   updated_at?: string;
 }

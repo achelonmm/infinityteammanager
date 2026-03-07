@@ -1,3 +1,4 @@
+import db from '../models/db';
 import { TournamentModel } from '../models/TournamentModel';
 import { TeamModel } from '../models/TeamModel';
 import { PlayerModel } from '../models/PlayerModel';
@@ -7,11 +8,18 @@ import { tournamentMapper, playerMapper, teamMapper, teamMatchMapper, individual
 
 export const tournamentService = {
   findAll() {
-    return TournamentModel.findAll();
+    const tournaments = TournamentModel.findAllWithCounts();
+    return tournaments.map(t => tournamentMapper.toApi(t));
   },
 
   findById(id: string) {
     return TournamentModel.findById(id);
+  },
+
+  findActive() {
+    const tournament = TournamentModel.findActive();
+    if (!tournament) return null;
+    return tournamentMapper.toApi(tournament);
   },
 
   getFullTournament(id: string) {
@@ -52,22 +60,58 @@ export const tournamentService = {
   },
 
   create(data: { id: string; name: string }) {
+    const existingName = TournamentModel.findByName(data.name);
+    if (existingName) {
+      return { tournament: null, created: false, conflict: true };
+    }
+
     const existing = TournamentModel.findById(data.id);
-    if (existing) return { tournament: existing, created: false };
+    if (existing) {
+      return { tournament: null, created: false, conflict: true };
+    }
 
     const tournament = TournamentModel.create({
       id: data.id,
       name: data.name,
-      current_round: 1
+      current_round: 1,
+      status: 'active'
     });
-    return { tournament, created: true };
+    return { tournament: tournamentMapper.toApi(tournament), created: true, conflict: false };
   },
 
   update(id: string, updates: Record<string, unknown>) {
+    if (updates.name) {
+      const existingName = TournamentModel.findByName(updates.name as string);
+      if (existingName && existingName.id !== id) {
+        return { tournament: null, conflict: true };
+      }
+    }
     const dbUpdates = tournamentMapper.toDb(updates);
     const tournament = TournamentModel.update(id, dbUpdates);
+    if (!tournament) return { tournament: null, conflict: false };
+    return { tournament: tournamentMapper.toApi(tournament), conflict: false };
+  },
+
+  activate(id: string) {
+    const tournament = TournamentModel.findById(id);
     if (!tournament) return null;
-    return tournamentMapper.toApi(tournament);
+
+    const activateTx = db.transaction(() => {
+      TournamentModel.deactivateAll();
+      return TournamentModel.setStatus(id, 'active');
+    });
+
+    const updated = activateTx();
+    if (!updated) return null;
+    return tournamentMapper.toApi(updated);
+  },
+
+  complete(id: string) {
+    const tournament = TournamentModel.findById(id);
+    if (!tournament) return null;
+    const updated = TournamentModel.setStatus(id, 'completed');
+    if (!updated) return null;
+    return tournamentMapper.toApi(updated);
   },
 
   delete(id: string) {

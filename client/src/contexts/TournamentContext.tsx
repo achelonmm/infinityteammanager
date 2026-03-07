@@ -19,9 +19,11 @@ export const useTournament = () => {
 
   return {
     tournament: tournamentData.tournament,
+    activeTournamentId: tournamentData.activeTournamentId,
     loading: tournamentData.loading,
     error: tournamentData.error,
     initializeTournament: tournamentData.initializeTournament,
+    switchTournament: tournamentData.switchTournament,
     ...teams,
     ...matches
   };

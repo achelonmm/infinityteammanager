@@ -2,6 +2,8 @@
 
 const tournamentFieldMap: Record<string, string> = {
   currentRound: 'current_round',
+  teamCount: 'team_count',
+  matchCount: 'match_count',
   createdAt: 'created_at',
   updatedAt: 'updated_at',
 };

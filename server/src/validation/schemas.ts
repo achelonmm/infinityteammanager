@@ -11,6 +11,7 @@ export const createTournamentSchema = z.object({
 export const updateTournamentSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   currentRound: z.number().int().positive().optional(),
+  status: z.enum(['active', 'completed']).optional(),
 }).refine(data => Object.keys(data).length > 0, {
   message: 'At least one field must be provided',
 });

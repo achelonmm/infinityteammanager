@@ -2,8 +2,14 @@ export interface Tournament {
   id: string;
   name: string;
   current_round: number;
+  status: 'active' | 'completed';
   created_at?: string;
   updated_at?: string;
+}
+
+export interface TournamentWithCounts extends Tournament {
+  team_count: number;
+  match_count: number;
 }
 
 export interface Team {
