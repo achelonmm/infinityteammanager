@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { TournamentProvider } from './contexts/TournamentContext';
 import { TournamentsProvider } from './contexts/TournamentsContext';
 import { AuthProvider } from './contexts/AuthContext';
@@ -25,11 +25,7 @@ function App() {
             <Navigation />
             <Routes>
               {/* Protected Admin Routes */}
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
+              <Route path="/" element={<Navigate to="/rankings" replace />} />
               <Route path="/tournaments" element={
                 <ProtectedRoute>
                   <Tournaments />
