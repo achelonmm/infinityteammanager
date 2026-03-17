@@ -14,7 +14,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   fallback
 }) => {
   const { checkAdminAccess } = useAuth();
-  const [showLogin, setShowLogin] = useState(!checkAdminAccess());
+  const [showLogin, setShowLogin] = useState(false);
 
   if (!checkAdminAccess()) {
     if (fallback) {
