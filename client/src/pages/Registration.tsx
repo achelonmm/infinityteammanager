@@ -93,7 +93,8 @@ const Registration: React.FC = () => {
           army: player.army,
           isCaptain: player.isCaptain,
           teamId: '',
-          isPainted: false
+          isPainted: false,
+          armyListLate: false
         }))
       };
 

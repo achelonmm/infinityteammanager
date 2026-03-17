@@ -12,6 +12,7 @@ import {
   Pencil,
   Crown,
   Palette,
+  Clock,
   Rocket,
   AlertCircle,
 } from 'lucide-react';
@@ -381,16 +382,24 @@ const TeamsPlayers: React.FC = () => {
                               )}
                             </td>
                             <td>
-                              {player.isPainted ? (
-                                <span className={styles.paintedBadge}>
-                                  <Palette size={14} />
-                                  Painted
-                                </span>
-                              ) : (
-                                <span className={styles.unpaintedText}>
-                                  Unpainted
-                                </span>
-                              )}
+                              <div className={styles.statusCell}>
+                                {player.isPainted ? (
+                                  <span className={styles.paintedBadge}>
+                                    <Palette size={14} />
+                                    Painted
+                                  </span>
+                                ) : (
+                                  <span className={styles.unpaintedText}>
+                                    Unpainted
+                                  </span>
+                                )}
+                                {player.armyListLate && (
+                                  <span className={styles.lateListBadge}>
+                                    <Clock size={14} />
+                                    Late List
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td>
                               <button

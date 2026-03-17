@@ -29,6 +29,7 @@ export interface Player {
   army: string;
   is_captain: number;
   is_painted: number;
+  army_list_late: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -60,6 +61,8 @@ export interface IndividualMatch {
   victory_points_against2: number;
   painted_bonus1: number;
   painted_bonus2: number;
+  late_list_penalty1: number;
+  late_list_penalty2: number;
   is_completed: number;
   created_at?: string;
   updated_at?: string;

@@ -66,21 +66,29 @@ export const calculateIndividualTournamentPoints = (
   return points;
 };
 
-// Calculate team tournament points (including painted bonus)
+// Calculate team tournament points (including painted bonus and late list penalty)
 export const calculateTeamTournamentPoints = (
   objectivePoints1: number,
   objectivePoints2: number,
   paintedBonus1: boolean,
   paintedBonus2: boolean,
+  lateListPenalty1: boolean,
+  lateListPenalty2: boolean,
   isPlayer1: boolean
 ): number => {
   // Start with individual points
   let points = calculateIndividualTournamentPoints(objectivePoints1, objectivePoints2, isPlayer1);
-  
+
   // Add painted army bonus
   const hasPaintedBonus = isPlayer1 ? paintedBonus1 : paintedBonus2;
   if (hasPaintedBonus) {
     points += 1;
+  }
+
+  // Apply late list penalty
+  const hasLateListPenalty = isPlayer1 ? lateListPenalty1 : lateListPenalty2;
+  if (hasLateListPenalty) {
+    points -= 1;
   }
 
   return points;
@@ -230,19 +238,23 @@ export const calculateTeamRankings = (teams: Team[], allMatches: TeamMatch[]): T
 
         teamMatch.individualMatches.forEach((match) => {
           if (match.isCompleted) {
-            // Calculate team tournament points (including painted bonus)
+            // Calculate team tournament points (including painted bonus and late list penalty)
             const player1TeamPoints = calculateTeamTournamentPoints(
-              match.objectivePoints1, 
-              match.objectivePoints2, 
+              match.objectivePoints1,
+              match.objectivePoints2,
               match.paintedBonus1,
               match.paintedBonus2,
+              match.lateListPenalty1,
+              match.lateListPenalty2,
               true
             );
             const player2TeamPoints = calculateTeamTournamentPoints(
-              match.objectivePoints1, 
-              match.objectivePoints2, 
+              match.objectivePoints1,
+              match.objectivePoints2,
               match.paintedBonus1,
               match.paintedBonus2,
+              match.lateListPenalty1,
+              match.lateListPenalty2,
               false
             );
 

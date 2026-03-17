@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pencil, Tag, Hash, Swords, Crown, Palette, AlertCircle, X, Save } from 'lucide-react';
+import { Pencil, Tag, Hash, Swords, Crown, Palette, Clock, AlertCircle, X, Save } from 'lucide-react';
 import { Player, Team } from '../types';
 import Modal from './Modal';
 import clsx from 'clsx';
@@ -25,6 +25,7 @@ const EditPlayerForm: React.FC<EditPlayerFormProps> = ({
   const [army, setArmy] = useState(player.army);
   const [isCaptain, setIsCaptain] = useState(player.isCaptain);
   const [isPainted, setIsPainted] = useState(player.isPainted);
+  const [armyListLate, setArmyListLate] = useState(player.armyListLate ?? false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -74,7 +75,8 @@ const EditPlayerForm: React.FC<EditPlayerFormProps> = ({
         itsPin: itsPin.trim(),
         army,
         isCaptain,
-        isPainted
+        isPainted,
+        armyListLate
       });
     } catch (err) {
       console.error('Error updating player:', err);
@@ -196,6 +198,18 @@ const EditPlayerForm: React.FC<EditPlayerFormProps> = ({
             />
             <Palette size={20} className={styles.toggleIcon} />
             <span className={styles.toggleLabel}>Painted Army</span>
+          </label>
+
+          <label className={clsx(styles.toggleCard, armyListLate && styles.toggleCardLate)}>
+            <input
+              type="checkbox"
+              checked={armyListLate}
+              onChange={(e) => setArmyListLate(e.target.checked)}
+              disabled={isSubmitting}
+              className={styles.checkbox}
+            />
+            <Clock size={20} className={styles.toggleIcon} />
+            <span className={styles.toggleLabel}>Army list late submission</span>
           </label>
         </div>
 

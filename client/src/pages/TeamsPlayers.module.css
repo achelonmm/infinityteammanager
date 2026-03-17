@@ -325,6 +325,25 @@
   font-size: var(--font-size-sm);
 }
 
+.statusCell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.lateListBadge {
+  background: linear-gradient(135deg, var(--color-error-dark), var(--color-error));
+  color: var(--color-neutral-50);
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  width: fit-content;
+}
+
 /* ---- Loading state ---- */
 
 .loadingCard {

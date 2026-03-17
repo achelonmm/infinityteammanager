@@ -20,6 +20,7 @@ const playerFieldMap: Record<string, string> = {
   itsPin: 'its_pin',
   isCaptain: 'is_captain',
   isPainted: 'is_painted',
+  armyListLate: 'army_list_late',
   createdAt: 'created_at',
   updatedAt: 'updated_at',
 };
@@ -48,6 +49,8 @@ const individualMatchFieldMap: Record<string, string> = {
   victoryPointsAgainst2: 'victory_points_against2',
   paintedBonus1: 'painted_bonus1',
   paintedBonus2: 'painted_bonus2',
+  lateListPenalty1: 'late_list_penalty1',
+  lateListPenalty2: 'late_list_penalty2',
   isCompleted: 'is_completed',
   createdAt: 'created_at',
   updatedAt: 'updated_at',
@@ -64,8 +67,9 @@ function invertMap(map: Record<string, string>): Record<string, string> {
 
 // Boolean fields that need conversion from SQLite integers
 const booleanSnakeFields = new Set([
-  'is_captain', 'is_painted', 'is_completed',
+  'is_captain', 'is_painted', 'army_list_late', 'is_completed',
   'painted_bonus1', 'painted_bonus2',
+  'late_list_penalty1', 'late_list_penalty2',
 ]);
 
 // Convert DB row (snake_case) to API response (camelCase) with boolean conversion

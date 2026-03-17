@@ -54,6 +54,7 @@ export const updatePlayerSchema = z.object({
   army: z.string().min(1).max(100).optional(),
   isCaptain: z.boolean().optional(),
   isPainted: z.boolean().optional(),
+  armyListLate: z.boolean().optional(),
 }).refine(data => Object.keys(data).length > 0, {
   message: 'At least one field must be provided',
 });
@@ -92,6 +93,8 @@ export const updateIndividualMatchSchema = z.object({
   victoryPointsAgainst2: z.number().int().min(0).max(300).optional(),
   paintedBonus1: z.boolean().optional(),
   paintedBonus2: z.boolean().optional(),
+  lateListPenalty1: z.boolean().optional(),
+  lateListPenalty2: z.boolean().optional(),
   isCompleted: z.boolean().optional(),
 });
 

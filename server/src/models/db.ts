@@ -38,6 +38,7 @@ db.exec(`
     army TEXT NOT NULL,
     is_captain BOOLEAN DEFAULT 0,
     is_painted BOOLEAN DEFAULT 0,
+    army_list_late BOOLEAN DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
@@ -73,6 +74,8 @@ db.exec(`
     victory_points_against2 INTEGER DEFAULT 0,
     painted_bonus1 BOOLEAN DEFAULT 0,
     painted_bonus2 BOOLEAN DEFAULT 0,
+    late_list_penalty1 BOOLEAN DEFAULT 0,
+    late_list_penalty2 BOOLEAN DEFAULT 0,
     is_completed BOOLEAN DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -93,6 +96,25 @@ db.exec(`
 // Migration: add status column to tournaments (safe to re-run)
 try {
   db.exec(`ALTER TABLE tournaments ADD COLUMN status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'completed'))`);
+} catch {
+  // Column already exists — ignore
+}
+
+// Migration: add army_list_late flag to players
+try {
+  db.exec(`ALTER TABLE players ADD COLUMN army_list_late BOOLEAN DEFAULT 0`);
+} catch {
+  // Column already exists — ignore
+}
+
+// Migration: add late list penalty flags to individual_matches
+try {
+  db.exec(`ALTER TABLE individual_matches ADD COLUMN late_list_penalty1 BOOLEAN DEFAULT 0`);
+} catch {
+  // Column already exists — ignore
+}
+try {
+  db.exec(`ALTER TABLE individual_matches ADD COLUMN late_list_penalty2 BOOLEAN DEFAULT 0`);
 } catch {
   // Column already exists — ignore
 }

@@ -2,7 +2,7 @@ import db from './db';
 import { Player } from './types';
 import { buildUpdate } from './helpers';
 
-const PLAYER_COLUMNS = new Set(['team_id', 'nickname', 'its_pin', 'army', 'is_captain', 'is_painted']);
+const PLAYER_COLUMNS = new Set(['team_id', 'nickname', 'its_pin', 'army', 'is_captain', 'is_painted', 'army_list_late']);
 
 export const PlayerModel = {
   create: (player: Omit<Player, 'created_at' | 'updated_at'>): Player => {

@@ -254,6 +254,40 @@
   margin-top: var(--spacing-1);
 }
 
+/* Late list penalty toggles */
+.lateToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  cursor: pointer;
+  padding: var(--spacing-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-overlay);
+  border: 2px solid var(--color-neutral-300);
+  transition: all var(--transition-fast);
+  color: var(--color-neutral-700);
+}
+
+.lateToggle:hover {
+  border-color: var(--color-neutral-400);
+}
+
+.lateToggleActive {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: var(--color-error);
+  color: var(--color-error-light);
+}
+
+.lateToggleIcon {
+  flex-shrink: 0;
+}
+
+.lateNote {
+  font-size: var(--font-size-xs);
+  opacity: 0.8;
+  margin-top: var(--spacing-1);
+}
+
 /* Actions */
 .actions {
   display: flex;

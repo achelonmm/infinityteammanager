@@ -8,7 +8,8 @@ const INDIVIDUAL_MATCH_COLUMNS = new Set([
   'objective_points1', 'objective_points2',
   'victory_points_for1', 'victory_points_against1',
   'victory_points_for2', 'victory_points_against2',
-  'painted_bonus1', 'painted_bonus2', 'is_completed'
+  'painted_bonus1', 'painted_bonus2',
+  'late_list_penalty1', 'late_list_penalty2', 'is_completed'
 ]);
 
 export const IndividualMatchModel = {
@@ -20,9 +21,11 @@ export const IndividualMatchModel = {
         objective_points1, objective_points2,
         victory_points_for1, victory_points_against1,
         victory_points_for2, victory_points_against2,
-        painted_bonus1, painted_bonus2, is_completed
+        painted_bonus1, painted_bonus2,
+        late_list_penalty1, late_list_penalty2,
+        is_completed
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     stmt.run(
       match.id,
@@ -39,6 +42,8 @@ export const IndividualMatchModel = {
       match.victory_points_against2,
       match.painted_bonus1 ? 1 : 0,
       match.painted_bonus2 ? 1 : 0,
+      match.late_list_penalty1 ? 1 : 0,
+      match.late_list_penalty2 ? 1 : 0,
       match.is_completed ? 1 : 0
     );
     const created = IndividualMatchModel.findById(match.id);

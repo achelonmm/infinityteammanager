@@ -57,6 +57,8 @@ export const matchService = {
           victory_points_against2: 0,
           painted_bonus1: 0,
           painted_bonus2: 0,
+          late_list_penalty1: 0,
+          late_list_penalty2: 0,
           is_completed: 0
         });
         return individualMatchMapper.toApi(created);

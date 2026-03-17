@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   ClipboardList, AlertCircle, FileText, Trophy, Zap, Target,
-  Gamepad2, Palette, Flag, Swords, X, Save
+  Gamepad2, Palette, Clock, Flag, Swords, X, Save
 } from 'lucide-react';
 import { Player, IndividualMatch } from '../types';
 import { calculateTeamTournamentPoints } from '../utils/rankingUtils';
@@ -31,6 +31,8 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
     victoryPointsFor2: individualMatch.victoryPointsFor2 || 0,
     paintedBonus1: individualMatch.paintedBonus1 || player1.isPainted,
     paintedBonus2: individualMatch.paintedBonus2 || player2.isPainted,
+    lateListPenalty1: individualMatch.lateListPenalty1 || player1.armyListLate,
+    lateListPenalty2: individualMatch.lateListPenalty2 || player2.armyListLate,
   });
 
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -38,11 +40,13 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
   const calculatedPoints = {
     points1: calculateTeamTournamentPoints(
       results.objectivePoints1, results.objectivePoints2,
-      results.paintedBonus1, results.paintedBonus2, true
+      results.paintedBonus1, results.paintedBonus2,
+      results.lateListPenalty1, results.lateListPenalty2, true
     ),
     points2: calculateTeamTournamentPoints(
       results.objectivePoints1, results.objectivePoints2,
-      results.paintedBonus1, results.paintedBonus2, false
+      results.paintedBonus1, results.paintedBonus2,
+      results.lateListPenalty1, results.lateListPenalty2, false
     ),
   };
 
@@ -51,8 +55,15 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
       ...prev,
       paintedBonus1: individualMatch.paintedBonus1 || player1.isPainted,
       paintedBonus2: individualMatch.paintedBonus2 || player2.isPainted,
+      lateListPenalty1: individualMatch.lateListPenalty1 || player1.armyListLate,
+      lateListPenalty2: individualMatch.lateListPenalty2 || player2.armyListLate,
     }));
-  }, [player1.isPainted, player2.isPainted, individualMatch.paintedBonus1, individualMatch.paintedBonus2]);
+  }, [
+    player1.isPainted, player2.isPainted,
+    player1.armyListLate, player2.armyListLate,
+    individualMatch.paintedBonus1, individualMatch.paintedBonus2,
+    individualMatch.lateListPenalty1, individualMatch.lateListPenalty2,
+  ]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -161,12 +172,13 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
           </div>
           <div>
             <strong className={styles.scoringCategory}>
-              <Zap size={14} /> Bonus Points:
+              <Zap size={14} /> Bonus / Penalty Points:
             </strong>
             <ul className={styles.scoringList}>
               <li><strong>Offensive:</strong> +1 pt (5+ Obj. Points)</li>
               <li><strong>Defensive:</strong> +1 pt (lose by &le;2 Obj.)</li>
               <li><strong>Painted Army:</strong> +1 pt</li>
+              <li><strong>Late Army List:</strong> -1 pt</li>
             </ul>
           </div>
           <div>
@@ -365,6 +377,53 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
                 {player2.isPainted && (
                   <div className={styles.paintedNote}>
                     Army marked as painted in profile
+                  </div>
+                )}
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {/* Late Army List Penalty */}
+        <div className={styles.section}>
+          <h5 className={styles.sectionTitle}>
+            <Clock size={18} className={styles.sectionIcon} />
+            Late Army List Penalty (-1 Tournament Point)
+          </h5>
+          <div className={styles.inputRow}>
+            <label className={clsx(styles.lateToggle, results.lateListPenalty1 && styles.lateToggleActive)}>
+              <input
+                type="checkbox"
+                checked={results.lateListPenalty1}
+                onChange={(e) => handleChange('lateListPenalty1', e.target.checked)}
+                disabled={isSubmitting}
+                className={styles.checkbox}
+              />
+              <Clock size={20} className={styles.lateToggleIcon} />
+              <div>
+                <strong>{player1.nickname}</strong>
+                {player1.armyListLate && (
+                  <div className={styles.lateNote}>
+                    Army list marked as late in profile
+                  </div>
+                )}
+              </div>
+            </label>
+
+            <label className={clsx(styles.lateToggle, results.lateListPenalty2 && styles.lateToggleActive)}>
+              <input
+                type="checkbox"
+                checked={results.lateListPenalty2}
+                onChange={(e) => handleChange('lateListPenalty2', e.target.checked)}
+                disabled={isSubmitting}
+                className={styles.checkbox}
+              />
+              <Clock size={20} className={styles.lateToggleIcon} />
+              <div>
+                <strong>{player2.nickname}</strong>
+                {player2.armyListLate && (
+                  <div className={styles.lateNote}>
+                    Army list marked as late in profile
                   </div>
                 )}
               </div>

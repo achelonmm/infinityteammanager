@@ -47,6 +47,8 @@ function simulateMatchResults(
       victoryPointsAgainst2: vp1,
       paintedBonus1: false,
       paintedBonus2: false,
+      lateListPenalty1: false,
+      lateListPenalty2: false,
       isCompleted: true,
     };
 

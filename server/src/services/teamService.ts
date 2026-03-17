@@ -10,6 +10,7 @@ interface PlayerInput {
   army: string;
   isCaptain?: boolean;
   isPainted?: boolean;
+  armyListLate?: boolean;
 }
 
 interface CreateTeamInput {
@@ -22,7 +23,7 @@ interface UpdateTeamInput {
   playersData?: PlayerInput[];
 }
 
-function mapPlayer(player: { id: string; team_id: string; nickname: string; its_pin: string; army: string; is_captain: number; is_painted: number; created_at?: string; updated_at?: string }) {
+function mapPlayer(player: { id: string; team_id: string; nickname: string; its_pin: string; army: string; is_captain: number; is_painted: number; army_list_late: number; created_at?: string; updated_at?: string }) {
   return playerMapper.toApi(player);
 }
 
@@ -59,7 +60,8 @@ export const teamService = {
           its_pin: player.itsPin,
           army: player.army,
           is_captain: player.isCaptain ? 1 : 0,
-          is_painted: player.isPainted ? 1 : 0
+          is_painted: player.isPainted ? 1 : 0,
+          army_list_late: player.armyListLate ? 1 : 0
         });
         return mapPlayer(created);
       });
@@ -94,7 +96,8 @@ export const teamService = {
             its_pin: player.itsPin,
             army: player.army,
             is_captain: player.isCaptain ? 1 : 0,
-            is_painted: player.isPainted ? 1 : 0
+            is_painted: player.isPainted ? 1 : 0,
+            army_list_late: player.armyListLate ? 1 : 0
           });
           updatedPlayers.push(mapPlayer(created));
         }

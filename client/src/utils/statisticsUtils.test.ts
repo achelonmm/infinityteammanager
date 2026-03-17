@@ -14,6 +14,7 @@ const makePlayer = (overrides: Partial<Player> = {}): Player => ({
   army: 'Army A',
   isCaptain: false,
   isPainted: false,
+  armyListLate: false,
   ...overrides
 });
 
@@ -32,6 +33,8 @@ const makeIndividualMatch = (overrides: Partial<IndividualMatch> = {}): Individu
   victoryPointsAgainst2: 150,
   paintedBonus1: false,
   paintedBonus2: false,
+  lateListPenalty1: false,
+  lateListPenalty2: false,
   isCompleted: true,
   ...overrides
 });

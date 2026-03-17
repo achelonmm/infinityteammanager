@@ -9,6 +9,7 @@ const makePlayer = (overrides: Partial<Player> = {}): Player => ({
   army: 'Army A',
   isCaptain: false,
   isPainted: false,
+  armyListLate: false,
   ...overrides
 });
 

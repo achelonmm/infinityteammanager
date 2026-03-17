@@ -38,6 +38,7 @@ export interface Player {
   army: string;
   isCaptain: boolean;
   isPainted: boolean;
+  armyListLate: boolean;
   created_at?: string;
   updated_at?: string;
 }
@@ -70,6 +71,8 @@ export interface IndividualMatch {
   victoryPointsAgainst2: number;
   paintedBonus1: boolean;
   paintedBonus2: boolean;
+  lateListPenalty1: boolean;
+  lateListPenalty2: boolean;
   isCompleted: boolean;
   created_at?: string;
   updated_at?: string;

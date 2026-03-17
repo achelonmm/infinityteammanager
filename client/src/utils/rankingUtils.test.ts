@@ -19,6 +19,7 @@ const makePlayer = (overrides: Partial<Player> = {}): Player => ({
   army: 'Army A',
   isCaptain: false,
   isPainted: false,
+  armyListLate: false,
   ...overrides
 });
 
@@ -46,6 +47,8 @@ const makeIndividualMatch = (overrides: Partial<IndividualMatch> = {}): Individu
   victoryPointsAgainst2: 0,
   paintedBonus1: false,
   paintedBonus2: false,
+  lateListPenalty1: false,
+  lateListPenalty2: false,
   isCompleted: true,
   ...overrides
 });
@@ -120,17 +123,37 @@ describe('calculateIndividualTournamentPoints', () => {
 describe('calculateTeamTournamentPoints', () => {
   it('adds painted bonus on top of individual points', () => {
     // Win with 7 obj: 4 (win) + 1 (offensive, 7 >= 5) + 1 (painted) = 6
-    expect(calculateTeamTournamentPoints(7, 3, true, false, true)).toBe(6);
+    expect(calculateTeamTournamentPoints(7, 3, true, false, false, false, true)).toBe(6);
   });
 
   it('does not add painted bonus if false', () => {
     // Win with 7 obj: 4 (win) + 1 (offensive) = 5, no painted
-    expect(calculateTeamTournamentPoints(7, 3, false, false, true)).toBe(5);
+    expect(calculateTeamTournamentPoints(7, 3, false, false, false, false, true)).toBe(5);
   });
 
   it('adds painted bonus for player 2', () => {
     // Loss with 3 obj (diff=4 > 2, no defensive): 0 + 1 (painted) = 1
-    expect(calculateTeamTournamentPoints(7, 3, false, true, false)).toBe(1);
+    expect(calculateTeamTournamentPoints(7, 3, false, true, false, false, false)).toBe(1);
+  });
+
+  it('applies late list penalty for player 1', () => {
+    // Win with 7 obj: 4 (win) + 1 (offensive) - 1 (penalty) = 5
+    expect(calculateTeamTournamentPoints(7, 3, false, false, true, false, true)).toBe(4);
+  });
+
+  it('applies late list penalty for player 2', () => {
+    // Loss with 3 obj (diff=4, no defensive): 0 - 1 (penalty) = -1
+    expect(calculateTeamTournamentPoints(7, 3, false, false, false, true, false)).toBe(-1);
+  });
+
+  it('nets zero when painted and late list both active for same player', () => {
+    // Win with 7 obj: 4 + 1 (offensive) + 1 (painted) - 1 (penalty) = 5
+    expect(calculateTeamTournamentPoints(7, 3, true, false, true, false, true)).toBe(5);
+  });
+
+  it('allows team TP to go negative (no floor)', () => {
+    // Defeat (0 base TP) with late list penalty: 0 - 1 = -1
+    expect(calculateTeamTournamentPoints(1, 5, false, false, true, false, true)).toBe(-1);
   });
 });
 
