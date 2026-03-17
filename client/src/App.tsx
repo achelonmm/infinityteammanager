@@ -5,7 +5,6 @@ import { TournamentsProvider } from './contexts/TournamentsContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import Navigation from './components/Navigation';
-import Dashboard from './pages/Dashboard';
 import Registration from './pages/Registration';
 import TeamsPlayers from './pages/TeamsPlayers';
 import Pairings from './pages/Pairings';
