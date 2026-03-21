@@ -13,6 +13,7 @@ import {
   Progress,
   SimpleGrid,
 } from '@mantine/core';
+import { DonutChart } from '@mantine/charts';
 import { useTournament } from '../contexts/TournamentContext';
 import { calculateTournamentStats } from '../utils/statisticsUtils';
 
@@ -28,6 +29,11 @@ const ARMY_COLORS = [
   'yellow',
   'lime',
   'green',
+];
+
+const ARMY_HEX_COLORS = [
+  '#06b6d4', '#22c55e', '#f59e0b', '#ef4444', '#6366f1',
+  '#0891b2', '#f97316', '#a855f7', '#ec4899', '#84cc16', '#14b8a6',
 ];
 
 const Statistics: React.FC = () => {
@@ -137,28 +143,66 @@ const Statistics: React.FC = () => {
         </Stack>
       </Paper>
 
-      {/* Army Distribution Chart */}
+      {/* Army Distribution — 3D Donut */}
       <Paper p="lg" radius="md" withBorder>
         <Title order={4} mb="md">Army Distribution</Title>
         {stats.armyDistribution.length > 0 ? (
-          <Stack gap="sm">
-            {stats.armyDistribution.map((army, index) => (
-              <div key={army.army}>
-                <Group justify="space-between" mb={4}>
-                  <Text size="sm" fw={500}>{army.army}</Text>
-                  <Text size="xs" c="dimmed">
-                    {army.count} players ({army.percentage.toFixed(1)}%)
+          <Group align="flex-start" gap="xl" wrap="wrap">
+            {/* 3D-tilted donut chart */}
+            <Stack align="center" gap={4} style={{ flexShrink: 0 }}>
+              <div style={{ perspective: '700px', perspectiveOrigin: '50% 0%' }}>
+                <div
+                  style={{
+                    transform: 'rotateX(28deg)',
+                    transformOrigin: 'center bottom',
+                    filter: 'drop-shadow(0 22px 30px rgba(0,0,0,0.6))',
+                  }}
+                >
+                  <DonutChart
+                    data={stats.armyDistribution.map((army, index) => ({
+                      name: army.army,
+                      value: army.count,
+                      color: ARMY_HEX_COLORS[index % ARMY_HEX_COLORS.length],
+                    }))}
+                    size={260}
+                    thickness={42}
+                    paddingAngle={2}
+                    withTooltip
+                    tooltipDataSource="segment"
+                    chartLabel={String(stats.totalPlayers)}
+                  />
+                </div>
+              </div>
+              <Text size="xs" c="dimmed" style={{ letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                total players
+              </Text>
+            </Stack>
+
+            {/* Colour-coded legend */}
+            <Stack gap={8} style={{ flex: 1, minWidth: 200, justifyContent: 'center' }}>
+              {stats.armyDistribution.map((army, index) => (
+                <Group key={army.army} gap="sm" wrap="nowrap">
+                  <div
+                    style={{
+                      width: 11,
+                      height: 11,
+                      borderRadius: '50%',
+                      background: ARMY_HEX_COLORS[index % ARMY_HEX_COLORS.length],
+                      flexShrink: 0,
+                      boxShadow: `0 0 6px ${ARMY_HEX_COLORS[index % ARMY_HEX_COLORS.length]}88`,
+                    }}
+                  />
+                  <Text size="sm" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {army.army}
+                  </Text>
+                  <Text size="sm" fw={600} style={{ flexShrink: 0 }}>{army.count}</Text>
+                  <Text size="xs" c="dimmed" style={{ flexShrink: 0, minWidth: 48, textAlign: 'right' }}>
+                    {army.percentage.toFixed(1)}%
                   </Text>
                 </Group>
-                <Progress
-                  value={Math.min(army.percentage, 100)}
-                  color={ARMY_COLORS[index % ARMY_COLORS.length]}
-                  size="md"
-                  radius="md"
-                />
-              </div>
-            ))}
-          </Stack>
+              ))}
+            </Stack>
+          </Group>
         ) : (
           <Text c="dimmed">No army data available yet.</Text>
         )}
