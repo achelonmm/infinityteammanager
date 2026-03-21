@@ -17,20 +17,6 @@ import { DonutChart } from '@mantine/charts';
 import { useTournament } from '../contexts/TournamentContext';
 import { calculateTournamentStats } from '../utils/statisticsUtils';
 
-const ARMY_COLORS = [
-  'cyan',
-  'teal',
-  'blue',
-  'violet',
-  'grape',
-  'pink',
-  'red',
-  'orange',
-  'yellow',
-  'lime',
-  'green',
-];
-
 const ARMY_HEX_COLORS = [
   '#06b6d4', '#22c55e', '#f59e0b', '#ef4444', '#6366f1',
   '#0891b2', '#f97316', '#a855f7', '#ec4899', '#84cc16', '#14b8a6',
