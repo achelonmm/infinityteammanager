@@ -29,7 +29,6 @@ import {
   Divider,
   SimpleGrid,
   ThemeIcon,
-  Loader,
 } from '@mantine/core';
 import { useTournament } from '../contexts/TournamentContext';
 import { useToast } from '../contexts/ToastContext';

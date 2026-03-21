@@ -10,8 +10,6 @@ import {
   User,
   LogOut,
   KeyRound,
-  Menu,
-  X,
   ListTodo,
 } from 'lucide-react';
 import {

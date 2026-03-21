@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Lock, KeyRound, BarChart3 } from 'lucide-react';
-import { Container, Paper, Stack, Title, Text, Button, Group, Center, ThemeIcon } from '@mantine/core';
+import { Container, Paper, Stack, Title, Text, Button, Group, ThemeIcon } from '@mantine/core';
 import { useAuth } from '../contexts/AuthContext';
 import LoginForm from './LoginForm';
 
