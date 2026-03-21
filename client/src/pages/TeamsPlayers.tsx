@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import {
   Container, Paper, Title, Group, Stack, Text, Button, Alert,
-  Badge, Table, Tabs, TextInput, Select, ActionIcon, Avatar, ThemeIcon,
+  Badge, Table, Tabs, TextInput, Select, Avatar, ThemeIcon,
 } from '@mantine/core';
 import { useTournament } from '../contexts/TournamentContext';
 import { useToast } from '../contexts/ToastContext';

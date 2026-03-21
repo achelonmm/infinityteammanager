@@ -27,7 +27,6 @@ import {
   TextInput,
   Box,
   ThemeIcon,
-  Loader,
 } from '@mantine/core';
 import { useTournaments } from '../contexts/TournamentsContext';
 import { useTournamentData } from '../contexts/TournamentDataContext';

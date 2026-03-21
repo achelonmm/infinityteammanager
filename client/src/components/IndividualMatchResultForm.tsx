@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import {
   NumberInput, Checkbox, Button, Group, Stack, Text, Paper,
-  Alert, SimpleGrid, Badge, List, ThemeIcon, Box,
+  Alert, SimpleGrid, Badge, List, Box,
 } from '@mantine/core';
 import { Player, IndividualMatch } from '../types';
 import { calculateTeamTournamentPoints } from '../utils/rankingUtils';
