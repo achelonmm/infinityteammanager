@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Pencil, AlertCircle, X, Save } from 'lucide-react';
+import { Pencil, Save } from 'lucide-react';
+import { Select, Button, Group, Stack, Text, Paper, Badge, Alert } from '@mantine/core';
 import { Team, TeamMatch } from '../types';
 import Modal from './Modal';
-import styles from './PairingEditor.module.css';
 
 interface PairingEditorProps {
   teams: Team[];
@@ -75,84 +75,57 @@ const PairingEditor: React.FC<PairingEditorProps> = ({
       titleIcon={<Pencil size={20} />}
       size="lg"
     >
-      <div className={styles.pairingsList}>
+      <Stack gap="md">
         {editablePairings.map((pairing, index) => (
-          <div key={pairing.id} className={styles.matchCard}>
-            <h5 className={styles.matchTitle}>Match {index + 1}</h5>
-
-            <div className={styles.matchGrid}>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Team 1:</label>
-                <select
-                  value={pairing.team1Id}
-                  onChange={(e) => handlePairingChange(index, 'team1Id', e.target.value)}
-                  className={styles.select}
-                >
-                  <option value="">Select Team</option>
-                  {getAvailableTeams(index, 'team1Id').map(team => (
-                    <option key={team.id} value={team.id}>{team.name}</option>
-                  ))}
-                  {pairing.team1Id && !getAvailableTeams(index, 'team1Id').some(t => t.id === pairing.team1Id) && (
-                    <option value={pairing.team1Id}>
-                      {teams.find(t => t.id === pairing.team1Id)?.name} (Conflict)
-                    </option>
-                  )}
-                </select>
-              </div>
-
-              <div className={styles.vsBadge}>VS</div>
-
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Team 2:</label>
-                <select
-                  value={pairing.team2Id}
-                  onChange={(e) => handlePairingChange(index, 'team2Id', e.target.value)}
-                  className={styles.select}
-                >
-                  <option value="">Select Team</option>
-                  {getAvailableTeams(index, 'team2Id').map(team => (
-                    <option key={team.id} value={team.id}>{team.name}</option>
-                  ))}
-                  {pairing.team2Id && !getAvailableTeams(index, 'team2Id').some(t => t.id === pairing.team2Id) && (
-                    <option value={pairing.team2Id}>
-                      {teams.find(t => t.id === pairing.team2Id)?.name} (Conflict)
-                    </option>
-                  )}
-                </select>
-              </div>
-            </div>
-          </div>
+          <Paper key={pairing.id} p="md" radius="md" withBorder>
+            <Text fw={600} size="sm" mb="sm">Match {index + 1}</Text>
+            <Group grow align="flex-end">
+              <Select
+                label="Team 1"
+                placeholder="Select Team"
+                data={[
+                  ...getAvailableTeams(index, 'team1Id').map(t => ({ value: t.id, label: t.name })),
+                  ...(pairing.team1Id && !getAvailableTeams(index, 'team1Id').some(t => t.id === pairing.team1Id)
+                    ? [{ value: pairing.team1Id, label: `${teams.find(t => t.id === pairing.team1Id)?.name} (Conflict)` }]
+                    : []),
+                ]}
+                value={pairing.team1Id || null}
+                onChange={(v) => handlePairingChange(index, 'team1Id', v || '')}
+              />
+              <Badge variant="light" color="cyan" size="lg" style={{ alignSelf: 'center', flexGrow: 0 }}>
+                VS
+              </Badge>
+              <Select
+                label="Team 2"
+                placeholder="Select Team"
+                data={[
+                  ...getAvailableTeams(index, 'team2Id').map(t => ({ value: t.id, label: t.name })),
+                  ...(pairing.team2Id && !getAvailableTeams(index, 'team2Id').some(t => t.id === pairing.team2Id)
+                    ? [{ value: pairing.team2Id, label: `${teams.find(t => t.id === pairing.team2Id)?.name} (Conflict)` }]
+                    : []),
+                ]}
+                value={pairing.team2Id || null}
+                onChange={(v) => handlePairingChange(index, 'team2Id', v || '')}
+              />
+            </Group>
+          </Paper>
         ))}
-      </div>
 
-      {(!isValidPairing() || error) && (
-        <div className={styles.warningBanner}>
-          <AlertCircle size={16} />
-          <span>
+        {(!isValidPairing() || error) && (
+          <Alert color="yellow" variant="light">
             {error || 'Please ensure all pairings are complete and no team appears in multiple matches.'}
-          </span>
-        </div>
-      )}
+          </Alert>
+        )}
 
-      <div className={styles.actions}>
-        <button
-          type="button"
-          onClick={onCancel}
-          className={styles.cancelButton}
-        >
-          <X size={16} />
-          Cancel
-        </button>
-        <button
-          type="button"
-          onClick={handleSave}
-          className={styles.submitButton}
-          disabled={!isValidPairing()}
-        >
-          <Save size={16} />
-          Save Pairings
-        </button>
-      </div>
+        <Group justify="flex-end" gap="sm">
+          <Button variant="default" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={!isValidPairing()} leftSection={<Save size={16} />}>
+            Save Pairings
+          </Button>
+        </Group>
+      </Stack>
     </Modal>
   );
 };

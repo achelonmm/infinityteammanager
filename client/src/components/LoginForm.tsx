@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Shield, KeyRound, LogIn, AlertCircle, X } from 'lucide-react';
+import { Shield, LogIn } from 'lucide-react';
+import { PasswordInput, Button, Group, Stack, Text, Alert } from '@mantine/core';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import Modal from './Modal';
-import styles from './LoginForm.module.css';
 
 interface LoginFormProps {
   onClose?: () => void;
@@ -58,69 +58,50 @@ const LoginForm: React.FC<LoginFormProps> = ({ onClose }) => {
       titleIcon={<Shield size={20} />}
       size="sm"
     >
-      <div className={styles.description}>
-        Please enter the admin password to access tournament management features.
-      </div>
+      <Stack gap="md">
+        <Text size="sm" c="dimmed">
+          Please enter the admin password to access tournament management features.
+        </Text>
 
-      {error && (
-        <div className={styles.errorBanner}>
-          <AlertCircle size={16} />
-          <span><strong>Error:</strong> {error}</span>
-        </div>
-      )}
+        {error && (
+          <Alert color="red" variant="light" title="Error">
+            {error}
+          </Alert>
+        )}
 
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.fieldGroup}>
-          <label className={styles.fieldLabel}>
-            <KeyRound size={16} className={styles.fieldLabelIcon} />
-            Admin Password:
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={styles.passwordInput}
-            placeholder="Enter admin password"
-            disabled={isSubmitting}
-            autoFocus
-          />
-        </div>
-
-        <div className={styles.actions}>
-          {onClose && (
-            <button
-              type="button"
-              onClick={onClose}
-              className={styles.cancelButton}
+        <form onSubmit={handleSubmit}>
+          <Stack gap="md">
+            <PasswordInput
+              label="Admin Password"
+              placeholder="Enter admin password"
+              value={password}
+              onChange={(e) => setPassword(e.currentTarget.value)}
               disabled={isSubmitting}
-            >
-              <X size={16} />
-              Cancel
-            </button>
-          )}
-          <button
-            type="submit"
-            className={styles.submitButton}
-            disabled={isSubmitting || !password.trim()}
-          >
-            {isSubmitting ? (
-              <>
-                <div className={styles.spinner} />
-                Verifying...
-              </>
-            ) : (
-              <>
-                <LogIn size={16} />
-                Login
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+              autoFocus
+            />
 
-      <div className={styles.note}>
-        <strong>Note:</strong> Rankings and Statistics are publicly accessible without login.
-      </div>
+            <Group justify="flex-end" gap="sm">
+              {onClose && (
+                <Button variant="default" onClick={onClose} disabled={isSubmitting}>
+                  Cancel
+                </Button>
+              )}
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                disabled={!password.trim()}
+                leftSection={<LogIn size={16} />}
+              >
+                Login
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+
+        <Text size="xs" c="dimmed">
+          <strong>Note:</strong> Rankings and Statistics are publicly accessible without login.
+        </Text>
+      </Stack>
     </Modal>
   );
 };

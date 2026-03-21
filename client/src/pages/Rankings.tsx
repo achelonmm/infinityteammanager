@@ -9,7 +9,18 @@ import {
   Medal,
   AlertCircle,
 } from 'lucide-react';
-import clsx from 'clsx';
+import {
+  Container,
+  Paper,
+  Table,
+  Badge,
+  Text,
+  Title,
+  Group,
+  Stack,
+  Button,
+  Alert,
+} from '@mantine/core';
 import { useTournament } from '../contexts/TournamentContext';
 import {
   calculatePlayerRankings,
@@ -21,7 +32,6 @@ import { Team, Player } from '../types';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import MatchHistoryModal from '../components/MatchHistoryModal';
 import type { MatchHistoryEntry } from '../components/MatchHistoryModal';
-import styles from './Rankings.module.css';
 
 const Rankings: React.FC = () => {
   const { getTeams, tournament, loading, error } = useTournament();
@@ -35,26 +45,28 @@ const Rankings: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="container">
-        <h2 className={styles.loadingTitle}>Tournament Rankings</h2>
-        <div className="card">
+      <Container size="xl" py="md">
+        <Title order={2} mb="lg">Tournament Rankings</Title>
+        <Paper p="lg" radius="md" withBorder>
           <LoadingSkeleton variant="table-rows" count={5} columns={13} />
-        </div>
-      </div>
+        </Paper>
+      </Container>
     );
   }
 
   if (error) {
     return (
-      <div className="container">
-        <h2 className={styles.loadingTitle}>Tournament Rankings</h2>
-        <div className="alert alert-error">
-          <span className={styles.errorIcon}>
-            <AlertCircle size={18} />
-          </span>
-          <strong>Error:</strong> {error}
-        </div>
-      </div>
+      <Container size="xl" py="md">
+        <Title order={2} mb="lg">Tournament Rankings</Title>
+        <Alert
+          color="red"
+          variant="light"
+          icon={<AlertCircle size={18} />}
+          title="Error"
+        >
+          {error}
+        </Alert>
+      </Container>
     );
   }
 
@@ -197,308 +209,272 @@ const Rankings: React.FC = () => {
   const renderRankBadge = (position: number) => {
     if (position === 1) {
       return (
-        <span className={clsx(styles.rankBadge, styles.rankGold)}>
+        <Badge color="#f59e0b" variant="filled" size="lg" circle>
           <Medal size={16} />
-        </span>
+        </Badge>
       );
     }
     if (position === 2) {
       return (
-        <span className={clsx(styles.rankBadge, styles.rankSilver)}>
+        <Badge color="#94a3b8" variant="filled" size="lg" circle>
           <Medal size={16} />
-        </span>
+        </Badge>
       );
     }
     if (position === 3) {
       return (
-        <span className={clsx(styles.rankBadge, styles.rankBronze)}>
+        <Badge color="#b45309" variant="filled" size="lg" circle>
           <Medal size={16} />
-        </span>
+        </Badge>
       );
     }
     return (
-      <span className={clsx(styles.rankBadge, styles.rankDefault)}>
+      <Badge variant="default" size="lg" circle>
         {position}
-      </span>
+      </Badge>
     );
   };
 
   const renderDiff = (value: number) => (
-    <span className={value >= 0 ? styles.pointsPositive : styles.pointsNegative}>
+    <Text span c={value >= 0 ? 'teal' : 'red'} size="sm">
       {value >= 0 ? '+' : ''}
       {value}
-    </span>
+    </Text>
+  );
+
+  const renderWDL = (wins: number, draws: number, losses: number) => (
+    <Group gap={4} wrap="nowrap">
+      <Text span c="teal" fw={700} size="sm">{wins}</Text>
+      <Text span c="dimmed" size="sm">-</Text>
+      <Text span c="yellow" fw={700} size="sm">{draws}</Text>
+      <Text span c="dimmed" size="sm">-</Text>
+      <Text span c="red" fw={700} size="sm">{losses}</Text>
+    </Group>
   );
 
   return (
-    <div className={styles.page}>
-      <h2 className={styles.pageTitle}>
-        <span className={styles.pageTitleIcon}>
-          <Trophy size={28} />
-        </span>
-        <span className={styles.pageTitleText}>Tournament Rankings</span>
-      </h2>
+    <Container size="xl" py="md">
+      <Group gap="xs" mb="lg">
+        <Trophy size={28} />
+        <Title order={2}>Tournament Rankings</Title>
+      </Group>
 
       {teams.length === 0 ? (
-        <div className="card">
-          <div className={styles.emptyState}>
-            <div className={styles.emptyStateIcon}>
-              <Trophy size={48} />
-            </div>
-            <h3 className={styles.emptyStateTitle}>No Rankings Yet</h3>
-            <p className={styles.emptyStateMessage}>
+        <Paper p="lg" radius="md" withBorder>
+          <Stack align="center" py="xl">
+            <Trophy size={48} />
+            <Title order={3}>No Rankings Yet</Title>
+            <Text c="dimmed">
               Rankings will appear once teams are registered and matches are
               played.
-            </p>
-          </div>
-        </div>
+            </Text>
+          </Stack>
+        </Paper>
       ) : (
         <>
           {/* Team Rankings */}
-          <div className="card">
-            <h3 className={styles.sectionTitle}>
-              <span className={styles.sectionIcon}>
-                <Building2 size={22} />
-              </span>
-              Team Rankings
-              <span className={styles.sectionSubtitle}>
-                (includes painted army bonuses)
-              </span>
-            </h3>
+          <Paper p="lg" radius="md" withBorder mb="lg">
+            <Group gap="xs" mb="md">
+              <Building2 size={22} />
+              <Title order={3}>Team Rankings</Title>
+              <Text c="dimmed" size="sm">(includes painted army bonuses)</Text>
+            </Group>
 
             {teamRankings.length === 0 ? (
-              <p className={styles.emptyTableMessage}>
+              <Text c="dimmed">
                 No matches completed yet. Rankings will appear after matches are
                 played.
-              </p>
+              </Text>
             ) : (
-              <div className="table-responsive">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Rank</th>
-                      <th>Team</th>
-                      <th>Tournament Pts</th>
-                      <th>Obj Pts</th>
-                      <th>Obj Against</th>
-                      <th>Obj Diff</th>
-                      <th>Own VP</th>
-                      <th>Enemy VP</th>
-                      <th>VP Diff</th>
-                      <th>Matches</th>
-                      <th>W-D-L</th>
-                      <th>Paint Bonus</th>
-                      <th>History</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              <Table.ScrollContainer minWidth={800}>
+                <Table striped highlightOnHover>
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>Rank</Table.Th>
+                      <Table.Th>Team</Table.Th>
+                      <Table.Th>Tournament Pts</Table.Th>
+                      <Table.Th>Obj Pts</Table.Th>
+                      <Table.Th>Obj Against</Table.Th>
+                      <Table.Th>Obj Diff</Table.Th>
+                      <Table.Th>Own VP</Table.Th>
+                      <Table.Th>Enemy VP</Table.Th>
+                      <Table.Th>VP Diff</Table.Th>
+                      <Table.Th>Matches</Table.Th>
+                      <Table.Th>W-D-L</Table.Th>
+                      <Table.Th>Paint Bonus</Table.Th>
+                      <Table.Th>History</Table.Th>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
                     {teamRankings.map((ranking, index) => (
-                      <tr key={ranking.team.id}>
-                        <td>{renderRankBadge(index + 1)}</td>
-                        <td>
-                          <strong>{ranking.team.name}</strong>
-                        </td>
-                        <td>
-                          <strong className={styles.pointsValue}>
+                      <Table.Tr key={ranking.team.id}>
+                        <Table.Td>{renderRankBadge(index + 1)}</Table.Td>
+                        <Table.Td>
+                          <Text fw={700}>{ranking.team.name}</Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text fw={700} c="cyan">
                             {ranking.tournamentPoints}
-                          </strong>
-                        </td>
-                        <td>{ranking.objectivePoints}</td>
-                        <td>
-                          <span className={styles.pointsNegative}>
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>{ranking.objectivePoints}</Table.Td>
+                        <Table.Td>
+                          <Text span c="red">
                             {ranking.objectivePointsAgainst}
-                          </span>
-                        </td>
-                        <td>{renderDiff(ranking.objectivePointsDifference)}</td>
-                        <td>
-                          <span className={styles.pointsPositive}>
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>{renderDiff(ranking.objectivePointsDifference)}</Table.Td>
+                        <Table.Td>
+                          <Text span c="teal">
                             {ranking.victoryPointsFor}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={styles.pointsNegative}>
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text span c="red">
                             {ranking.victoryPointsAgainst}
-                          </span>
-                        </td>
-                        <td>{renderDiff(ranking.victoryPointsDifference)}</td>
-                        <td>{ranking.matchesPlayed}</td>
-                        <td>
-                          <span className={styles.wdlRecord}>
-                            <span className={styles.wdlWin}>
-                              {ranking.wins}
-                            </span>
-                            <span className={styles.wdlSep}>-</span>
-                            <span className={styles.wdlDraw}>
-                              {ranking.draws}
-                            </span>
-                            <span className={styles.wdlSep}>-</span>
-                            <span className={styles.wdlLoss}>
-                              {ranking.losses}
-                            </span>
-                          </span>
-                        </td>
-                        <td>
-                          <span
-                            className={clsx(
-                              styles.paintBadge,
-                              ranking.paintedBonus > 0
-                                ? styles.paintBadgeActive
-                                : styles.paintBadgeInactive
-                            )}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>{renderDiff(ranking.victoryPointsDifference)}</Table.Td>
+                        <Table.Td>{ranking.matchesPlayed}</Table.Td>
+                        <Table.Td>
+                          {renderWDL(ranking.wins, ranking.draws, ranking.losses)}
+                        </Table.Td>
+                        <Table.Td>
+                          <Badge
+                            color={ranking.paintedBonus > 0 ? 'teal' : 'gray'}
+                            variant="light"
                           >
                             +{ranking.paintedBonus}
-                          </span>
-                        </td>
-                        <td>
-                          <button
+                          </Badge>
+                        </Table.Td>
+                        <Table.Td>
+                          <Button
+                            variant="light"
+                            size="xs"
+                            leftSection={<BarChart3 size={14} />}
                             onClick={() =>
                               setSelectedTeamHistory(ranking.team)
                             }
-                            className={clsx('btn btn-secondary', styles.viewBtn)}
                           >
-                            <span className={styles.viewBtnIcon}>
-                              <BarChart3 size={14} />
-                            </span>
                             View
-                          </button>
-                        </td>
-                      </tr>
+                          </Button>
+                        </Table.Td>
+                      </Table.Tr>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </Table.Tbody>
+                </Table>
+              </Table.ScrollContainer>
             )}
-          </div>
+          </Paper>
 
           {/* Player Rankings */}
-          <div className="card">
-            <h3 className={styles.sectionTitle}>
-              <span className={styles.sectionIcon}>
-                <Gamepad2 size={22} />
-              </span>
-              Individual Player Rankings
-              <span className={styles.sectionSubtitle}>
-                (excludes painted army bonuses)
-              </span>
-            </h3>
+          <Paper p="lg" radius="md" withBorder>
+            <Group gap="xs" mb="md">
+              <Gamepad2 size={22} />
+              <Title order={3}>Individual Player Rankings</Title>
+              <Text c="dimmed" size="sm">(excludes painted army bonuses)</Text>
+            </Group>
 
             {playerRankings.length === 0 ? (
-              <p className={styles.emptyTableMessage}>
+              <Text c="dimmed">
                 No matches completed yet. Rankings will appear after matches are
                 played.
-              </p>
+              </Text>
             ) : (
-              <div className="table-responsive">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Rank</th>
-                      <th>Player</th>
-                      <th>Team</th>
-                      <th>Army</th>
-                      <th>Tournament Pts</th>
-                      <th>Obj Pts</th>
-                      <th>Obj Against</th>
-                      <th>Obj Diff</th>
-                      <th>Own VP</th>
-                      <th>Enemy VP</th>
-                      <th>VP Diff</th>
-                      <th>Matches</th>
-                      <th>W-D-L</th>
-                      <th>History</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+              <Table.ScrollContainer minWidth={800}>
+                <Table striped highlightOnHover>
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>Rank</Table.Th>
+                      <Table.Th>Player</Table.Th>
+                      <Table.Th>Team</Table.Th>
+                      <Table.Th>Army</Table.Th>
+                      <Table.Th>Tournament Pts</Table.Th>
+                      <Table.Th>Obj Pts</Table.Th>
+                      <Table.Th>Obj Against</Table.Th>
+                      <Table.Th>Obj Diff</Table.Th>
+                      <Table.Th>Own VP</Table.Th>
+                      <Table.Th>Enemy VP</Table.Th>
+                      <Table.Th>VP Diff</Table.Th>
+                      <Table.Th>Matches</Table.Th>
+                      <Table.Th>W-D-L</Table.Th>
+                      <Table.Th>History</Table.Th>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
                     {playerRankings.map((ranking, index) => (
-                      <tr key={ranking.player.id}>
-                        <td>{renderRankBadge(index + 1)}</td>
-                        <td>
-                          <div className={styles.playerName}>
+                      <Table.Tr key={ranking.player.id}>
+                        <Table.Td>{renderRankBadge(index + 1)}</Table.Td>
+                        <Table.Td>
+                          <Group gap={4} wrap="nowrap">
                             {ranking.player.isCaptain && (
-                              <span className={styles.captainIcon}>
-                                <Crown size={14} />
-                              </span>
+                              <Crown size={14} color="#f59e0b" />
                             )}
-                            <strong>{ranking.player.nickname}</strong>
+                            <Text fw={700}>{ranking.player.nickname}</Text>
                             {ranking.player.isPainted && (
-                              <span className={styles.paintedIcon}>
-                                <Palette size={14} />
-                              </span>
+                              <Palette size={14} color="#12b886" />
                             )}
-                          </div>
-                        </td>
-                        <td>{ranking.team.name}</td>
-                        <td>
-                          <span className={styles.armyTag}>
+                          </Group>
+                        </Table.Td>
+                        <Table.Td>{ranking.team.name}</Table.Td>
+                        <Table.Td>
+                          <Badge variant="light" color="cyan" size="xs">
                             {ranking.player.army}
-                          </span>
-                        </td>
-                        <td>
-                          <strong className={styles.pointsValue}>
+                          </Badge>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text fw={700} c="cyan">
                             {ranking.tournamentPoints}
-                          </strong>
-                        </td>
-                        <td>{ranking.objectivePoints}</td>
-                        <td>
-                          <span className={styles.pointsNegative}>
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>{ranking.objectivePoints}</Table.Td>
+                        <Table.Td>
+                          <Text span c="red">
                             {ranking.objectivePointsAgainst}
-                          </span>
-                        </td>
-                        <td>
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
                           {renderDiff(ranking.objectivePointsDifference)}
-                        </td>
-                        <td>
-                          <span className={styles.pointsPositive}>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text span c="teal">
                             {ranking.victoryPointsFor}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={styles.pointsNegative}>
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text span c="red">
                             {ranking.victoryPointsAgainst}
-                          </span>
-                        </td>
-                        <td>
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
                           {renderDiff(ranking.victoryPointsDifference)}
-                        </td>
-                        <td>{ranking.matchesPlayed}</td>
-                        <td>
-                          <span className={styles.wdlRecord}>
-                            <span className={styles.wdlWin}>
-                              {ranking.wins}
-                            </span>
-                            <span className={styles.wdlSep}>-</span>
-                            <span className={styles.wdlDraw}>
-                              {ranking.draws}
-                            </span>
-                            <span className={styles.wdlSep}>-</span>
-                            <span className={styles.wdlLoss}>
-                              {ranking.losses}
-                            </span>
-                          </span>
-                        </td>
-                        <td>
-                          <button
+                        </Table.Td>
+                        <Table.Td>{ranking.matchesPlayed}</Table.Td>
+                        <Table.Td>
+                          {renderWDL(ranking.wins, ranking.draws, ranking.losses)}
+                        </Table.Td>
+                        <Table.Td>
+                          <Button
+                            variant="light"
+                            size="xs"
+                            leftSection={<BarChart3 size={14} />}
                             onClick={() =>
                               setSelectedPlayerHistory({
                                 player: ranking.player,
                                 team: ranking.team,
                               })
                             }
-                            className={clsx('btn btn-secondary', styles.viewBtn)}
                           >
-                            <span className={styles.viewBtnIcon}>
-                              <BarChart3 size={14} />
-                            </span>
                             View
-                          </button>
-                        </td>
-                      </tr>
+                          </Button>
+                        </Table.Td>
+                      </Table.Tr>
                     ))}
-                  </tbody>
-                </table>
-              </div>
+                  </Table.Tbody>
+                </Table>
+              </Table.ScrollContainer>
             )}
-          </div>
+          </Paper>
         </>
       )}
 
@@ -523,7 +499,7 @@ const Rankings: React.FC = () => {
           isTeamHistory={false}
         />
       )}
-    </div>
+    </Container>
   );
 };
 

@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Pencil, Tag, Hash, Swords, Crown, Palette, Clock, AlertCircle, X, Save } from 'lucide-react';
+import { Pencil, Crown, Palette, Clock, Save } from 'lucide-react';
+import { TextInput, Select, Checkbox, Button, Group, Stack, Text, Alert, SimpleGrid } from '@mantine/core';
 import { Player, Team } from '../types';
 import { ARMIES } from '../utils/armies';
 import Modal from './Modal';
-import clsx from 'clsx';
-import styles from './EditPlayerForm.module.css';
 
 interface EditPlayerFormProps {
   player: Player;
@@ -84,6 +83,16 @@ const EditPlayerForm: React.FC<EditPlayerFormProps> = ({
 
   const availableArmies = getAvailableArmies();
 
+  const armyOptions = [
+    ...availableArmies.map(a => ({ value: a, label: a })),
+    ...(army && !availableArmies.includes(army) && army === player.army
+      ? [{ value: army, label: `${army} (Current)` }]
+      : []),
+    ...(army && !availableArmies.includes(army) && army !== player.army
+      ? [{ value: army, label: `${army} (Already selected by teammate)` }]
+      : []),
+  ];
+
   return (
     <Modal
       isOpen={true}
@@ -92,162 +101,94 @@ const EditPlayerForm: React.FC<EditPlayerFormProps> = ({
       titleIcon={<Pencil size={20} />}
       size="md"
     >
-      <div className={styles.teamBanner}>
-        <strong>Team:</strong> {team.name}
-      </div>
+      <Stack gap="md">
+        <Text size="sm" c="dimmed">
+          <strong>Team:</strong> {team.name}
+        </Text>
 
-      {error && (
-        <div className={styles.errorBanner}>
-          <AlertCircle size={16} />
-          <span>{error}</span>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.fieldGrid}>
-          <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel}>
-              <Tag size={16} className={styles.fieldLabelIcon} />
-              Nickname:
-            </label>
-            <input
-              type="text"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              className={styles.input}
-              placeholder="Player nickname"
-              disabled={isSubmitting}
-              autoFocus
-            />
-          </div>
-
-          <div className={styles.fieldGroup}>
-            <label className={styles.fieldLabel}>
-              <Hash size={16} className={styles.fieldLabelIcon} />
-              ITS Pin:
-            </label>
-            <input
-              type="text"
-              value={itsPin}
-              onChange={(e) => setItsPin(e.target.value)}
-              className={styles.input}
-              placeholder="ITS Pin number"
-              disabled={isSubmitting}
-            />
-          </div>
-        </div>
-
-        <div className={styles.fieldGroup}>
-          <label className={styles.fieldLabel}>
-            <Swords size={16} className={styles.fieldLabelIcon} />
-            Army/Sectorial:
-            {availableArmies.length < ARMIES.length && (
-              <span className={styles.fieldHint}>
-                (Some armies already selected by teammates)
-              </span>
-            )}
-          </label>
-          <select
-            value={army}
-            onChange={(e) => setArmy(e.target.value)}
-            className={clsx(
-              styles.input,
-              army && !availableArmies.includes(army) && army !== player.army && styles.inputError
-            )}
-            disabled={isSubmitting}
-          >
-            <option value="">Select Army</option>
-            {availableArmies.map(armyName => (
-              <option key={armyName} value={armyName}>{armyName}</option>
-            ))}
-            {army && !availableArmies.includes(army) && army === player.army && (
-              <option value={army}>{army} (Current)</option>
-            )}
-            {army && !availableArmies.includes(army) && army !== player.army && (
-              <option value={army}>
-                {army} (Already selected by teammate)
-              </option>
-            )}
-          </select>
-        </div>
-
-        <div className={styles.toggleGrid}>
-          <label className={clsx(styles.toggleCard, isCaptain && styles.toggleCardCaptain)}>
-            <input
-              type="checkbox"
-              checked={isCaptain}
-              onChange={(e) => setIsCaptain(e.target.checked)}
-              disabled={isSubmitting}
-              className={styles.checkbox}
-            />
-            <Crown size={20} className={styles.toggleIcon} />
-            <span className={styles.toggleLabel}>Team Captain</span>
-          </label>
-
-          <label className={clsx(styles.toggleCard, isPainted && styles.toggleCardPainted)}>
-            <input
-              type="checkbox"
-              checked={isPainted}
-              onChange={(e) => setIsPainted(e.target.checked)}
-              disabled={isSubmitting}
-              className={styles.checkbox}
-            />
-            <Palette size={20} className={styles.toggleIcon} />
-            <span className={styles.toggleLabel}>Painted Army</span>
-          </label>
-
-          <label className={clsx(styles.toggleCard, armyListLate && styles.toggleCardLate)}>
-            <input
-              type="checkbox"
-              checked={armyListLate}
-              onChange={(e) => setArmyListLate(e.target.checked)}
-              disabled={isSubmitting}
-              className={styles.checkbox}
-            />
-            <Clock size={20} className={styles.toggleIcon} />
-            <span className={styles.toggleLabel}>Army list late submission</span>
-          </label>
-        </div>
-
-        {army && !availableArmies.includes(army) && army !== player.army && (
-          <div className={styles.warningBanner}>
-            <AlertCircle size={16} />
-            <span>
-              <strong>Army Conflict:</strong> This army is already being used by another teammate.
-              Please select a different army to avoid conflicts.
-            </span>
-          </div>
+        {error && (
+          <Alert color="red" variant="light">{error}</Alert>
         )}
 
-        <div className={styles.actions}>
-          <button
-            type="button"
-            onClick={onCancel}
-            className={styles.cancelButton}
-            disabled={isSubmitting}
-          >
-            <X size={16} />
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className={styles.submitButton}
-            disabled={isSubmitting || !nickname.trim() || !itsPin.trim() || !army}
-          >
-            {isSubmitting ? (
-              <>
-                <div className={styles.spinner} />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save size={16} />
-                Save Changes
-              </>
+        <form onSubmit={handleSubmit}>
+          <Stack gap="md">
+            <SimpleGrid cols={2}>
+              <TextInput
+                label="Nickname"
+                placeholder="Player nickname"
+                value={nickname}
+                onChange={(e) => setNickname(e.currentTarget.value)}
+                disabled={isSubmitting}
+                autoFocus
+              />
+              <TextInput
+                label="ITS Pin"
+                placeholder="ITS Pin number"
+                value={itsPin}
+                onChange={(e) => setItsPin(e.currentTarget.value)}
+                disabled={isSubmitting}
+              />
+            </SimpleGrid>
+
+            <Select
+              label="Army/Sectorial"
+              description={availableArmies.length < ARMIES.length ? 'Some armies already selected by teammates' : undefined}
+              placeholder="Select Army"
+              data={armyOptions}
+              value={army}
+              onChange={(v) => setArmy(v || '')}
+              disabled={isSubmitting}
+              searchable
+              error={army && !availableArmies.includes(army) && army !== player.army ? 'Army conflict with teammate' : undefined}
+            />
+
+            <SimpleGrid cols={3}>
+              <Checkbox
+                label="Team Captain"
+                description={<Crown size={14} />}
+                checked={isCaptain}
+                onChange={(e) => setIsCaptain(e.currentTarget.checked)}
+                disabled={isSubmitting}
+              />
+              <Checkbox
+                label="Painted Army"
+                description={<Palette size={14} />}
+                checked={isPainted}
+                onChange={(e) => setIsPainted(e.currentTarget.checked)}
+                disabled={isSubmitting}
+              />
+              <Checkbox
+                label="Late List"
+                description={<Clock size={14} />}
+                checked={armyListLate}
+                onChange={(e) => setArmyListLate(e.currentTarget.checked)}
+                disabled={isSubmitting}
+              />
+            </SimpleGrid>
+
+            {army && !availableArmies.includes(army) && army !== player.army && (
+              <Alert color="yellow" variant="light" title="Army Conflict">
+                This army is already being used by another teammate.
+                Please select a different army to avoid conflicts.
+              </Alert>
             )}
-          </button>
-        </div>
-      </form>
+
+            <Group justify="flex-end" gap="sm">
+              <Button variant="default" onClick={onCancel} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                disabled={!nickname.trim() || !itsPin.trim() || !army}
+                leftSection={<Save size={16} />}
+              >
+                Save Changes
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Stack>
     </Modal>
   );
 };

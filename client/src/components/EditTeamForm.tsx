@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Pencil, Tag, Crown, X, Save, AlertCircle } from 'lucide-react';
+import { Pencil, Save } from 'lucide-react';
+import { TextInput, Select, Button, Group, Stack, Alert } from '@mantine/core';
 import { Team } from '../types';
 import Modal from './Modal';
-import styles from './EditTeamForm.module.css';
 
 interface EditTeamFormProps {
   team: Team;
-  onSave: (teamId: string, updates: { name: string; captainId: string; players?: any[] }) => void;
+  onSave: (teamId: string, updates: Partial<Team>) => void;
   onCancel: () => void;
 }
 
@@ -59,79 +59,50 @@ const EditTeamForm: React.FC<EditTeamFormProps> = ({ team, onSave, onCancel }) =
       titleIcon={<Pencil size={20} />}
       size="sm"
     >
-      {error && (
-        <div className={styles.errorBanner}>
-          <AlertCircle size={16} />
-          <span>{error}</span>
-        </div>
-      )}
+      <Stack gap="md">
+        {error && (
+          <Alert color="red" variant="light">{error}</Alert>
+        )}
 
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.fieldGroup}>
-          <label className={styles.fieldLabel}>
-            <Tag size={16} className={styles.fieldLabelIcon} />
-            Team Name:
-          </label>
-          <input
-            type="text"
-            value={teamName}
-            onChange={(e) => setTeamName(e.target.value)}
-            className={styles.input}
-            placeholder="Enter team name"
-            disabled={isSubmitting}
-            autoFocus
-          />
-        </div>
+        <form onSubmit={handleSubmit}>
+          <Stack gap="md">
+            <TextInput
+              label="Team Name"
+              placeholder="Enter team name"
+              value={teamName}
+              onChange={(e) => setTeamName(e.currentTarget.value)}
+              disabled={isSubmitting}
+              autoFocus
+            />
 
-        <div className={styles.fieldGroup}>
-          <label className={styles.fieldLabel}>
-            <Crown size={16} className={styles.fieldLabelIcon} />
-            Team Captain:
-          </label>
-          <select
-            value={captainId}
-            onChange={(e) => setCaptainId(e.target.value)}
-            className={styles.input}
-            disabled={isSubmitting}
-          >
-            <option value="">Select Captain</option>
-            {team.players.map(player => (
-              <option key={player.id} value={player.id}>
-                {player.nickname} ({player.army})
-              </option>
-            ))}
-          </select>
-        </div>
+            <Select
+              label="Team Captain"
+              placeholder="Select Captain"
+              data={team.players.map(p => ({
+                value: p.id,
+                label: `${p.nickname} (${p.army})`
+              }))}
+              value={captainId}
+              onChange={(v) => setCaptainId(v || '')}
+              disabled={isSubmitting}
+            />
 
-        <div className={styles.actions}>
-          <button
-            type="button"
-            onClick={onCancel}
-            className={styles.cancelButton}
-            disabled={isSubmitting}
-          >
-            <X size={16} />
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className={styles.submitButton}
-            disabled={isSubmitting || !teamName.trim() || !captainId}
-          >
-            {isSubmitting ? (
-              <>
-                <div className={styles.spinner} />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save size={16} />
+            <Group justify="flex-end" gap="sm">
+              <Button variant="default" onClick={onCancel} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                disabled={!teamName.trim() || !captainId}
+                leftSection={<Save size={16} />}
+              >
                 Save Changes
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Stack>
     </Modal>
   );
 };

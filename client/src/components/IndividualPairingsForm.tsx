@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Swords, AlertCircle, X, Save } from 'lucide-react';
+import { Swords, Save } from 'lucide-react';
+import { Select, Button, Group, Stack, Text, Paper, Badge, Alert } from '@mantine/core';
 import { Team } from '../types';
 import Modal from './Modal';
-import styles from './IndividualPairingsForm.module.css';
 
 interface IndividualPairingsFormProps {
-  teamMatch: any; // TeamMatch
+  teamMatch: unknown;
   team1: Team;
   team2: Team;
   onSave: (pairings: { player1Id: string; player2Id: string }[]) => void;
@@ -74,82 +74,59 @@ const IndividualPairingsForm: React.FC<IndividualPairingsFormProps> = ({
       titleIcon={<Swords size={20} />}
       size="lg"
     >
-      <div className={styles.matchupHeader}>
-        {team1.name} vs {team2.name}
-      </div>
+      <Stack gap="md">
+        <Text fw={600} ta="center" size="lg">
+          {team1.name} vs {team2.name}
+        </Text>
 
-      {error && (
-        <div className={styles.errorBanner}>
-          <AlertCircle size={16} />
-          <span>{error}</span>
-        </div>
-      )}
+        {error && (
+          <Alert color="red" variant="light">{error}</Alert>
+        )}
 
-      <form onSubmit={handleSubmit} className={styles.form}>
-        {pairings.map((pairing, index) => (
-          <div key={index} className={styles.matchCard}>
-            <h5 className={styles.matchTitle}>Match {index + 1}</h5>
+        <form onSubmit={handleSubmit}>
+          <Stack gap="md">
+            {pairings.map((pairing, index) => (
+              <Paper key={index} p="md" radius="md" withBorder>
+                <Text fw={600} size="sm" mb="sm">Match {index + 1}</Text>
+                <Group grow align="flex-end">
+                  <Select
+                    label={`${team1.name} Player`}
+                    placeholder="Select Player"
+                    data={getAvailableTeam1Players(index).map(p => ({
+                      value: p.id,
+                      label: `${p.nickname} (${p.army})`
+                    }))}
+                    value={pairing.player1Id || null}
+                    onChange={(v) => handlePairingChange(index, 'player1Id', v || '')}
+                  />
+                  <Badge variant="light" color="cyan" size="lg" style={{ alignSelf: 'center', flexGrow: 0 }}>
+                    VS
+                  </Badge>
+                  <Select
+                    label={`${team2.name} Player`}
+                    placeholder="Select Player"
+                    data={getAvailableTeam2Players(index).map(p => ({
+                      value: p.id,
+                      label: `${p.nickname} (${p.army})`
+                    }))}
+                    value={pairing.player2Id || null}
+                    onChange={(v) => handlePairingChange(index, 'player2Id', v || '')}
+                  />
+                </Group>
+              </Paper>
+            ))}
 
-            <div className={styles.matchGrid}>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>
-                  {team1.name} Player:
-                </label>
-                <select
-                  value={pairing.player1Id}
-                  onChange={(e) => handlePairingChange(index, 'player1Id', e.target.value)}
-                  className={styles.select}
-                >
-                  <option value="">Select Player</option>
-                  {getAvailableTeam1Players(index).map(player => (
-                    <option key={player.id} value={player.id}>
-                      {player.nickname} ({player.army})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className={styles.vsBadge}>VS</div>
-
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>
-                  {team2.name} Player:
-                </label>
-                <select
-                  value={pairing.player2Id}
-                  onChange={(e) => handlePairingChange(index, 'player2Id', e.target.value)}
-                  className={styles.select}
-                >
-                  <option value="">Select Player</option>
-                  {getAvailableTeam2Players(index).map(player => (
-                    <option key={player.id} value={player.id}>
-                      {player.nickname} ({player.army})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        <div className={styles.actions}>
-          <button
-            type="button"
-            onClick={onCancel}
-            className={styles.cancelButton}
-          >
-            <X size={16} />
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className={styles.submitButton}
-          >
-            <Save size={16} />
-            Save Pairings
-          </button>
-        </div>
-      </form>
+            <Group justify="flex-end" gap="sm">
+              <Button variant="default" onClick={onCancel}>
+                Cancel
+              </Button>
+              <Button type="submit" leftSection={<Save size={16} />}>
+                Save Pairings
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Stack>
     </Modal>
   );
 };

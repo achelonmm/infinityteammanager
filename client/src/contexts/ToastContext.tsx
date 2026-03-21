@@ -1,6 +1,16 @@
-import React, { createContext, useContext, useReducer, useCallback, useState } from 'react';
-import ToastContainer, { Toast, ToastType } from '../components/ToastContainer';
-import ConfirmDialog from '../components/ConfirmDialog';
+import React, { createContext, useContext, useCallback, useState } from 'react';
+import { notifications } from '@mantine/notifications';
+import { Modal, Button, Group, Stack, Text } from '@mantine/core';
+import { AlertTriangle } from 'lucide-react';
+
+type ToastType = 'success' | 'error' | 'warning' | 'info';
+
+const toastColorMap: Record<ToastType, string> = {
+  success: 'teal',
+  error: 'red',
+  warning: 'yellow',
+  info: 'cyan',
+};
 
 interface ToastContextValue {
   addToast: (message: string, type?: ToastType, duration?: number) => void;
@@ -11,24 +21,7 @@ interface ToastContextValue {
   confirm: (message: string, options?: { confirmLabel?: string; cancelLabel?: string; variant?: 'warning' | 'danger' }) => Promise<boolean>;
 }
 
-type ToastAction =
-  | { type: 'ADD'; payload: Toast }
-  | { type: 'REMOVE'; payload: string };
-
-function toastReducer(state: Toast[], action: ToastAction): Toast[] {
-  switch (action.type) {
-    case 'ADD':
-      return [...state, action.payload];
-    case 'REMOVE':
-      return state.filter((t) => t.id !== action.payload);
-    default:
-      return state;
-  }
-}
-
 const ToastContext = createContext<ToastContextValue | null>(null);
-
-let idCounter = 0;
 
 interface ConfirmState {
   message: string;
@@ -39,17 +32,14 @@ interface ConfirmState {
 }
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [toasts, dispatch] = useReducer(toastReducer, []);
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
 
   const addToast = useCallback((message: string, type: ToastType = 'info', duration = 4000) => {
-    const id = `toast-${++idCounter}`;
-    dispatch({ type: 'ADD', payload: { id, message, type, duration, createdAt: Date.now() } });
-    setTimeout(() => dispatch({ type: 'REMOVE', payload: id }), duration);
-  }, []);
-
-  const removeToast = useCallback((id: string) => {
-    dispatch({ type: 'REMOVE', payload: id });
+    notifications.show({
+      message,
+      color: toastColorMap[type],
+      autoClose: duration,
+    });
   }, []);
 
   const confirm = useCallback((
@@ -89,17 +79,33 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <ToastContainer toasts={toasts} onDismiss={removeToast} />
-      {confirmState && (
-        <ConfirmDialog
-          message={confirmState.message}
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-          confirmLabel={confirmState.confirmLabel}
-          cancelLabel={confirmState.cancelLabel}
-          variant={confirmState.variant}
-        />
-      )}
+      <Modal
+        opened={!!confirmState}
+        onClose={handleCancel}
+        title={
+          <Group gap="xs">
+            <AlertTriangle size={20} color={confirmState?.variant === 'danger' ? 'var(--mantine-color-red-6)' : 'var(--mantine-color-yellow-6)'} />
+            <Text fw={600}>Confirm</Text>
+          </Group>
+        }
+        centered
+        size="sm"
+      >
+        <Stack gap="lg">
+          <Text>{confirmState?.message}</Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={handleCancel}>
+              {confirmState?.cancelLabel ?? 'Cancel'}
+            </Button>
+            <Button
+              color={confirmState?.variant === 'danger' ? 'red' : 'cyan'}
+              onClick={handleConfirm}
+            >
+              {confirmState?.confirmLabel ?? 'Confirm'}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
     </ToastContext.Provider>
   );
 };

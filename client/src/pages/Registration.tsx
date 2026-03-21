@@ -2,19 +2,18 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   UserPlus,
-  Tag,
   Users,
   Crown,
   Gamepad2,
-  Swords,
-  Hash,
   Rocket,
   CheckCircle2,
-  AlertCircle,
 } from 'lucide-react';
+import {
+  Container, Paper, Title, Group, Stack, Text, Button, Alert,
+  TextInput, Select, Stepper, Radio, Badge, Loader,
+} from '@mantine/core';
 import { useTournament } from '../contexts/TournamentContext';
 import { useToast } from '../contexts/ToastContext';
-import styles from './Registration.module.css';
 import { ARMIES } from '../utils/armies';
 
 interface PlayerForm {
@@ -37,12 +36,10 @@ const Registration: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
 
-
   const handlePlayerChange = (index: number, field: keyof PlayerForm, value: string | boolean) => {
     const newPlayers = [...players];
     newPlayers[index] = { ...newPlayers[index], [field]: value };
 
-    // If setting a captain, unset others
     if (field === 'isCaptain' && value === true) {
       newPlayers.forEach((player, i) => {
         if (i !== index) player.isCaptain = false;
@@ -55,7 +52,6 @@ const Registration: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Basic validation
     if (!teamName.trim()) {
       toast.warning('Please enter a team name');
       return;
@@ -77,8 +73,8 @@ const Registration: React.FC = () => {
     try {
       const teamData = {
         name: teamName,
-        tournamentId: '', // This will be set by the context
-        captainId: '', // This will be set by the context
+        tournamentId: '',
+        captainId: '',
         players: players.map((player) => ({
           id: '',
           nickname: player.nickname,
@@ -95,7 +91,6 @@ const Registration: React.FC = () => {
 
       toast.success('Team registered successfully!');
 
-      // Reset form
       setTeamName('');
       setPlayers([
         { nickname: '', itsPin: '', army: '', isCaptain: false },
@@ -114,250 +109,199 @@ const Registration: React.FC = () => {
   };
 
   const isFormValid = () => {
-    const basicValidation = teamName.trim() &&
+    return teamName.trim() &&
            players.filter(p => p.isCaptain).length === 1 &&
            players.every(p => p.nickname.trim() && p.itsPin.trim() && p.army);
-
-    return basicValidation;
   };
 
+  const armyOptions = ARMIES.map(a => ({ value: a, label: a }));
+
   return (
-    <div className="container animate-fade-in">
-      <h2 className={styles.pageTitle}>
-        <UserPlus className={styles.pageTitleIcon} size={28} />
-        Team Registration
-      </h2>
+    <Container size="xl" py="md">
+      <Group gap="xs" mb="lg">
+        <UserPlus size={28} />
+        <Title order={2}>Team Registration</Title>
+      </Group>
 
       {error && (
-        <div className="alert alert-error animate-slide-in">
-          <AlertCircle className={styles.errorIcon} size={18} />
-          <strong>Error:</strong> {error}
-        </div>
+        <Alert color="red" variant="light" title="Error" mb="md">{error}</Alert>
       )}
 
-      {/* Step Indicator */}
-      <div className={styles.stepIndicator}>
-        <button
-          type="button"
-          className={currentStep === -1 ? styles.stepActive : (currentStep > -1 ? styles.stepCompleted : styles.step)}
-          onClick={() => setCurrentStep(-1)}
-        >
-          <span className={styles.stepIcon}><Tag size={18} /></span>
-        </button>
-        {[0, 1, 2].map(index => (
-          <button
-            type="button"
-            key={index}
-            className={
-              currentStep === index
-                ? styles.stepActive
-                : index < currentStep
-                  ? styles.stepCompleted
-                  : styles.step
-            }
-            onClick={() => setCurrentStep(index)}
-          >
-            {index + 1}
-          </button>
-        ))}
-      </div>
+      <Stepper active={currentStep} onStepClick={setCurrentStep} mb="lg">
+        <Stepper.Step label="Team Name" description="Name your team" />
+        <Stepper.Step label="Player 1" description={players[0].nickname || 'Set up player'} />
+        <Stepper.Step label="Player 2" description={players[1].nickname || 'Set up player'} />
+        <Stepper.Step label="Player 3" description={players[2].nickname || 'Set up player'} />
+      </Stepper>
 
       <form onSubmit={handleSubmit}>
-        <div className={styles.formCard}>
+        <Paper p="lg" radius="md" withBorder pos="relative">
           {(loading || submitting) && (
-            <div className="loading-overlay">
-              <div className={`loading-spinner ${styles.loadingOverlaySpinner}`}></div>
+            <div style={{
+              position: 'absolute', inset: 0, display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(0,0,0,0.5)', borderRadius: 'inherit', zIndex: 10,
+            }}>
+              <Loader color="cyan" />
             </div>
           )}
 
-          <h3 className={styles.formCardTitle}>
-            <Rocket className={styles.formCardTitleIcon} size={24} />
-            Register Your Team
-          </h3>
+          <Group gap="xs" mb="lg">
+            <Rocket size={24} />
+            <Title order={3}>Register Your Team</Title>
+          </Group>
 
-          {/* Team Name Section */}
-          {currentStep === -1 && (
-            <div className={`animate-fade-in ${styles.teamNameSection}`}>
-              <div className="form-group">
-                <label className={`form-label ${styles.teamNameLabel}`}>
-                  <Tag className={styles.labelIcon} size={18} />
-                  Team Name:
-                </label>
-                <input
-                  type="text"
-                  value={teamName}
-                  onChange={(e) => setTeamName(e.target.value)}
-                  className={`form-input ${styles.teamNameInput}`}
-                  placeholder="Enter your team name (e.g., 'Steel Wolves')"
-                  disabled={loading || submitting}
-                />
-              </div>
-
-              <div className={styles.ctaCenter}>
-                <button
-                  type="button"
-                  className={`btn btn-primary ${styles.ctaButton}`}
-                  onClick={() => setCurrentStep(0)}
+          {/* Team Name Step */}
+          {currentStep === 0 && (
+            <Stack gap="md">
+              <TextInput
+                label="Team Name"
+                placeholder="Enter your team name (e.g., 'Steel Wolves')"
+                value={teamName}
+                onChange={(e) => setTeamName(e.currentTarget.value)}
+                disabled={loading || submitting}
+                size="md"
+                autoFocus
+              />
+              <Group justify="flex-end">
+                <Button
+                  onClick={() => setCurrentStep(1)}
                   disabled={!teamName.trim()}
+                  leftSection={<Rocket size={18} />}
                 >
-                  <Rocket size={20} />
                   Continue to Players
-                </button>
-              </div>
-            </div>
+                </Button>
+              </Group>
+            </Stack>
           )}
 
-          {/* Players Section */}
-          {currentStep >= 0 && (
-            <div className="animate-fade-in">
-              <h4 className={styles.playersTitle}>
-                <Users className={styles.playersTitleIcon} size={22} />
-                Players
-              </h4>
+          {/* Player Steps */}
+          {currentStep >= 1 && currentStep <= 3 && (
+            <Stack gap="md">
+              <Group gap="xs" mb="xs">
+                <Users size={22} />
+                <Title order={4}>Players</Title>
+              </Group>
 
-              {players.map((player, index) => (
-                <div
-                  key={index}
-                  className={currentStep === index ? styles.playerCardActive : styles.playerCard}
-                  onClick={() => setCurrentStep(index)}
-                >
-                  <div className={styles.playerCardHeader}>
-                    {player.isCaptain ? (
-                      <Crown className={styles.playerCardHeaderIconCaptain} size={24} />
-                    ) : (
-                      <Gamepad2 className={styles.playerCardHeaderIcon} size={24} />
-                    )}
-                    <h5 className={styles.playerCardName}>
-                      Player {index + 1}
-                      {player.isCaptain && <span className={styles.captainTag}>(Captain)</span>}
-                    </h5>
-                  </div>
+              {players.map((player, index) => {
+                const stepIndex = index + 1;
+                const isActive = currentStep === stepIndex;
 
-                  {currentStep === index && (
-                    <div className="animate-fade-in">
-                      <div className={styles.fieldGrid}>
-                        <div className="form-group">
-                          <label className="form-label">
-                            <Tag className={styles.labelIcon} size={16} /> Nickname:
-                          </label>
-                          <input
-                            type="text"
-                            value={player.nickname}
-                            onChange={(e) => handlePlayerChange(index, 'nickname', e.target.value)}
-                            className="form-input"
+                return (
+                  <Paper
+                    key={index}
+                    p="md"
+                    radius="md"
+                    withBorder
+                    style={{
+                      borderColor: isActive ? 'var(--mantine-color-cyan-5)' : undefined,
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => setCurrentStep(stepIndex)}
+                  >
+                    <Group gap="xs" mb={isActive ? 'md' : 0}>
+                      {player.isCaptain ? (
+                        <Crown size={24} color="var(--mantine-color-yellow-5)" />
+                      ) : (
+                        <Gamepad2 size={24} />
+                      )}
+                      <Text fw={600}>
+                        Player {index + 1}
+                        {player.isCaptain && (
+                          <Badge ml="xs" color="yellow" variant="light" size="sm">Captain</Badge>
+                        )}
+                      </Text>
+                    </Group>
+
+                    {isActive && (
+                      <Stack gap="md">
+                        <Group grow>
+                          <TextInput
+                            label="Nickname"
                             placeholder="Player nickname"
+                            value={player.nickname}
+                            onChange={(e) => handlePlayerChange(index, 'nickname', e.currentTarget.value)}
                             disabled={loading || submitting}
                           />
-                        </div>
-
-                        <div className="form-group">
-                          <label className="form-label">
-                            <Hash className={styles.labelIcon} size={16} /> ITS Pin:
-                          </label>
-                          <input
-                            type="text"
-                            value={player.itsPin}
-                            onChange={(e) => handlePlayerChange(index, 'itsPin', e.target.value)}
-                            className="form-input"
+                          <TextInput
+                            label="ITS Pin"
                             placeholder="ITS Pin number"
+                            value={player.itsPin}
+                            onChange={(e) => handlePlayerChange(index, 'itsPin', e.currentTarget.value)}
                             disabled={loading || submitting}
                           />
-                        </div>
-                      </div>
+                        </Group>
 
-                      <div className="form-group">
-                        <label className="form-label">
-                          <Swords className={styles.labelIcon} size={16} /> Army/Sectorial:
-                        </label>
-                        <select
-                          value={player.army}
-                          onChange={(e) => handlePlayerChange(index, 'army', e.target.value)}
-                          className="form-input"
+                        <Select
+                          label="Army/Sectorial"
+                          placeholder="Select Army"
+                          data={armyOptions}
+                          value={player.army || null}
+                          onChange={(v) => handlePlayerChange(index, 'army', v || '')}
                           disabled={loading || submitting}
-                        >
-                          <option value="">Select Army</option>
-                          {ARMIES.map(army => (
-                            <option key={army} value={army}>{army}</option>
-                          ))}
-                        </select>
-                      </div>
+                          searchable
+                        />
 
-                      <div className={styles.captainToggle}>
-                        <label className={styles.captainLabel}>
-                          <input
-                            type="radio"
-                            checked={player.isCaptain}
-                            onChange={(e) => handlePlayerChange(index, 'isCaptain', e.target.checked)}
-                            disabled={loading || submitting}
-                            className={styles.captainRadio}
-                          />
-                          <Crown className={styles.captainLabelIcon} size={22} />
-                          <span className={styles.captainLabelText}>
-                            Team Captain
-                          </span>
-                        </label>
-                      </div>
-                    </div>
-                  )}
+                        <Radio
+                          label="Team Captain"
+                          description="Select this player as the team captain"
+                          checked={player.isCaptain}
+                          onChange={(e) => handlePlayerChange(index, 'isCaptain', e.currentTarget.checked)}
+                          disabled={loading || submitting}
+                        />
+                      </Stack>
+                    )}
 
-                  {currentStep !== index && (
-                    <div className={styles.playerSummary}>
-                      <span><strong>Nickname:</strong> {player.nickname || 'Not set'}</span>
-                      <span><strong>Army:</strong> {player.army || 'Not selected'}</span>
-                    </div>
-                  )}
-                </div>
-              ))}
+                    {!isActive && (
+                      <Group gap="lg" mt="xs">
+                        <Text size="sm" c="dimmed">
+                          <strong>Nickname:</strong> {player.nickname || 'Not set'}
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                          <strong>Army:</strong> {player.army || 'Not selected'}
+                        </Text>
+                      </Group>
+                    )}
+                  </Paper>
+                );
+              })}
 
-              {/* Navigation Buttons */}
-              <div className={styles.navFooter}>
-                <button
-                  type="button"
-                  className="btn btn-outline"
-                  onClick={() => setCurrentStep(currentStep > 0 ? currentStep - 1 : -1)}
+              {/* Navigation */}
+              <Group justify="space-between" mt="md">
+                <Button
+                  variant="default"
+                  onClick={() => setCurrentStep(currentStep > 1 ? currentStep - 1 : 0)}
                   disabled={loading || submitting}
                 >
                   Back
-                </button>
+                </Button>
 
-                <div className={styles.stepCounter}>
-                  Step {currentStep + 2} of 4
-                </div>
+                <Text size="sm" c="dimmed">Step {currentStep + 1} of 4</Text>
 
-                {currentStep < 2 ? (
-                  <button
-                    type="button"
-                    className="btn btn-primary"
+                {currentStep < 3 ? (
+                  <Button
                     onClick={() => setCurrentStep(currentStep + 1)}
                     disabled={loading || submitting}
                   >
                     Next Player
-                  </button>
+                  </Button>
                 ) : (
-                  <button
+                  <Button
                     type="submit"
-                    className={`btn btn-success ${styles.submitButton}`}
-                    disabled={loading || submitting || !isFormValid()}
+                    color="teal"
+                    loading={submitting}
+                    disabled={loading || !isFormValid()}
+                    leftSection={<CheckCircle2 size={18} />}
                   >
-                    {submitting ? (
-                      <>
-                        <div className="loading-spinner"></div>
-                        Registering...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 size={20} />
-                        Register Team
-                      </>
-                    )}
-                  </button>
+                    Register Team
+                  </Button>
                 )}
-              </div>
-            </div>
+              </Group>
+            </Stack>
           )}
-        </div>
+        </Paper>
       </form>
-    </div>
+    </Container>
   );
 };
 
