@@ -1,23 +1,37 @@
 import React, { useState } from 'react';
 import { Trophy, Target, Crown } from 'lucide-react';
 import clsx from 'clsx';
+import {
+  ResponsiveContainer,
+  PieChart, Pie, Cell, Label,
+  Tooltip, Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, ReferenceLine,
+  RadarChart, PolarGrid, PolarAngleAxis, Radar,
+} from 'recharts';
 import { useTournament } from '../contexts/TournamentContext';
 import { calculateTournamentStats } from '../utils/statisticsUtils';
 import styles from './Statistics.module.css';
 
-const ARMY_COLORS = [
-  styles.armyColor0,
-  styles.armyColor1,
-  styles.armyColor2,
-  styles.armyColor3,
-  styles.armyColor4,
-  styles.armyColor5,
-  styles.armyColor6,
-  styles.armyColor7,
-  styles.armyColor8,
-  styles.armyColor9,
-  styles.armyColor10,
+const CHART_COLORS = [
+  '#06b6d4', '#22c55e', '#f59e0b', '#ef4444', '#6366f1',
+  '#0891b2', '#f97316', '#a855f7', '#ec4899', '#84cc16', '#14b8a6',
 ];
+
+const TOOLTIP_STYLE = {
+  contentStyle: {
+    background: '#0f172a',
+    border: '1px solid #334155',
+    borderRadius: '0.5rem',
+  },
+  labelStyle: { color: '#f1f5f9' },
+  itemStyle: { color: '#94a3b8' },
+};
+
+const winRateColor = (rate: number) => {
+  if (rate >= 60) return '#10b981';
+  if (rate >= 40) return '#f59e0b';
+  return '#ef4444';
+};
 
 const Statistics: React.FC = () => {
   const { getTeams, getPlayers, tournament } = useTournament();
@@ -136,31 +150,77 @@ const Statistics: React.FC = () => {
         )}
       </div>
 
-      {/* Army Distribution Chart */}
+      {/* Army Distribution Pie Chart */}
       <div className="card">
         <h3 className={styles.sectionTitle}>Army Distribution</h3>
         {stats.armyDistribution.length > 0 ? (
-          <div>
-            {stats.armyDistribution.map((army, index) => (
-              <div key={army.army} className={styles.armyItem}>
-                <div className={styles.armyLabel}>
-                  <span className={styles.armyName}>{army.army}</span>
-                  <span className={styles.armyCount}>
-                    {army.count} players ({army.percentage.toFixed(1)}%)
-                  </span>
-                </div>
-                <div className={styles.armyBar}>
-                  <div
-                    className={clsx(
-                      styles.armyBarFill,
-                      ARMY_COLORS[index % ARMY_COLORS.length]
-                    )}
-                    style={{ width: `${Math.min(army.percentage, 100)}%` }}
+          <ResponsiveContainer width="100%" height={320}>
+            <PieChart>
+              <Pie
+                data={stats.armyDistribution}
+                dataKey="count"
+                nameKey="army"
+                cx="50%"
+                cy="50%"
+                innerRadius={70}
+                outerRadius={110}
+                paddingAngle={2}
+              >
+                <Label
+                  content={({ viewBox }) => {
+                    if (!viewBox || !('cx' in viewBox)) return null;
+                    const { cx, cy } = viewBox as { cx: number; cy: number };
+                    return (
+                      <g>
+                        <text
+                          x={cx}
+                          y={(cy ?? 0) - 6}
+                          textAnchor="middle"
+                          fill="#f1f5f9"
+                          fontSize={28}
+                          fontWeight="bold"
+                        >
+                          {stats.totalPlayers}
+                        </text>
+                        <text
+                          x={cx}
+                          y={(cy ?? 0) + 14}
+                          textAnchor="middle"
+                          fill="#94a3b8"
+                          fontSize={11}
+                        >
+                          PLAYERS
+                        </text>
+                      </g>
+                    );
+                  }}
+                />
+                {stats.armyDistribution.map((entry, index) => (
+                  <Cell
+                    key={entry.army}
+                    fill={CHART_COLORS[index % CHART_COLORS.length]}
                   />
-                </div>
-              </div>
-            ))}
-          </div>
+                ))}
+              </Pie>
+              <Tooltip
+                formatter={(value: number, name: string) => {
+                  const entry = stats.armyDistribution.find(a => a.army === name);
+                  return [
+                    `${value} players (${entry?.percentage.toFixed(1) ?? 0}%)`,
+                    name,
+                  ];
+                }}
+                {...TOOLTIP_STYLE}
+              />
+              <Legend
+                formatter={(value) => (
+                  <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
+                    {value}
+                  </span>
+                )}
+              />
+            </PieChart>
+          </ResponsiveContainer>
         ) : (
           <p className={styles.emptyText}>No army data available yet.</p>
         )}
@@ -168,123 +228,325 @@ const Statistics: React.FC = () => {
     </div>
   );
 
-  const renderArmies = () => (
-    <div className="card">
-      <h3 className={styles.sectionTitle}>Army Performance Analysis</h3>
-      {stats.armyPerformance.length > 0 ? (
-        <div className="table-responsive">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Army</th>
-                <th>Players</th>
-                <th>Games</th>
-                <th>Win Rate</th>
-                <th>Avg Objective</th>
-                <th>Avg Kill Ratio</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stats.armyPerformance.map((army) => (
-                <tr key={army.army}>
-                  <td>
-                    <strong>{army.army}</strong>
-                  </td>
-                  <td>{army.players.length}</td>
-                  <td>{army.gamesPlayed}</td>
-                  <td>
-                    <span className={winRateClass(army.winRate)}>
-                      {army.winRate.toFixed(1)}%
-                    </span>
-                  </td>
-                  <td>{army.averageObjectivePoints.toFixed(1)}</td>
-                  <td>{army.averageKillRatio.toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <p className={styles.emptyText}>
-          No army performance data available yet. Complete some matches to see
-          statistics.
-        </p>
-      )}
-    </div>
-  );
+  const renderArmies = () => {
+    const radarArmies = stats.armyPerformance.slice(0, 6);
+    const maxObj = Math.max(...radarArmies.map(a => a.averageObjectivePoints), 0.01);
+    const maxKill = Math.max(...radarArmies.map(a => a.averageKillRatio), 0.01);
+    const radarData = [
+      {
+        metric: 'Win Rate',
+        ...Object.fromEntries(radarArmies.map(a => [a.army, Math.round(a.winRate)])),
+      },
+      {
+        metric: 'Objective',
+        ...Object.fromEntries(
+          radarArmies.map(a => [
+            a.army,
+            Math.round((a.averageObjectivePoints / maxObj) * 100),
+          ])
+        ),
+      },
+      {
+        metric: 'Kill Ratio',
+        ...Object.fromEntries(
+          radarArmies.map(a => [
+            a.army,
+            Math.round((a.averageKillRatio / maxKill) * 100),
+          ])
+        ),
+      },
+    ] as Record<string, string | number>[];
 
-  const renderPlayers = () => (
-    <div>
-      {/* Top Performers */}
-      <div className="card">
-        <h3 className={styles.sectionTitle}>Top Performers (by Win Rate)</h3>
-        {stats.topPerformers.length > 0 ? (
-          <div className="table-responsive">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Player</th>
-                  <th>Army</th>
-                  <th>Games</th>
-                  <th>Win Rate</th>
-                  <th>Avg Obj</th>
-                  <th>Kill Ratio</th>
-                  <th>Total Pts</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.topPerformers.map((performance, index) => (
-                  <tr
-                    key={performance.player.id}
-                    className={clsx(
-                      index === 0 && styles.podiumGold,
-                      index === 1 && styles.podiumSilver,
-                      index === 2 && styles.podiumBronze
-                    )}
-                  >
-                    <td>
-                      <strong>
-                        {index < 3 && (
-                          <span className={styles.rankPrefix}>
-                            #{index + 1}
-                          </span>
-                        )}
-                        {performance.player.nickname}
-                      </strong>
-                      {performance.player.isCaptain && (
-                        <span className={styles.captainBadge}>C</span>
+    return (
+      <div>
+        {stats.armyPerformance.length > 0 ? (
+          <>
+            {/* Win Rate Bar Chart */}
+            <div className="card">
+              <h3 className={styles.sectionTitle}>Win Rate by Army</h3>
+              <ResponsiveContainer
+                width="100%"
+                height={Math.max(200, stats.armyPerformance.length * 42)}
+              >
+                <BarChart
+                  data={stats.armyPerformance}
+                  layout="vertical"
+                  margin={{ top: 0, right: 24, bottom: 0, left: 0 }}
+                >
+                  <CartesianGrid
+                    horizontal={false}
+                    stroke="#1e293b"
+                  />
+                  <XAxis
+                    type="number"
+                    domain={[0, 100]}
+                    tickFormatter={v => `${v}%`}
+                    tick={{ fill: '#94a3b8', fontSize: 12 }}
+                    axisLine={{ stroke: '#334155' }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="army"
+                    width={150}
+                    tick={{ fill: '#94a3b8', fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <ReferenceLine
+                    x={50}
+                    stroke="#475569"
+                    strokeDasharray="4 4"
+                    label={{ value: '50%', fill: '#64748b', fontSize: 11 }}
+                  />
+                  <Tooltip
+                    formatter={(v: number) => [`${v.toFixed(1)}%`, 'Win Rate']}
+                    {...TOOLTIP_STYLE}
+                  />
+                  <Bar dataKey="winRate" radius={[0, 4, 4, 0]} maxBarSize={28}>
+                    {stats.armyPerformance.map((entry) => (
+                      <Cell
+                        key={entry.army}
+                        fill={winRateColor(entry.winRate)}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Radar Chart */}
+            {radarArmies.length >= 2 && (
+              <div className="card">
+                <h3 className={styles.sectionTitle}>
+                  Multi-Dimensional Comparison
+                  <span className={styles.chartSubtitle}>
+                    (normalised — Win Rate, Objective Points, Kill Ratio)
+                  </span>
+                </h3>
+                <ResponsiveContainer width="100%" height={320}>
+                  <RadarChart cx="50%" cy="50%" outerRadius={110} data={radarData}>
+                    <PolarGrid stroke="#334155" />
+                    <PolarAngleAxis
+                      dataKey="metric"
+                      tick={{ fill: '#94a3b8', fontSize: 13 }}
+                    />
+                    {radarArmies.map((army, index) => (
+                      <Radar
+                        key={army.army}
+                        name={army.army}
+                        dataKey={army.army}
+                        stroke={CHART_COLORS[index % CHART_COLORS.length]}
+                        fill={CHART_COLORS[index % CHART_COLORS.length]}
+                        fillOpacity={0.12}
+                        strokeWidth={2}
+                      />
+                    ))}
+                    <Legend
+                      formatter={(value) => (
+                        <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
+                          {value}
+                        </span>
                       )}
-                    </td>
-                    <td>{performance.player.army}</td>
-                    <td>{performance.gamesPlayed}</td>
-                    <td>
-                      <span className={winRateClass(performance.winRate)}>
-                        {performance.winRate.toFixed(1)}%
-                      </span>
-                    </td>
-                    <td>
-                      {performance.averageObjectivePoints.toFixed(1)}
-                    </td>
-                    <td>{performance.killRatio.toFixed(2)}</td>
-                    <td>
-                      <span className={styles.totalPoints}>
-                        {performance.totalTournamentPoints}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    />
+                    <Tooltip
+                      formatter={(v: number, name: string) => [`${v}`, name]}
+                      {...TOOLTIP_STYLE}
+                    />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* Performance Table */}
+            <div className="card">
+              <h3 className={styles.sectionTitle}>Army Performance Analysis</h3>
+              <div className="table-responsive">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Army</th>
+                      <th>Players</th>
+                      <th>Games</th>
+                      <th>Win Rate</th>
+                      <th>Avg Objective</th>
+                      <th>Avg Kill Ratio</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.armyPerformance.map((army) => (
+                      <tr key={army.army}>
+                        <td>
+                          <strong>{army.army}</strong>
+                        </td>
+                        <td>{army.players.length}</td>
+                        <td>{army.gamesPlayed}</td>
+                        <td>
+                          <span className={winRateClass(army.winRate)}>
+                            {army.winRate.toFixed(1)}%
+                          </span>
+                        </td>
+                        <td>{army.averageObjectivePoints.toFixed(1)}</td>
+                        <td>{army.averageKillRatio.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
         ) : (
-          <p className={styles.emptyText}>
-            No player performance data available yet. Complete some matches to
-            see statistics.
-          </p>
+          <div className="card">
+            <p className={styles.emptyText}>
+              No army performance data available yet. Complete some matches to see
+              statistics.
+            </p>
+          </div>
         )}
       </div>
-    </div>
-  );
+    );
+  };
+
+  const renderPlayers = () => {
+    const playerBarData = stats.topPerformers.map(p => ({
+      name: p.player.nickname,
+      'Tournament Points': p.totalTournamentPoints,
+      'Win Rate (%)': Math.round(p.winRate),
+      'Avg Objective': parseFloat(p.averageObjectivePoints.toFixed(1)),
+    }));
+
+    return (
+      <div>
+        {/* Top Performers Bar Chart */}
+        {stats.topPerformers.length > 0 && (
+          <div className="card">
+            <h3 className={styles.sectionTitle}>Top Performers Overview</h3>
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart
+                data={playerBarData}
+                margin={{ top: 8, right: 16, bottom: 0, left: 0 }}
+              >
+                <CartesianGrid vertical={false} stroke="#1e293b" />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fill: '#94a3b8', fontSize: 12 }}
+                  axisLine={{ stroke: '#334155' }}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fill: '#94a3b8', fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  formatter={(value: number, name: string) => {
+                    if (name === 'Win Rate (%)') return [`${value}%`, name];
+                    if (name === 'Avg Objective') return [value.toFixed(1), name];
+                    return [value, name];
+                  }}
+                  {...TOOLTIP_STYLE}
+                />
+                <Legend
+                  formatter={(value) => (
+                    <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
+                      {value}
+                    </span>
+                  )}
+                />
+                <Bar
+                  dataKey="Tournament Points"
+                  fill={CHART_COLORS[0]}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={32}
+                />
+                <Bar
+                  dataKey="Win Rate (%)"
+                  fill={CHART_COLORS[1]}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={32}
+                />
+                <Bar
+                  dataKey="Avg Objective"
+                  fill={CHART_COLORS[2]}
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={32}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Top Performers Table */}
+        <div className="card">
+          <h3 className={styles.sectionTitle}>Top Performers (by Win Rate)</h3>
+          {stats.topPerformers.length > 0 ? (
+            <div className="table-responsive">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Player</th>
+                    <th>Army</th>
+                    <th>Games</th>
+                    <th>Win Rate</th>
+                    <th>Avg Obj</th>
+                    <th>Kill Ratio</th>
+                    <th>Total Pts</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.topPerformers.map((performance, index) => (
+                    <tr
+                      key={performance.player.id}
+                      className={clsx(
+                        index === 0 && styles.podiumGold,
+                        index === 1 && styles.podiumSilver,
+                        index === 2 && styles.podiumBronze
+                      )}
+                    >
+                      <td>
+                        <strong>
+                          {index < 3 && (
+                            <span className={styles.rankPrefix}>
+                              #{index + 1}
+                            </span>
+                          )}
+                          {performance.player.nickname}
+                        </strong>
+                        {performance.player.isCaptain && (
+                          <span className={styles.captainBadge}>C</span>
+                        )}
+                      </td>
+                      <td>{performance.player.army}</td>
+                      <td>{performance.gamesPlayed}</td>
+                      <td>
+                        <span className={winRateClass(performance.winRate)}>
+                          {performance.winRate.toFixed(1)}%
+                        </span>
+                      </td>
+                      <td>
+                        {performance.averageObjectivePoints.toFixed(1)}
+                      </td>
+                      <td>{performance.killRatio.toFixed(2)}</td>
+                      <td>
+                        <span className={styles.totalPoints}>
+                          {performance.totalTournamentPoints}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className={styles.emptyText}>
+              No player performance data available yet. Complete some matches to
+              see statistics.
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const renderAchievements = () => (
     <div>

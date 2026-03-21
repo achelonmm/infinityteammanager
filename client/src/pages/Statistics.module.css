@@ -188,52 +188,13 @@
   box-shadow: 0 0 8px var(--color-secondary-dark);
 }
 
-/* Army distribution bar */
-.armyItem {
-  margin-bottom: var(--spacing-4);
+/* Chart subtitle (e.g. normalisation note on radar) */
+.chartSubtitle {
+  margin-left: var(--spacing-2);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-normal);
+  color: var(--color-neutral-500);
 }
-
-.armyLabel {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-2);
-}
-
-.armyName {
-  font-weight: var(--font-weight-bold);
-  color: var(--color-neutral-900);
-}
-
-.armyCount {
-  color: var(--color-neutral-600);
-  font-size: var(--font-size-sm);
-}
-
-.armyBar {
-  height: 20px;
-  background: var(--color-surface-elevated);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.armyBarFill {
-  height: 100%;
-  border-radius: var(--radius-full);
-  transition: width 0.3s ease;
-}
-
-/* Army color palette (CSS vars set inline for the fill bar) */
-.armyColor0 { background: var(--color-secondary-dark); }
-.armyColor1 { background: var(--color-secondary); }
-.armyColor2 { background: var(--color-success); }
-.armyColor3 { background: var(--color-accent); }
-.armyColor4 { background: var(--color-error); }
-.armyColor5 { background: #0891b2; }
-.armyColor6 { background: var(--color-neutral-500); }
-.armyColor7 { background: var(--color-rank-bronze); }
-.armyColor8 { background: var(--color-error-dark); }
-.armyColor9 { background: #6366f1; }
-.armyColor10 { background: var(--color-success-dark); }
 
 /* Empty state text */
 .emptyText {
