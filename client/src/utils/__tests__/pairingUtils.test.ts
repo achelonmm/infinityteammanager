@@ -176,7 +176,7 @@ describe('Pairing System – 20 teams × 5 rounds', () => {
       });
 
       // Sort by the same criteria the algorithm uses
-      const ranked = [...stats.entries()].sort((a, b) => {
+      const ranked = Array.from(stats.entries()).sort((a, b) => {
         if (a[1].tp !== b[1].tp) return b[1].tp - a[1].tp;
         if (a[1].op !== b[1].op) return b[1].op - a[1].op;
         return b[1].vpDiff - a[1].vpDiff;

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Trophy, Tag, Save, AlertCircle } from 'lucide-react';
+import { Trophy, Save } from 'lucide-react';
+import { TextInput, Button, Group, Stack, Alert } from '@mantine/core';
 import { TournamentSummary } from '../types';
 import Modal from './Modal';
-import styles from './TournamentForm.module.css';
 
 interface TournamentFormProps {
   tournament?: TournamentSummary;
@@ -49,59 +49,39 @@ const TournamentForm: React.FC<TournamentFormProps> = ({ tournament, onSave, onC
       titleIcon={<Trophy size={20} />}
       size="sm"
     >
-      {error && (
-        <div className={styles.errorBanner}>
-          <AlertCircle size={16} />
-          <span>{error}</span>
-        </div>
-      )}
+      <Stack gap="md">
+        {error && (
+          <Alert color="red" variant="light">{error}</Alert>
+        )}
 
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <div className={styles.fieldGroup}>
-          <label className={styles.fieldLabel}>
-            <Tag size={16} className={styles.fieldLabelIcon} />
-            Tournament Name:
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className={styles.input}
-            placeholder="Enter tournament name..."
-            disabled={isSubmitting}
-            autoFocus
-            maxLength={200}
-          />
-        </div>
+        <form onSubmit={handleSubmit}>
+          <Stack gap="md">
+            <TextInput
+              label="Tournament Name"
+              placeholder="Enter tournament name..."
+              value={name}
+              onChange={(e) => setName(e.currentTarget.value)}
+              disabled={isSubmitting}
+              autoFocus
+              maxLength={200}
+            />
 
-        <div className={styles.actions}>
-          <button
-            type="button"
-            onClick={onCancel}
-            className={styles.cancelButton}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className={styles.submitButton}
-            disabled={isSubmitting || !name.trim()}
-          >
-            {isSubmitting ? (
-              <>
-                <div className={styles.spinner} />
-                {isEditing ? 'Saving...' : 'Creating...'}
-              </>
-            ) : (
-              <>
-                <Save size={16} />
+            <Group justify="flex-end" gap="sm">
+              <Button variant="default" onClick={onCancel} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                disabled={!name.trim()}
+                leftSection={<Save size={16} />}
+              >
                 {isEditing ? 'Save Changes' : 'Create Tournament'}
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Stack>
     </Modal>
   );
 };

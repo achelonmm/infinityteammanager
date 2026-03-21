@@ -1,6 +1,5 @@
 import React from 'react';
-import clsx from 'clsx';
-import styles from './LoadingSkeleton.module.css';
+import { Skeleton, Group, Stack, Paper } from '@mantine/core';
 
 interface SkeletonProps {
   variant: 'stat-card' | 'table-rows' | 'card';
@@ -18,45 +17,49 @@ const LoadingSkeleton: React.FC<SkeletonProps> = ({
   switch (variant) {
     case 'stat-card':
       return (
-        <div className={styles.statCardGrid}>
+        <Group grow>
           {Array.from({ length: count }).map((_, i) => (
-            <div key={i} className={styles.statCardItem}>
-              <div className={clsx(styles.skeleton, styles.statCardIcon)} />
-              <div className={clsx(styles.skeleton, styles.statCardLabel)} />
-              <div className={clsx(styles.skeleton, styles.statCardValue)} />
-            </div>
+            <Paper key={i} p="md" radius="md" bg="dark.7">
+              <Stack gap="sm">
+                <Skeleton height={20} width="40%" />
+                <Skeleton height={32} width="60%" />
+                <Skeleton height={14} width="30%" />
+              </Stack>
+            </Paper>
           ))}
-        </div>
+        </Group>
       );
 
     case 'table-rows':
       return (
-        <div className={styles.tableContainer}>
-          <div className={styles.tableHeader}>
+        <Stack gap="xs">
+          <Group gap="xs">
             {Array.from({ length: columns }).map((_, i) => (
-              <div key={i} className={clsx(styles.skeleton, styles.tableHeaderCell)} />
+              <Skeleton key={i} height={16} style={{ flex: 1 }} />
             ))}
-          </div>
+          </Group>
           {Array.from({ length: count }).map((_, i) => (
-            <div key={i} className={styles.tableRow}>
-              <div className={clsx(styles.skeleton, styles.tableCellNarrow)} />
+            <Group key={i} gap="xs">
+              <Skeleton height={20} width={40} />
               {Array.from({ length: columns - 1 }).map((_, j) => (
-                <div key={j} className={clsx(styles.skeleton, styles.tableCell)} />
+                <Skeleton key={j} height={20} style={{ flex: 1 }} />
               ))}
-            </div>
+            </Group>
           ))}
-        </div>
+        </Stack>
       );
 
     case 'card':
       return (
         <>
           {Array.from({ length: count }).map((_, i) => (
-            <div key={i} className={styles.cardItem}>
-              {Array.from({ length: lines }).map((_, j) => (
-                <div key={j} className={clsx(styles.skeleton, styles.cardLine)} />
-              ))}
-            </div>
+            <Paper key={i} p="md" radius="md" bg="dark.7" mb="sm">
+              <Stack gap="sm">
+                {Array.from({ length: lines }).map((_, j) => (
+                  <Skeleton key={j} height={16} width={j === 0 ? '80%' : '60%'} />
+                ))}
+              </Stack>
+            </Paper>
           ))}
         </>
       );

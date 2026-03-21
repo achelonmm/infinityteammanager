@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ClipboardList, AlertCircle, FileText, Trophy, Zap, Target,
-  Gamepad2, Palette, Clock, Flag, Swords, X, Save
+  ClipboardList, FileText, Trophy, Zap, Target,
+  Gamepad2, Palette, Clock, Flag, Swords, Save
 } from 'lucide-react';
+import {
+  NumberInput, Checkbox, Button, Group, Stack, Text, Paper,
+  Alert, SimpleGrid, Badge, List, ThemeIcon, Box,
+} from '@mantine/core';
 import { Player, IndividualMatch } from '../types';
 import { calculateTeamTournamentPoints } from '../utils/rankingUtils';
 import Modal from './Modal';
-import clsx from 'clsx';
-import styles from './IndividualMatchResultForm.module.css';
 
 interface IndividualMatchResultFormProps {
   individualMatch: IndividualMatch;
@@ -138,329 +140,198 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
       titleIcon={<ClipboardList size={20} />}
       size="xl"
     >
-      {/* Validation Errors */}
-      {validationErrors.length > 0 && (
-        <div className={styles.errorBanner}>
-          <AlertCircle size={16} />
-          <div>
-            <strong>Please fix the following errors:</strong>
-            <ul className={styles.errorList}>
-              {validationErrors.map((error, index) => (
-                <li key={index}>{error}</li>
+      <Stack gap="md">
+        {validationErrors.length > 0 && (
+          <Alert color="red" variant="light" title="Please fix the following errors:">
+            <List size="sm">
+              {validationErrors.map((err, index) => (
+                <List.Item key={index}>{err}</List.Item>
               ))}
-            </ul>
-          </div>
-        </div>
-      )}
+            </List>
+          </Alert>
+        )}
 
-      {/* Scoring Guide */}
-      <div className={styles.scoringGuide}>
-        <h4 className={styles.scoringGuideTitle}>
-          <FileText size={18} className={styles.scoringGuideIcon} />
-          Infinity Tournament Scoring
-        </h4>
-        <div className={styles.scoringGrid}>
-          <div>
-            <strong className={styles.scoringCategory}>
-              <Trophy size={14} /> Base Tournament Points:
-            </strong>
-            <ul className={styles.scoringList}>
-              <li><strong>Victory:</strong> 4 points (more Obj. Points)</li>
-              <li><strong>Tie:</strong> 2 points (same Obj. Points)</li>
-              <li><strong>Defeat:</strong> 0 points (less Obj. Points)</li>
-            </ul>
-          </div>
-          <div>
-            <strong className={styles.scoringCategory}>
-              <Zap size={14} /> Bonus / Penalty Points:
-            </strong>
-            <ul className={styles.scoringList}>
-              <li><strong>Offensive:</strong> +1 pt (5+ Obj. Points)</li>
-              <li><strong>Defensive:</strong> +1 pt (lose by &le;2 Obj.)</li>
-              <li><strong>Painted Army:</strong> +1 pt</li>
-              <li><strong>Late Army List:</strong> -1 pt</li>
-            </ul>
-          </div>
-          <div>
-            <strong className={styles.scoringCategory}>
-              <Target size={14} /> Tiebreakers:
-            </strong>
-            <ul className={styles.scoringList}>
-              <li>1st: Objective Points</li>
-              <li>2nd: Victory Points Difference</li>
-              <li>3rd: Victory Points For</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+        {/* Scoring Guide */}
+        <Paper p="sm" radius="md" withBorder>
+          <Group gap="xs" mb="xs">
+            <FileText size={18} />
+            <Text fw={600} size="sm">Infinity Tournament Scoring</Text>
+          </Group>
+          <SimpleGrid cols={3} spacing="xs">
+            <Box>
+              <Group gap={4} mb={4}><Trophy size={14} /><Text fw={600} size="xs">Base Points:</Text></Group>
+              <Text size="xs" c="dimmed">Victory: 4 pts | Tie: 2 pts | Defeat: 0 pts</Text>
+            </Box>
+            <Box>
+              <Group gap={4} mb={4}><Zap size={14} /><Text fw={600} size="xs">Bonus/Penalty:</Text></Group>
+              <Text size="xs" c="dimmed">Offensive: +1 | Defensive: +1 | Painted: +1 | Late: -1</Text>
+            </Box>
+            <Box>
+              <Group gap={4} mb={4}><Target size={14} /><Text fw={600} size="xs">Tiebreakers:</Text></Group>
+              <Text size="xs" c="dimmed">1st: Obj Pts | 2nd: VP Diff | 3rd: VP For</Text>
+            </Box>
+          </SimpleGrid>
+        </Paper>
 
-      {/* Player Cards */}
-      <div className={styles.playerCards}>
-        <div className={clsx(styles.playerCard, styles.playerCard1)}>
-          <h4 className={styles.playerName}>
-            <Gamepad2 size={18} />
-            {player1.nickname}
-          </h4>
-          <p className={styles.playerArmy}>
-            {player1.army}
-            {player1.isPainted && (
-              <span className={styles.paintedTag}>
-                <Palette size={12} /> Painted
-              </span>
-            )}
-          </p>
-          <div className={styles.pointsDisplay}>
-            {calculatedPoints.points1} Tournament Points
-          </div>
-        </div>
+        {/* Player Cards */}
+        <SimpleGrid cols={2}>
+          <Paper p="md" radius="md" withBorder style={{ borderColor: 'var(--mantine-color-cyan-8)' }}>
+            <Group gap="xs" mb="xs">
+              <Gamepad2 size={18} />
+              <Text fw={700}>{player1.nickname}</Text>
+            </Group>
+            <Group gap="xs" mb="xs">
+              <Text size="sm" c="dimmed">{player1.army}</Text>
+              {player1.isPainted && <Badge size="xs" color="teal" variant="light">Painted</Badge>}
+            </Group>
+            <Badge size="lg" color="cyan" variant="filled">
+              {calculatedPoints.points1} Tournament Points
+            </Badge>
+          </Paper>
 
-        <div className={clsx(styles.playerCard, styles.playerCard2)}>
-          <h4 className={styles.playerName}>
-            <Gamepad2 size={18} />
-            {player2.nickname}
-          </h4>
-          <p className={styles.playerArmy}>
-            {player2.army}
-            {player2.isPainted && (
-              <span className={styles.paintedTag}>
-                <Palette size={12} /> Painted
-              </span>
-            )}
-          </p>
-          <div className={styles.pointsDisplay}>
-            {calculatedPoints.points2} Tournament Points
-          </div>
-        </div>
-      </div>
+          <Paper p="md" radius="md" withBorder style={{ borderColor: 'var(--mantine-color-red-8)' }}>
+            <Group gap="xs" mb="xs">
+              <Gamepad2 size={18} />
+              <Text fw={700}>{player2.nickname}</Text>
+            </Group>
+            <Group gap="xs" mb="xs">
+              <Text size="sm" c="dimmed">{player2.army}</Text>
+              {player2.isPainted && <Badge size="xs" color="teal" variant="light">Painted</Badge>}
+            </Group>
+            <Badge size="lg" color="cyan" variant="filled">
+              {calculatedPoints.points2} Tournament Points
+            </Badge>
+          </Paper>
+        </SimpleGrid>
 
-      {/* Match Outcome */}
-      <div className={styles.outcomeBar}>
-        <Flag size={18} />
-        {getMatchOutcome()}
-      </div>
+        {/* Match Outcome */}
+        <Paper p="sm" radius="md" bg="dark.7" ta="center">
+          <Group gap="xs" justify="center">
+            <Flag size={18} />
+            <Text fw={600}>{getMatchOutcome()}</Text>
+          </Group>
+        </Paper>
 
-      <form onSubmit={handleSubmit} className={styles.form}>
-        {/* Objective Points */}
-        <div className={styles.section}>
-          <h5 className={styles.sectionTitle}>
-            <Target size={18} className={styles.sectionIcon} />
-            Objective Points (determines winner) - Range: 0-10
-          </h5>
-          <div className={styles.inputRow}>
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel}>
-                {player1.nickname}:
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="10"
-                value={results.objectivePoints1 === 0 ? '' : results.objectivePoints1}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value) || 0;
-                  handleChange('objectivePoints1', Math.min(10, Math.max(0, value)));
-                }}
-                className={styles.input}
-                disabled={isSubmitting}
-                placeholder="0"
-                autoFocus
-              />
-              <small className={styles.inputHint}>Must be between 0 and 10</small>
-            </div>
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel}>
-                {player2.nickname}:
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="10"
-                value={results.objectivePoints2 === 0 ? '' : results.objectivePoints2}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value) || 0;
-                  handleChange('objectivePoints2', Math.min(10, Math.max(0, value)));
-                }}
-                className={styles.input}
-                disabled={isSubmitting}
-                placeholder="0"
-              />
-              <small className={styles.inputHint}>Must be between 0 and 10</small>
-            </div>
-          </div>
-        </div>
+        <form onSubmit={handleSubmit}>
+          <Stack gap="md">
+            {/* Objective Points */}
+            <Box>
+              <Group gap="xs" mb="xs">
+                <Target size={18} />
+                <Text fw={600} size="sm">Objective Points (determines winner) - Range: 0-10</Text>
+              </Group>
+              <SimpleGrid cols={2}>
+                <NumberInput
+                  label={player1.nickname}
+                  min={0}
+                  max={10}
+                  value={results.objectivePoints1}
+                  onChange={(v) => handleChange('objectivePoints1', typeof v === 'number' ? v : 0)}
+                  disabled={isSubmitting}
+                  description="Must be between 0 and 10"
+                  autoFocus
+                />
+                <NumberInput
+                  label={player2.nickname}
+                  min={0}
+                  max={10}
+                  value={results.objectivePoints2}
+                  onChange={(v) => handleChange('objectivePoints2', typeof v === 'number' ? v : 0)}
+                  disabled={isSubmitting}
+                  description="Must be between 0 and 10"
+                />
+              </SimpleGrid>
+            </Box>
 
-        {/* Victory Points */}
-        <div className={styles.section}>
-          <h5 className={styles.sectionTitle}>
-            <Swords size={18} className={styles.sectionIcon} />
-            Victory Points For (tiebreaker) - Range: 0-300
-          </h5>
-          <div className={styles.inputRow}>
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel}>
-                {player1.nickname}:
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="300"
-                value={results.victoryPointsFor1 === 0 ? '' : results.victoryPointsFor1}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value) || 0;
-                  handleChange('victoryPointsFor1', Math.min(300, Math.max(0, value)));
-                }}
-                className={styles.input}
-                disabled={isSubmitting}
-                placeholder="0"
-              />
-              <small className={styles.inputHint}>Must be between 0 and 300</small>
-            </div>
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel}>
-                {player2.nickname}:
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="300"
-                value={results.victoryPointsFor2 === 0 ? '' : results.victoryPointsFor2}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value) || 0;
-                  handleChange('victoryPointsFor2', Math.min(300, Math.max(0, value)));
-                }}
-                className={styles.input}
-                disabled={isSubmitting}
-                placeholder="0"
-              />
-              <small className={styles.inputHint}>Must be between 0 and 300</small>
-            </div>
-          </div>
-        </div>
+            {/* Victory Points */}
+            <Box>
+              <Group gap="xs" mb="xs">
+                <Swords size={18} />
+                <Text fw={600} size="sm">Victory Points For (tiebreaker) - Range: 0-300</Text>
+              </Group>
+              <SimpleGrid cols={2}>
+                <NumberInput
+                  label={player1.nickname}
+                  min={0}
+                  max={300}
+                  value={results.victoryPointsFor1}
+                  onChange={(v) => handleChange('victoryPointsFor1', typeof v === 'number' ? v : 0)}
+                  disabled={isSubmitting}
+                  description="Must be between 0 and 300"
+                />
+                <NumberInput
+                  label={player2.nickname}
+                  min={0}
+                  max={300}
+                  value={results.victoryPointsFor2}
+                  onChange={(v) => handleChange('victoryPointsFor2', typeof v === 'number' ? v : 0)}
+                  disabled={isSubmitting}
+                  description="Must be between 0 and 300"
+                />
+              </SimpleGrid>
+            </Box>
 
-        {/* Painted Army Bonus */}
-        <div className={styles.section}>
-          <h5 className={styles.sectionTitle}>
-            <Palette size={18} className={styles.sectionIcon} />
-            Painted Army Bonus (+1 Tournament Point)
-          </h5>
-          <div className={styles.inputRow}>
-            <label className={clsx(styles.paintedToggle, results.paintedBonus1 && styles.paintedToggleActive)}>
-              <input
-                type="checkbox"
-                checked={results.paintedBonus1}
-                onChange={(e) => handleChange('paintedBonus1', e.target.checked)}
-                disabled={isSubmitting}
-                className={styles.checkbox}
-              />
-              <Palette size={20} className={styles.paintedToggleIcon} />
-              <div>
-                <strong>{player1.nickname}</strong>
-                {player1.isPainted && (
-                  <div className={styles.paintedNote}>
-                    Army marked as painted in profile
-                  </div>
-                )}
-              </div>
-            </label>
+            {/* Painted Army Bonus */}
+            <Box>
+              <Group gap="xs" mb="xs">
+                <Palette size={18} />
+                <Text fw={600} size="sm">Painted Army Bonus (+1 Tournament Point)</Text>
+              </Group>
+              <SimpleGrid cols={2}>
+                <Checkbox
+                  label={player1.nickname}
+                  description={player1.isPainted ? 'Army marked as painted in profile' : undefined}
+                  checked={results.paintedBonus1}
+                  onChange={(e) => handleChange('paintedBonus1', e.currentTarget.checked)}
+                  disabled={isSubmitting}
+                />
+                <Checkbox
+                  label={player2.nickname}
+                  description={player2.isPainted ? 'Army marked as painted in profile' : undefined}
+                  checked={results.paintedBonus2}
+                  onChange={(e) => handleChange('paintedBonus2', e.currentTarget.checked)}
+                  disabled={isSubmitting}
+                />
+              </SimpleGrid>
+            </Box>
 
-            <label className={clsx(styles.paintedToggle, results.paintedBonus2 && styles.paintedToggleActive)}>
-              <input
-                type="checkbox"
-                checked={results.paintedBonus2}
-                onChange={(e) => handleChange('paintedBonus2', e.target.checked)}
-                disabled={isSubmitting}
-                className={styles.checkbox}
-              />
-              <Palette size={20} className={styles.paintedToggleIcon} />
-              <div>
-                <strong>{player2.nickname}</strong>
-                {player2.isPainted && (
-                  <div className={styles.paintedNote}>
-                    Army marked as painted in profile
-                  </div>
-                )}
-              </div>
-            </label>
-          </div>
-        </div>
+            {/* Late Army List Penalty */}
+            <Box>
+              <Group gap="xs" mb="xs">
+                <Clock size={18} />
+                <Text fw={600} size="sm">Late Army List Penalty (-1 Tournament Point)</Text>
+              </Group>
+              <SimpleGrid cols={2}>
+                <Checkbox
+                  label={player1.nickname}
+                  description={player1.armyListLate ? 'Army list marked as late in profile' : undefined}
+                  checked={results.lateListPenalty1}
+                  onChange={(e) => handleChange('lateListPenalty1', e.currentTarget.checked)}
+                  disabled={isSubmitting}
+                  color="red"
+                />
+                <Checkbox
+                  label={player2.nickname}
+                  description={player2.armyListLate ? 'Army list marked as late in profile' : undefined}
+                  checked={results.lateListPenalty2}
+                  onChange={(e) => handleChange('lateListPenalty2', e.currentTarget.checked)}
+                  disabled={isSubmitting}
+                  color="red"
+                />
+              </SimpleGrid>
+            </Box>
 
-        {/* Late Army List Penalty */}
-        <div className={styles.section}>
-          <h5 className={styles.sectionTitle}>
-            <Clock size={18} className={styles.sectionIcon} />
-            Late Army List Penalty (-1 Tournament Point)
-          </h5>
-          <div className={styles.inputRow}>
-            <label className={clsx(styles.lateToggle, results.lateListPenalty1 && styles.lateToggleActive)}>
-              <input
-                type="checkbox"
-                checked={results.lateListPenalty1}
-                onChange={(e) => handleChange('lateListPenalty1', e.target.checked)}
-                disabled={isSubmitting}
-                className={styles.checkbox}
-              />
-              <Clock size={20} className={styles.lateToggleIcon} />
-              <div>
-                <strong>{player1.nickname}</strong>
-                {player1.armyListLate && (
-                  <div className={styles.lateNote}>
-                    Army list marked as late in profile
-                  </div>
-                )}
-              </div>
-            </label>
-
-            <label className={clsx(styles.lateToggle, results.lateListPenalty2 && styles.lateToggleActive)}>
-              <input
-                type="checkbox"
-                checked={results.lateListPenalty2}
-                onChange={(e) => handleChange('lateListPenalty2', e.target.checked)}
-                disabled={isSubmitting}
-                className={styles.checkbox}
-              />
-              <Clock size={20} className={styles.lateToggleIcon} />
-              <div>
-                <strong>{player2.nickname}</strong>
-                {player2.armyListLate && (
-                  <div className={styles.lateNote}>
-                    Army list marked as late in profile
-                  </div>
-                )}
-              </div>
-            </label>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className={styles.actions}>
-          <button
-            type="button"
-            onClick={onCancel}
-            className={styles.cancelButton}
-            disabled={isSubmitting}
-          >
-            <X size={16} />
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className={styles.submitButton}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <>
-                <div className={styles.spinner} />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save size={16} />
+            <Group justify="flex-end" gap="sm">
+              <Button variant="default" onClick={onCancel} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button type="submit" loading={isSubmitting} leftSection={<Save size={16} />}>
                 Save Results
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      </Stack>
     </Modal>
   );
 };

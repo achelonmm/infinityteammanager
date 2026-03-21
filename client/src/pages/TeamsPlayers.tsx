@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import clsx from 'clsx';
 import {
   Users,
   Search,
@@ -14,35 +13,33 @@ import {
   Palette,
   Clock,
   Rocket,
-  AlertCircle,
 } from 'lucide-react';
+import {
+  Container, Paper, Title, Group, Stack, Text, Button, Alert,
+  Badge, Table, Tabs, TextInput, Select, ActionIcon, Avatar, ThemeIcon,
+} from '@mantine/core';
 import { useTournament } from '../contexts/TournamentContext';
 import { useToast } from '../contexts/ToastContext';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import EditTeamForm from '../components/EditTeamForm';
 import EditPlayerForm from '../components/EditPlayerForm';
 import { Team, Player } from '../types';
-import styles from './TeamsPlayers.module.css';
 
 const TeamsPlayers: React.FC = () => {
   const { getTeams, getPlayers, deleteTeam, updateTeam, updatePlayer, loading, error } = useTournament();
   const toast = useToast();
-  const [activeTab, setActiveTab] = useState<'teams' | 'players'>('teams');
+  const [activeTab, setActiveTab] = useState<string | null>('teams');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterArmy, setFilterArmy] = useState('');
 
-  // Edit modal states
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
 
-  // Get fresh data - this will re-run whenever tournament context updates
   const teams = getTeams();
   const players = getPlayers();
 
-  // Get unique armies for filter
   const uniqueArmies = Array.from(new Set(players.map(p => p.army))).sort();
 
-  // Filter players based on search and army filter
   const filteredPlayers = players.filter(player => {
     const matchesSearch = player.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          teams.find(t => t.id === player.teamId)?.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -50,7 +47,6 @@ const TeamsPlayers: React.FC = () => {
     return matchesSearch && matchesArmy;
   });
 
-  // Filter teams based on search
   const filteredTeams = teams.filter(team =>
     team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     team.players.some(player => player.nickname.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -76,7 +72,7 @@ const TeamsPlayers: React.FC = () => {
     setEditingTeam(team);
   };
 
-  const handleSaveTeam = async (teamId: string, updates: { name: string; captainId: string; players?: any[] }) => {
+  const handleSaveTeam = async (teamId: string, updates: Partial<Team>) => {
     try {
       await updateTeam(teamId, updates);
       setEditingTeam(null);
@@ -104,325 +100,249 @@ const TeamsPlayers: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="container">
-        <h2 className={styles.pageTitle}>
-          <Users size={28} className={styles.pageTitleIcon} />
-          Teams &amp; Players Management
-        </h2>
-        <div className="card">
+      <Container size="xl" py="md">
+        <Group gap="xs" mb="lg">
+          <Users size={28} />
+          <Title order={2}>Teams &amp; Players Management</Title>
+        </Group>
+        <Paper p="lg" radius="md" withBorder>
           <LoadingSkeleton variant="table-rows" count={5} columns={7} />
-        </div>
-      </div>
+        </Paper>
+      </Container>
     );
   }
 
   if (error) {
     return (
-      <div className="container">
-        <h2 className={styles.pageTitle}>
-          <Users size={28} className={styles.pageTitleIcon} />
-          Teams &amp; Players Management
-        </h2>
-        <div className="alert alert-error">
-          <AlertCircle size={18} className={styles.errorIcon} />
-          <strong>Error:</strong> {error}
-        </div>
-      </div>
+      <Container size="xl" py="md">
+        <Group gap="xs" mb="lg">
+          <Users size={28} />
+          <Title order={2}>Teams &amp; Players Management</Title>
+        </Group>
+        <Alert color="red" variant="light" title="Error">{error}</Alert>
+      </Container>
     );
   }
 
   return (
     <>
-      <div className="container animate-fade-in">
-        <h2 className={styles.pageTitle}>
-          <Users size={28} className={styles.pageTitleIcon} />
-          Teams &amp; Players Management
-        </h2>
+      <Container size="xl" py="md">
+        <Group gap="xs" mb="lg">
+          <Users size={28} />
+          <Title order={2}>Teams &amp; Players Management</Title>
+        </Group>
 
         {/* Search and Filter Bar */}
-        <div className={clsx('card', styles.filterBar)}>
-          <div className={styles.filterGrid}>
-            <div className={clsx('form-group', styles.formGroupCompact)}>
-              <label className={clsx('form-label', styles.labelWithIcon)}>
-                <Search size={14} className={styles.labelIcon} />
-                Search:
-              </label>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="form-input"
-                placeholder="Search teams or players..."
-              />
-            </div>
-
+        <Paper p="md" radius="md" withBorder mb="md">
+          <Group>
+            <TextInput
+              placeholder="Search teams or players..."
+              leftSection={<Search size={14} />}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.currentTarget.value)}
+              style={{ flex: 1 }}
+            />
             {activeTab === 'players' && (
-              <div className={clsx('form-group', styles.formGroupCompact)}>
-                <label className={clsx('form-label', styles.labelWithIcon)}>
-                  <Swords size={14} className={styles.labelIcon} />
-                  Filter by Army:
-                </label>
-                <select
-                  value={filterArmy}
-                  onChange={(e) => setFilterArmy(e.target.value)}
-                  className="form-input"
-                >
-                  <option value="">All Armies</option>
-                  {uniqueArmies.map(army => (
-                    <option key={army} value={army}>{army}</option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                placeholder="All Armies"
+                leftSection={<Swords size={14} />}
+                data={uniqueArmies.map(a => ({ value: a, label: a }))}
+                value={filterArmy || null}
+                onChange={(v) => setFilterArmy(v || '')}
+                clearable
+                w={200}
+              />
             )}
-
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setFilterArmy('');
-              }}
-              className={clsx('btn btn-outline', styles.clearBtn)}
+            <Button
+              variant="default"
+              leftSection={<RotateCcw size={16} />}
+              onClick={() => { setSearchTerm(''); setFilterArmy(''); }}
             >
-              <RotateCcw size={16} />
-              Clear Filters
-            </button>
-          </div>
-        </div>
+              Clear
+            </Button>
+          </Group>
+        </Paper>
 
-        {/* Tab Navigation */}
-        <div className={styles.tabBar} role="tablist">
-          <button
-            className={clsx(styles.tab, activeTab === 'teams' && styles.tabActive)}
-            onClick={() => setActiveTab('teams')}
-            role="tab"
-            aria-selected={activeTab === 'teams'}
-          >
-            <Building2 size={18} />
-            Teams ({filteredTeams.length})
-          </button>
-          <button
-            className={clsx(styles.tab, activeTab === 'players' && styles.tabActive)}
-            onClick={() => setActiveTab('players')}
-            role="tab"
-            aria-selected={activeTab === 'players'}
-          >
-            <Gamepad2 size={18} />
-            Players ({filteredPlayers.length})
-          </button>
-        </div>
+        <Tabs value={activeTab} onChange={setActiveTab}>
+          <Tabs.List mb="md">
+            <Tabs.Tab value="teams" leftSection={<Building2 size={16} />}>
+              Teams ({filteredTeams.length})
+            </Tabs.Tab>
+            <Tabs.Tab value="players" leftSection={<Gamepad2 size={16} />}>
+              Players ({filteredPlayers.length})
+            </Tabs.Tab>
+          </Tabs.List>
 
-        <div className={clsx('card', styles.contentCard)}>
-          {loading && (
-            <div className="loading-overlay">
-              <div className="loading-spinner"></div>
-            </div>
-          )}
-
-          {activeTab === 'teams' ? (
-            <div className="animate-fade-in">
-              <div className={styles.sectionHeader}>
-                <h3 className={styles.sectionTitle}>
-                  <Building2 size={22} className={styles.sectionTitleIcon} />
-                  Teams Management
-                </h3>
-                <a
-                  href="/registration"
-                  className="btn btn-success"
-                >
-                  <UserPlus size={18} />
+          <Tabs.Panel value="teams">
+            <Paper p="lg" radius="md" withBorder>
+              <Group justify="space-between" mb="md">
+                <Group gap="xs">
+                  <Building2 size={22} />
+                  <Title order={3}>Teams Management</Title>
+                </Group>
+                <Button component="a" href="/registration" color="teal" leftSection={<UserPlus size={18} />}>
                   Add New Team
-                </a>
-              </div>
+                </Button>
+              </Group>
 
               {filteredTeams.length === 0 ? (
-                <div className={styles.emptyState}>
-                  <div className={styles.emptyIcon}>
-                    {searchTerm ? <Search size={48} /> : <Rocket size={48} />}
-                  </div>
-                  <p className={styles.emptyText}>
+                <Stack align="center" gap="md" py="xl">
+                  <ThemeIcon size={64} variant="light" color="cyan" radius="xl">
+                    {searchTerm ? <Search size={32} /> : <Rocket size={32} />}
+                  </ThemeIcon>
+                  <Text c="dimmed">
                     {searchTerm ? 'No teams found matching your search.' : 'No teams registered yet.'}
-                  </p>
+                  </Text>
                   {!searchTerm && (
-                    <a href="/registration" className="btn btn-primary">
-                      <Rocket size={18} />
+                    <Button component="a" href="/registration" leftSection={<Rocket size={18} />}>
                       Register the first team
-                    </a>
+                    </Button>
                   )}
-                </div>
+                </Stack>
               ) : (
-                <div>
+                <Stack gap="sm">
                   {filteredTeams.map((team) => {
                     const captain = team.players.find(p => p.isCaptain);
                     return (
-                      <div
-                        key={team.id}
-                        className={styles.teamCard}
-                      >
-                        <div className={styles.teamCardGrid}>
-                          <div className={styles.teamAvatar}>
-                            {team.name.charAt(0).toUpperCase()}
-                          </div>
-
-                          <div>
-                            <h4 className={styles.teamName}>
-                              {team.name}
-                            </h4>
-                            <div className={styles.teamMeta}>
-                              <div>
-                                <span className={styles.metaLabel}>
-                                  <Crown size={14} className={styles.metaIcon} />
-                                  Captain:
-                                </span>{' '}
-                                {captain?.nickname || 'No captain assigned'}
-                              </div>
-                              <div>
-                                <span className={styles.metaLabel}>
-                                  <Users size={14} className={styles.metaIcon} />
-                                  Players:
-                                </span>{' '}
-                                {team.players.map(p => p.nickname).join(', ')}
-                              </div>
+                      <Paper key={team.id} p="md" radius="md" withBorder>
+                        <Group justify="space-between" wrap="nowrap">
+                          <Group gap="md" wrap="nowrap">
+                            <Avatar color="cyan" radius="xl" size="md">
+                              {team.name.charAt(0).toUpperCase()}
+                            </Avatar>
+                            <div>
+                              <Text fw={700}>{team.name}</Text>
+                              <Group gap="xs">
+                                <Group gap={4}>
+                                  <Crown size={14} color="var(--mantine-color-yellow-5)" />
+                                  <Text size="sm" c="dimmed">
+                                    {captain?.nickname || 'No captain'}
+                                  </Text>
+                                </Group>
+                                <Text size="sm" c="dimmed">
+                                  | {team.players.map(p => p.nickname).join(', ')}
+                                </Text>
+                              </Group>
                             </div>
-                          </div>
-
-                          <div className={styles.teamActions}>
-                            <button
-                              className={clsx('btn btn-secondary', styles.btnSm)}
-                              onClick={() => handleEditTeam(team)}
-                            >
-                              <Pencil size={14} />
+                          </Group>
+                          <Group gap="xs">
+                            <Button variant="light" size="xs" leftSection={<Pencil size={14} />} onClick={() => handleEditTeam(team)}>
                               Edit
-                            </button>
-                            <button
-                              className={clsx('btn btn-warning', styles.btnSm)}
-                              onClick={() => handleDeleteTeam(team.id, team.name)}
-                            >
-                              <Trash2 size={14} />
+                            </Button>
+                            <Button variant="light" color="red" size="xs" leftSection={<Trash2 size={14} />} onClick={() => handleDeleteTeam(team.id, team.name)}>
                               Delete
-                            </button>
-                          </div>
-                        </div>
-                      </div>
+                            </Button>
+                          </Group>
+                        </Group>
+                      </Paper>
                     );
                   })}
-                </div>
+                </Stack>
               )}
-            </div>
-          ) : (
-            <div className="animate-fade-in">
-              <div className={styles.sectionHeader}>
-                <h3 className={styles.sectionTitle}>
-                  <Gamepad2 size={22} className={styles.sectionTitleIcon} />
-                  Players Management
-                </h3>
-                <button
-                  className="btn btn-success"
-                  onClick={() => toast.info('Add individual player functionality coming soon!')}
-                >
-                  <UserPlus size={18} />
+            </Paper>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="players">
+            <Paper p="lg" radius="md" withBorder>
+              <Group justify="space-between" mb="md">
+                <Group gap="xs">
+                  <Gamepad2 size={22} />
+                  <Title order={3}>Players Management</Title>
+                </Group>
+                <Button color="teal" leftSection={<UserPlus size={18} />} onClick={() => toast.info('Add individual player functionality coming soon!')}>
                   Add New Player
-                </button>
-              </div>
+                </Button>
+              </Group>
 
               {filteredPlayers.length === 0 ? (
-                <div className={styles.emptyState}>
-                  <div className={styles.emptyIcon}>
-                    {searchTerm || filterArmy ? <Search size={48} /> : <Gamepad2 size={48} />}
-                  </div>
-                  <p className={styles.emptyText}>
-                    {searchTerm || filterArmy ? 'No players found matching your filters.' : 'No players registered yet. Register teams first to see players here.'}
-                  </p>
-                </div>
+                <Stack align="center" gap="md" py="xl">
+                  <ThemeIcon size={64} variant="light" color="cyan" radius="xl">
+                    {searchTerm || filterArmy ? <Search size={32} /> : <Gamepad2 size={32} />}
+                  </ThemeIcon>
+                  <Text c="dimmed">
+                    {searchTerm || filterArmy ? 'No players found matching your filters.' : 'No players registered yet.'}
+                  </Text>
+                </Stack>
               ) : (
-                <div className={styles.tableWrap}>
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        <th>Player</th>
-                        <th>Team</th>
-                        <th>Army</th>
-                        <th>ITS Pin</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+                <Table.ScrollContainer minWidth={800}>
+                  <Table striped highlightOnHover>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>Player</Table.Th>
+                        <Table.Th>Team</Table.Th>
+                        <Table.Th>Army</Table.Th>
+                        <Table.Th>ITS Pin</Table.Th>
+                        <Table.Th>Role</Table.Th>
+                        <Table.Th>Status</Table.Th>
+                        <Table.Th>Actions</Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
                       {filteredPlayers.map((player) => {
                         const team = teams.find(t => t.id === player.teamId);
                         return (
-                          <tr key={player.id}>
-                            <td>
-                              <div className={styles.playerCell}>
-                                <div className={clsx(
-                                  styles.playerAvatar,
-                                  player.isCaptain ? styles.playerAvatarCaptain : styles.playerAvatarDefault
-                                )}>
-                                  {player.isCaptain
-                                    ? <Crown size={16} />
-                                    : player.nickname.charAt(0).toUpperCase()}
-                                </div>
-                                <strong>{player.nickname}</strong>
-                              </div>
-                            </td>
-                            <td>{team?.name || 'Unknown'}</td>
-                            <td>
-                              <span className={styles.armyBadge}>
-                                {player.army}
-                              </span>
-                            </td>
-                            <td className={styles.itsPin}>{player.itsPin}</td>
-                            <td>
+                          <Table.Tr key={player.id}>
+                            <Table.Td>
+                              <Group gap="xs" wrap="nowrap">
+                                <Avatar
+                                  size="sm"
+                                  radius="xl"
+                                  color={player.isCaptain ? 'yellow' : 'cyan'}
+                                >
+                                  {player.isCaptain ? <Crown size={14} /> : player.nickname.charAt(0).toUpperCase()}
+                                </Avatar>
+                                <Text fw={600}>{player.nickname}</Text>
+                              </Group>
+                            </Table.Td>
+                            <Table.Td>{team?.name || 'Unknown'}</Table.Td>
+                            <Table.Td>
+                              <Badge variant="light" color="cyan" size="sm">{player.army}</Badge>
+                            </Table.Td>
+                            <Table.Td>
+                              <Text size="sm" ff="monospace">{player.itsPin}</Text>
+                            </Table.Td>
+                            <Table.Td>
                               {player.isCaptain ? (
-                                <span className={styles.captainBadge}>
-                                  <Crown size={14} />
+                                <Badge color="yellow" variant="light" size="sm" leftSection={<Crown size={12} />}>
                                   Captain
-                                </span>
+                                </Badge>
                               ) : (
-                                <span className={styles.rolePlayer}>Player</span>
+                                <Text size="sm" c="dimmed">Player</Text>
                               )}
-                            </td>
-                            <td>
-                              <div className={styles.statusCell}>
+                            </Table.Td>
+                            <Table.Td>
+                              <Group gap={4}>
                                 {player.isPainted ? (
-                                  <span className={styles.paintedBadge}>
-                                    <Palette size={14} />
+                                  <Badge color="teal" variant="light" size="sm" leftSection={<Palette size={12} />}>
                                     Painted
-                                  </span>
+                                  </Badge>
                                 ) : (
-                                  <span className={styles.unpaintedText}>
-                                    Unpainted
-                                  </span>
+                                  <Text size="sm" c="dimmed">Unpainted</Text>
                                 )}
                                 {player.armyListLate && (
-                                  <span className={styles.lateListBadge}>
-                                    <Clock size={14} />
-                                    Late List
-                                  </span>
+                                  <Badge color="red" variant="light" size="sm" leftSection={<Clock size={12} />}>
+                                    Late
+                                  </Badge>
                                 )}
-                              </div>
-                            </td>
-                            <td>
-                              <button
-                                className={clsx('btn btn-secondary', styles.btnSm)}
-                                onClick={() => handleEditPlayer(player)}
-                              >
-                                <Pencil size={14} />
+                              </Group>
+                            </Table.Td>
+                            <Table.Td>
+                              <Button variant="light" size="xs" leftSection={<Pencil size={14} />} onClick={() => handleEditPlayer(player)}>
                                 Edit
-                              </button>
-                            </td>
-                          </tr>
+                              </Button>
+                            </Table.Td>
+                          </Table.Tr>
                         );
                       })}
-                    </tbody>
-                  </table>
-                </div>
+                    </Table.Tbody>
+                  </Table>
+                </Table.ScrollContainer>
               )}
-            </div>
-          )}
-        </div>
-      </div>
+            </Paper>
+          </Tabs.Panel>
+        </Tabs>
+      </Container>
 
-      {/* Edit Team Modal */}
       {editingTeam && (
         <EditTeamForm
           team={editingTeam}
@@ -431,7 +351,6 @@ const TeamsPlayers: React.FC = () => {
         />
       )}
 
-      {/* Edit Player Modal */}
       {editingPlayer && (
         <EditPlayerForm
           player={editingPlayer}

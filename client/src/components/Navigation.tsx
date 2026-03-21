@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import clsx from 'clsx';
 import {
   Trophy,
   TrendingUp,
@@ -15,11 +14,21 @@ import {
   X,
   ListTodo,
 } from 'lucide-react';
+import {
+  Group,
+  Text,
+  Badge,
+  Button,
+  UnstyledButton,
+  Burger,
+  Collapse,
+  Divider,
+  Box,
+} from '@mantine/core';
 import { useAuth } from '../contexts/AuthContext';
 import { useTournamentData } from '../contexts/TournamentDataContext';
 import { useToast } from '../contexts/ToastContext';
 import LoginForm from './LoginForm';
-import styles from './Navigation.module.css';
 
 interface NavItem {
   path: string;
@@ -37,7 +46,6 @@ const Navigation: React.FC = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMenuOpen(false);
   }, [location]);
@@ -65,138 +73,182 @@ const Navigation: React.FC = () => {
     }
   };
 
-  const handleLoginClick = () => {
-    setShowLoginModal(true);
-  };
-
   return (
     <>
-      <nav className={styles.nav}>
-        <div className={styles.container}>
+      <Box
+        component="nav"
+        style={{
+          background: 'var(--mantine-color-dark-9)',
+          borderBottom: '1px solid var(--mantine-color-dark-6)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+        }}
+      >
+        <Group
+          h={56}
+          px="md"
+          justify="space-between"
+          maw={1280}
+          mx="auto"
+          wrap="nowrap"
+        >
           {/* Brand */}
-          <span className={styles.brand}>
-            <Swords size={24} />
-            Infinity TM
-          </span>
+          <Group gap="xs" style={{ flexShrink: 0 }}>
+            <Swords size={24} color="var(--mantine-color-cyan-5)" />
+            <Text fw={700} size="lg" c="white">Infinity TM</Text>
+          </Group>
 
           {/* Desktop nav links */}
-          <ul className={styles.navList}>
+          <Group gap={4} visibleFrom="md">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
-                <li key={item.path}>
-                  <Link
-                    to={item.path}
-                    className={clsx(styles.navLink, isActive && styles.navLinkActive)}
-                    {...(isActive ? { 'aria-current': 'page' as const } : {})}
-                  >
+                <UnstyledButton
+                  key={item.path}
+                  component={Link}
+                  to={item.path}
+                  px="sm"
+                  py={6}
+                  style={{
+                    borderRadius: 'var(--mantine-radius-sm)',
+                    background: isActive ? 'rgba(6, 182, 212, 0.12)' : 'transparent',
+                    borderBottom: isActive ? '2px solid var(--mantine-color-cyan-5)' : '2px solid transparent',
+                  }}
+                  {...(isActive ? { 'aria-current': 'page' as const } : {})}
+                >
+                  <Group gap={6}>
                     {item.icon}
-                    <span>{item.label}</span>
-                  </Link>
-                </li>
+                    <Text size="sm" c={isActive ? 'white' : 'dimmed'} fw={isActive ? 600 : 400}>
+                      {item.label}
+                    </Text>
+                  </Group>
+                </UnstyledButton>
               );
             })}
-          </ul>
+          </Group>
 
           {/* Desktop auth section */}
-          <div className={styles.authSection}>
+          <Group gap="xs" visibleFrom="md" style={{ flexShrink: 0 }}>
             {isAdmin ? (
               <>
-                <div className={styles.adminBadge}>
-                  <User size={16} />
+                <Badge variant="light" color="cyan" leftSection={<User size={12} />}>
                   Admin
-                </div>
-                <button
+                </Badge>
+                <Button
+                  variant="subtle"
+                  color="red"
+                  size="xs"
+                  leftSection={<LogOut size={14} />}
                   onClick={handleLogout}
-                  className={clsx(styles.authButton, styles.logoutButton)}
                 >
-                  <LogOut size={16} />
-                  <span>Logout</span>
-                </button>
+                  Logout
+                </Button>
               </>
             ) : (
-              <button
-                onClick={handleLoginClick}
-                className={clsx(styles.authButton, styles.loginButton)}
+              <Button
+                variant="subtle"
+                size="xs"
+                leftSection={<KeyRound size={14} />}
+                onClick={() => setShowLoginModal(true)}
               >
-                <KeyRound size={16} />
-                <span>Admin Login</span>
-              </button>
+                Admin Login
+              </Button>
             )}
-          </div>
+          </Group>
 
-          {/* Hamburger toggle (mobile only) */}
-          <button
-            className={styles.hamburger}
-            onClick={() => setMenuOpen((prev) => !prev)}
-            aria-expanded={menuOpen}
-            aria-controls="mobile-nav"
-            aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
-          >
-            {menuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
+          {/* Mobile burger */}
+          <Burger
+            opened={menuOpen}
+            onClick={() => setMenuOpen((o) => !o)}
+            hiddenFrom="md"
+            size="sm"
+            color="white"
+          />
+        </Group>
 
         {/* Active tournament bar */}
         {isAdmin && tournament && (
-          <div className={styles.tournamentBar}>
-            <div className={styles.tournamentBarContent}>
-              <Trophy size={14} />
-              <span className={styles.tournamentBarLabel}>Active Tournament:</span>
-              <span className={styles.tournamentBarName}>{tournament.name}</span>
-            </div>
-          </div>
+          <Box
+            px="md"
+            py={4}
+            style={{
+              background: 'rgba(6, 182, 212, 0.08)',
+              borderTop: '1px solid var(--mantine-color-dark-6)',
+            }}
+          >
+            <Group gap="xs" maw={1280} mx="auto">
+              <Trophy size={14} color="var(--mantine-color-cyan-5)" />
+              <Text size="xs" c="dimmed">Active Tournament:</Text>
+              <Text size="xs" fw={600} c="cyan">{tournament.name}</Text>
+            </Group>
+          </Box>
         )}
 
         {/* Mobile dropdown menu */}
-        <div
-          id="mobile-nav"
-          className={clsx(styles.mobileMenu, menuOpen && styles.mobileMenuOpen)}
-        >
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={clsx(styles.mobileNavLink, isActive && styles.mobileNavLinkActive)}
-                {...(isActive ? { 'aria-current': 'page' as const } : {})}
+        <Collapse in={menuOpen}>
+          <Box px="md" pb="md" hiddenFrom="md">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <UnstyledButton
+                  key={item.path}
+                  component={Link}
+                  to={item.path}
+                  display="flex"
+                  w="100%"
+                  py="xs"
+                  px="sm"
+                  mb={2}
+                  style={{
+                    borderRadius: 'var(--mantine-radius-sm)',
+                    background: isActive ? 'rgba(6, 182, 212, 0.12)' : 'transparent',
+                  }}
+                  {...(isActive ? { 'aria-current': 'page' as const } : {})}
+                >
+                  <Group gap="xs">
+                    {item.icon}
+                    <Text size="sm" c={isActive ? 'white' : 'dimmed'} fw={isActive ? 600 : 400}>
+                      {item.label}
+                    </Text>
+                  </Group>
+                </UnstyledButton>
+              );
+            })}
+
+            <Divider my="xs" />
+
+            {isAdmin ? (
+              <>
+                <Badge variant="light" color="cyan" leftSection={<User size={12} />} mb="xs">
+                  Admin
+                </Badge>
+                <Button
+                  variant="subtle"
+                  color="red"
+                  size="sm"
+                  fullWidth
+                  leftSection={<LogOut size={14} />}
+                  onClick={handleLogout}
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="subtle"
+                size="sm"
+                fullWidth
+                leftSection={<KeyRound size={14} />}
+                onClick={() => setShowLoginModal(true)}
               >
-                {item.icon}
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+                Admin Login
+              </Button>
+            )}
+          </Box>
+        </Collapse>
+      </Box>
 
-          <div className={styles.mobileDivider} />
-
-          {isAdmin ? (
-            <>
-              <div className={styles.mobileAdminBadge}>
-                <User size={16} />
-                Admin
-              </div>
-              <button
-                onClick={handleLogout}
-                className={clsx(styles.mobileAuthButton, styles.mobileLogoutButton)}
-              >
-                <LogOut size={16} />
-                <span>Logout</span>
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={handleLoginClick}
-              className={clsx(styles.mobileAuthButton, styles.mobileLoginButton)}
-            >
-              <KeyRound size={16} />
-              <span>Admin Login</span>
-            </button>
-          )}
-        </div>
-      </nav>
-
-      {/* Login Modal */}
       {showLoginModal && (
         <LoginForm onClose={() => setShowLoginModal(false)} />
       )}

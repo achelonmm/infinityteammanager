@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import clsx from 'clsx';
 import {
   Trophy,
   Search,
@@ -15,13 +14,27 @@ import {
   AlertCircle,
   RefreshCw,
 } from 'lucide-react';
+import {
+  Container,
+  Paper,
+  Title,
+  Group,
+  Stack,
+  Button,
+  Alert,
+  Badge,
+  Text,
+  TextInput,
+  Box,
+  ThemeIcon,
+  Loader,
+} from '@mantine/core';
 import { useTournaments } from '../contexts/TournamentsContext';
 import { useTournamentData } from '../contexts/TournamentDataContext';
 import { useToast } from '../contexts/ToastContext';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import TournamentForm from '../components/TournamentForm';
 import { TournamentSummary } from '../types';
-import styles from './Tournaments.module.css';
 
 const Tournaments: React.FC = () => {
   const {
@@ -145,30 +158,33 @@ const Tournaments: React.FC = () => {
 
   if (loading && tournaments.length === 0) {
     return (
-      <div className="container">
-        <h2 className={styles.pageTitle}>
-          <Trophy size={28} className={styles.pageTitleIcon} />
-          Tournament Management
-        </h2>
-        <div className="card">
+      <Container size="xl" py="md">
+        <Group mb="lg">
+          <ThemeIcon size="lg" variant="light" color="yellow">
+            <Trophy size={28} />
+          </ThemeIcon>
+          <Title order={2}>Tournament Management</Title>
+        </Group>
+        <Paper p="lg" radius="md" withBorder>
           <LoadingSkeleton variant="table-rows" count={3} columns={5} />
-        </div>
-      </div>
+        </Paper>
+      </Container>
     );
   }
 
   if (error) {
     return (
-      <div className="container">
-        <h2 className={styles.pageTitle}>
-          <Trophy size={28} className={styles.pageTitleIcon} />
-          Tournament Management
-        </h2>
-        <div className="alert alert-error">
-          <AlertCircle size={18} className={styles.errorIcon} />
-          <strong>Error:</strong> {error}
-        </div>
-      </div>
+      <Container size="xl" py="md">
+        <Group mb="lg">
+          <ThemeIcon size="lg" variant="light" color="yellow">
+            <Trophy size={28} />
+          </ThemeIcon>
+          <Title order={2}>Tournament Management</Title>
+        </Group>
+        <Alert icon={<AlertCircle size={18} />} color="red" title="Error">
+          {error}
+        </Alert>
+      </Container>
     );
   }
 
@@ -178,211 +194,212 @@ const Tournaments: React.FC = () => {
     const isCompleted = tournament.status === 'completed';
 
     return (
-      <div
+      <Paper
         key={tournament.id}
-        className={clsx(
-          styles.tournamentCard,
-          isCurrent && styles.tournamentCardActive
-        )}
+        p="md"
+        radius="sm"
+        withBorder
+        mb="sm"
+        bg={isCurrent ? 'var(--mantine-color-cyan-light)' : 'var(--mantine-color-dark-7)'}
+        style={isCurrent ? { borderColor: 'var(--mantine-color-cyan-filled)' } : undefined}
       >
-        <div className={styles.tournamentCardGrid}>
-          <div className={clsx(
-            styles.tournamentAvatar,
-            isCompleted && styles.tournamentAvatarCompleted
-          )}>
-            <Trophy size={28} />
-          </div>
+        <Group justify="space-between" wrap="wrap" gap="md">
+          <Group gap="md" wrap="nowrap">
+            <ThemeIcon
+              size="xl"
+              radius="xl"
+              variant="light"
+              color={isCompleted ? 'gray' : 'yellow'}
+            >
+              <Trophy size={28} />
+            </ThemeIcon>
 
-          <div>
-            <h4 className={styles.tournamentName}>
-              {tournament.name}
-              <span className={clsx(
-                styles.statusBadge,
-                isActive ? styles.statusActive : styles.statusCompleted
-              )}>
-                {tournament.status}
-              </span>
-              {isCurrent && (
-                <span className={styles.currentBadge}>Current</span>
-              )}
-            </h4>
-            <div className={styles.tournamentMeta}>
-              <div className={styles.metaItem}>
-                <span className={styles.metaLabel}>
-                  <Swords size={14} className={styles.metaIcon} />
-                  Round:
-                </span>
-                {tournament.currentRound}
-              </div>
-              <div className={styles.metaItem}>
-                <span className={styles.metaLabel}>
-                  <Users size={14} className={styles.metaIcon} />
-                  Teams:
-                </span>
-                {tournament.teamCount}
-              </div>
-              <div className={styles.metaItem}>
-                <span className={styles.metaLabel}>
-                  <Swords size={14} className={styles.metaIcon} />
-                  Matches:
-                </span>
-                {tournament.matchCount}
-              </div>
-              <div className={styles.metaItem}>
-                <span className={styles.metaLabel}>
-                  <Calendar size={14} className={styles.metaIcon} />
-                  Created:
-                </span>
-                {formatDate(tournament.created_at)}
-              </div>
+            <div>
+              <Group gap="xs" mb={4}>
+                <Text fw={700} size="lg">{tournament.name}</Text>
+                <Badge
+                  color={isActive ? 'green' : 'gray'}
+                  variant="light"
+                  size="sm"
+                >
+                  {tournament.status}
+                </Badge>
+                {isCurrent && (
+                  <Badge color="cyan" variant="filled" size="sm">
+                    Current
+                  </Badge>
+                )}
+              </Group>
+              <Group gap="md" wrap="wrap">
+                <Group gap={4}>
+                  <Swords size={14} />
+                  <Text size="xs" c="dimmed">Round:</Text>
+                  <Text size="xs">{tournament.currentRound}</Text>
+                </Group>
+                <Group gap={4}>
+                  <Users size={14} />
+                  <Text size="xs" c="dimmed">Teams:</Text>
+                  <Text size="xs">{tournament.teamCount}</Text>
+                </Group>
+                <Group gap={4}>
+                  <Swords size={14} />
+                  <Text size="xs" c="dimmed">Matches:</Text>
+                  <Text size="xs">{tournament.matchCount}</Text>
+                </Group>
+                <Group gap={4}>
+                  <Calendar size={14} />
+                  <Text size="xs" c="dimmed">Created:</Text>
+                  <Text size="xs">{formatDate(tournament.created_at)}</Text>
+                </Group>
+              </Group>
             </div>
-          </div>
+          </Group>
 
-          <div className={styles.tournamentActions}>
+          <Group gap="xs">
             {!isCurrent && (
-              <button
-                className={clsx('btn btn-primary', styles.btnSm)}
+              <Button
+                size="xs"
+                leftSection={<Play size={14} />}
                 onClick={() => handleOpen(tournament)}
               >
-                <Play size={14} />
                 Open
-              </button>
+              </Button>
             )}
             {isActive && !isCompleted && (
-              <button
-                className={clsx('btn btn-outline', styles.btnSm)}
+              <Button
+                size="xs"
+                variant="outline"
+                leftSection={<CheckCircle size={14} />}
                 onClick={() => handleComplete(tournament)}
               >
-                <CheckCircle size={14} />
                 Complete
-              </button>
+              </Button>
             )}
             {isCompleted && (
-              <button
-                className={clsx('btn btn-outline', styles.btnSm)}
+              <Button
+                size="xs"
+                variant="outline"
+                leftSection={<RefreshCw size={14} />}
                 onClick={() => handleActivate(tournament)}
               >
-                <RefreshCw size={14} />
                 Reactivate
-              </button>
+              </Button>
             )}
-            <button
-              className={clsx('btn btn-secondary', styles.btnSm)}
+            <Button
+              size="xs"
+              variant="default"
+              leftSection={<Pencil size={14} />}
               onClick={() => setEditingTournament(tournament)}
             >
-              <Pencil size={14} />
               Edit
-            </button>
-            <button
-              className={clsx('btn btn-warning', styles.btnSm)}
+            </Button>
+            <Button
+              size="xs"
+              color="red"
+              variant="outline"
+              leftSection={<Trash2 size={14} />}
               onClick={() => handleDelete(tournament)}
             >
-              <Trash2 size={14} />
               Delete
-            </button>
-          </div>
-        </div>
-      </div>
+            </Button>
+          </Group>
+        </Group>
+      </Paper>
     );
   };
 
   return (
     <>
-      <div className="container animate-fade-in">
-        <h2 className={styles.pageTitle}>
-          <Trophy size={28} className={styles.pageTitleIcon} />
-          Tournament Management
-        </h2>
+      <Container size="xl" py="md">
+        <Group mb="lg">
+          <ThemeIcon size="lg" variant="light" color="yellow">
+            <Trophy size={28} />
+          </ThemeIcon>
+          <Title order={2}>Tournament Management</Title>
+        </Group>
 
         {/* Search Bar */}
-        <div className={clsx('card', styles.filterBar)}>
-          <div className={styles.filterGrid}>
-            <div className={clsx('form-group', styles.formGroupCompact)}>
-              <label className={clsx('form-label', styles.labelWithIcon)}>
-                <Search size={14} className={styles.labelIcon} />
-                Search:
-              </label>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="form-input"
-                placeholder="Search tournaments..."
-              />
-            </div>
+        <Paper p="lg" radius="md" withBorder mb="md">
+          <Group>
+            <TextInput
+              leftSection={<Search size={14} />}
+              placeholder="Search tournaments..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.currentTarget.value)}
+              style={{ flex: 1 }}
+            />
             {searchTerm && (
-              <button
+              <Button
+                variant="outline"
+                leftSection={<RotateCcw size={16} />}
                 onClick={() => setSearchTerm('')}
-                className="btn btn-outline"
               >
-                <RotateCcw size={16} />
                 Clear
-              </button>
+              </Button>
             )}
-          </div>
-        </div>
+          </Group>
+        </Paper>
 
         {/* Main Content */}
-        <div className={clsx('card', styles.contentCard)}>
-          <div className={styles.sectionHeader}>
-            <h3 className={styles.sectionTitle}>
-              <Trophy size={22} className={styles.sectionTitleIcon} />
-              Tournaments ({filteredTournaments.length})
-            </h3>
-            <button
-              className="btn btn-success"
+        <Paper p="lg" radius="md" withBorder>
+          <Group justify="space-between" mb="md">
+            <Group>
+              <Trophy size={22} />
+              <Title order={3}>Tournaments ({filteredTournaments.length})</Title>
+            </Group>
+            <Button
+              color="green"
+              leftSection={<Plus size={18} />}
               onClick={() => setShowCreateForm(true)}
             >
-              <Plus size={18} />
               New Tournament
-            </button>
-          </div>
+            </Button>
+          </Group>
 
           {filteredTournaments.length === 0 ? (
-            <div className={styles.emptyState}>
-              <div className={styles.emptyIcon}>
+            <Stack align="center" gap="md" py="xl">
+              <ThemeIcon size={64} radius="xl" variant="light" color="gray">
                 {searchTerm ? <Search size={48} /> : <Trophy size={48} />}
-              </div>
-              <p className={styles.emptyText}>
+              </ThemeIcon>
+              <Text c="dimmed" size="lg" ta="center">
                 {searchTerm
                   ? 'No tournaments found matching your search.'
                   : 'No tournaments yet. Create your first tournament to get started!'}
-              </p>
+              </Text>
               {!searchTerm && (
-                <button
-                  className="btn btn-primary"
+                <Button
+                  leftSection={<Plus size={18} />}
                   onClick={() => setShowCreateForm(true)}
                 >
-                  <Plus size={18} />
                   Create First Tournament
-                </button>
+                </Button>
               )}
-            </div>
+            </Stack>
           ) : (
             <>
               {activeTournaments.length > 0 && (
-                <div className={styles.statusGroup}>
-                  <h4 className={styles.statusGroupTitle}>
+                <Box mb="lg">
+                  <Group gap="xs" mb="sm">
                     <Play size={18} />
-                    Active ({activeTournaments.length})
-                  </h4>
+                    <Title order={4}>Active ({activeTournaments.length})</Title>
+                  </Group>
                   {activeTournaments.map(renderTournamentCard)}
-                </div>
+                </Box>
               )}
 
               {completedTournaments.length > 0 && (
-                <div className={styles.statusGroup}>
-                  <h4 className={styles.statusGroupTitle}>
+                <Box mb="lg">
+                  <Group gap="xs" mb="sm">
                     <CheckCircle size={18} />
-                    Completed ({completedTournaments.length})
-                  </h4>
+                    <Title order={4}>Completed ({completedTournaments.length})</Title>
+                  </Group>
                   {completedTournaments.map(renderTournamentCard)}
-                </div>
+                </Box>
               )}
             </>
           )}
-        </div>
-      </div>
+        </Paper>
+      </Container>
 
       {/* Create Tournament Modal */}
       {showCreateForm && (

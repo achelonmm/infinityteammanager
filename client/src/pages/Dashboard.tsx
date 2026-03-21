@@ -1,135 +1,118 @@
 import React from 'react';
 import { Trophy, Users, Gamepad2, Target, Rocket, Tent, CheckCircle2, Swords, Plus } from 'lucide-react';
+import { Container, Paper, Title, Group, Stack, Text, SimpleGrid, Badge, Alert, Button, ThemeIcon } from '@mantine/core';
 import { useTournament } from '../contexts/TournamentContext';
 import LoadingSkeleton from '../components/LoadingSkeleton';
-import styles from './Dashboard.module.css';
 
 const Dashboard: React.FC = () => {
   const { getTeams, getPlayers, tournament, loading, error } = useTournament();
 
   if (loading) {
     return (
-      <div className="container">
-        <h2 className={styles.pageTitle}>
-          <Trophy className={styles.pageTitleIcon} size={28} />
-          Tournament Dashboard
-        </h2>
+      <Container size="xl" py="md">
+        <Group gap="xs" mb="lg">
+          <Trophy size={28} />
+          <Title order={2}>Tournament Dashboard</Title>
+        </Group>
         <LoadingSkeleton variant="stat-card" count={3} />
-      </div>
+      </Container>
     );
   }
 
   if (error) {
     return (
-      <div className="container">
-        <h2 className={styles.pageTitle}>
-          <Trophy className={styles.pageTitleIcon} size={28} />
-          Tournament Dashboard
-        </h2>
-        <div className="alert alert-error">
-          <strong>Error:</strong> {error}
-        </div>
-      </div>
+      <Container size="xl" py="md">
+        <Group gap="xs" mb="lg">
+          <Trophy size={28} />
+          <Title order={2}>Tournament Dashboard</Title>
+        </Group>
+        <Alert color="red" variant="light" title="Error">{error}</Alert>
+      </Container>
     );
   }
 
   const teams = getTeams();
   const players = getPlayers();
 
-  // Calculate army distribution
   const armyDistribution = players.reduce((acc, player) => {
     acc[player.army] = (acc[player.army] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   return (
-    <div className="container animate-fade-in">
-      <h2 className={styles.pageTitle}>
-        <Trophy className={styles.pageTitleIcon} size={28} />
-        Tournament Dashboard
-      </h2>
+    <Container size="xl" py="md">
+      <Group gap="xs" mb="lg">
+        <Trophy size={28} />
+        <Title order={2}>Tournament Dashboard</Title>
+      </Group>
 
-      <div className={styles.statGrid}>
-        <div className={styles.statCard}>
-          <span className={styles.statIcon}>
-            <Users />
-          </span>
-          <h3 className={styles.statLabel}>Total Teams</h3>
-          <p className={styles.statValue}>{teams.length}</p>
-        </div>
+      <SimpleGrid cols={3} mb="lg">
+        <Paper p="lg" radius="md" withBorder>
+          <Stack align="center" gap="xs">
+            <ThemeIcon size="lg" variant="light" color="teal"><Users size={20} /></ThemeIcon>
+            <Text size="sm" c="dimmed">Total Teams</Text>
+            <Text size="xl" fw={700} c="teal">{teams.length}</Text>
+          </Stack>
+        </Paper>
+        <Paper p="lg" radius="md" withBorder>
+          <Stack align="center" gap="xs">
+            <ThemeIcon size="lg" variant="light" color="cyan"><Gamepad2 size={20} /></ThemeIcon>
+            <Text size="sm" c="dimmed">Total Players</Text>
+            <Text size="xl" fw={700} c="cyan">{players.length}</Text>
+          </Stack>
+        </Paper>
+        <Paper p="lg" radius="md" withBorder>
+          <Stack align="center" gap="xs">
+            <ThemeIcon size="lg" variant="light" color="yellow"><Target size={20} /></ThemeIcon>
+            <Text size="sm" c="dimmed">Current Round</Text>
+            <Text size="xl" fw={700} c="yellow">{tournament?.currentRound || 1}</Text>
+          </Stack>
+        </Paper>
+      </SimpleGrid>
 
-        <div className={styles.statCard}>
-          <span className={styles.statIcon}>
-            <Gamepad2 />
-          </span>
-          <h3 className={styles.statLabel}>Total Players</h3>
-          <p className={styles.statValue}>{players.length}</p>
-        </div>
-
-        <div className={styles.statCard}>
-          <span className={styles.statIconAccent}>
-            <Target />
-          </span>
-          <h3 className={styles.statLabel}>Current Round</h3>
-          <p className={styles.statValue}>{tournament?.currentRound || 1}</p>
-        </div>
-      </div>
-
-      <div className={`card animate-slide-in ${styles.statusCard}`}>
-        <h3 className={styles.sectionTitle}>
-          <Rocket className={styles.sectionTitleIcon} size={24} />
-          Tournament Status
-        </h3>
+      <Paper p="lg" radius="md" withBorder>
+        <Group gap="xs" mb="md">
+          <Rocket size={24} />
+          <Title order={3}>Tournament Status</Title>
+        </Group>
 
         {teams.length === 0 ? (
-          <div className={styles.emptyState}>
-            <div className={styles.emptyStateIcon}>
-              <Tent size={48} />
-            </div>
-            <p className={styles.emptyStateText}>
+          <Stack align="center" gap="md" py="xl">
+            <ThemeIcon size={64} variant="light" color="cyan" radius="xl">
+              <Tent size={32} />
+            </ThemeIcon>
+            <Text c="dimmed" ta="center">
               No teams registered yet. Start by registering teams for the tournament.
-            </p>
-            <a
-              href="/registration"
-              className={`btn btn-primary ${styles.emptyStateCta}`}
-            >
-              <Plus size={20} />
+            </Text>
+            <Button component="a" href="/registration" leftSection={<Plus size={18} />}>
               Register First Team
-            </a>
-          </div>
+            </Button>
+          </Stack>
         ) : (
-          <div>
-            <div className={styles.progressBanner}>
-              <span className={styles.progressBannerIcon}>
-                <CheckCircle2 />
-              </span>
-              <div>
-                <strong>Tournament Progress:</strong> {teams.length} teams registered, ready for pairings.
-              </div>
-            </div>
+          <Stack gap="md">
+            <Alert color="teal" variant="light" icon={<CheckCircle2 size={18} />}>
+              <strong>Tournament Progress:</strong> {teams.length} teams registered, ready for pairings.
+            </Alert>
 
             {Object.keys(armyDistribution).length > 0 && (
-              <div className={styles.armySection}>
-                <h4 className={styles.armySectionTitle}>
-                  <Swords className={styles.armySectionTitleIcon} size={22} />
-                  Army Distribution
-                </h4>
-                <div className={styles.armyGrid}>
+              <div>
+                <Group gap="xs" mb="sm">
+                  <Swords size={22} />
+                  <Title order={4}>Army Distribution</Title>
+                </Group>
+                <Group gap="xs">
                   {Object.entries(armyDistribution).map(([army, count]) => (
-                    <div key={army} className={styles.armyBadge}>
-                      <span className={styles.armyName}>{army}</span>
-                      <strong className={styles.armyCount}>
-                        {count}
-                      </strong>
-                    </div>
+                    <Badge key={army} variant="light" color="cyan" size="lg">
+                      {army}: {count}
+                    </Badge>
                   ))}
-                </div>
+                </Group>
               </div>
             )}
-          </div>
+          </Stack>
         )}
-      </div>
-    </div>
+      </Paper>
+    </Container>
   );
 };
 

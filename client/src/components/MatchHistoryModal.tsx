@@ -1,8 +1,7 @@
 import React from 'react';
 import { BarChart3, Target } from 'lucide-react';
-import clsx from 'clsx';
+import { Table, Badge, Text, Group, Stack } from '@mantine/core';
 import Modal from './Modal';
-import styles from './MatchHistoryModal.module.css';
 
 export interface MatchHistoryEntry {
   round: number;
@@ -24,6 +23,9 @@ interface MatchHistoryModalProps {
   isTeamHistory?: boolean;
 }
 
+const resultColor = (result: string) =>
+  result === 'Win' ? 'teal' : result === 'Loss' ? 'red' : 'yellow';
+
 const MatchHistoryModal: React.FC<MatchHistoryModalProps> = ({
   isOpen,
   onClose,
@@ -31,7 +33,6 @@ const MatchHistoryModal: React.FC<MatchHistoryModalProps> = ({
   matches,
   isTeamHistory = false,
 }) => {
-  // Group matches by round for team history
   const groupedMatches = isTeamHistory
     ? matches.reduce((acc, match) => {
         if (!acc[match.round]) {
@@ -42,14 +43,6 @@ const MatchHistoryModal: React.FC<MatchHistoryModalProps> = ({
       }, {} as Record<number, MatchHistoryEntry[]>)
     : null;
 
-  const resultBadgeClass = (result: string) =>
-    clsx(
-      styles.resultBadge,
-      result === 'Win' && styles.resultWin,
-      result === 'Draw' && styles.resultDraw,
-      result === 'Loss' && styles.resultLoss
-    );
-
   return (
     <Modal
       isOpen={isOpen}
@@ -59,122 +52,97 @@ const MatchHistoryModal: React.FC<MatchHistoryModalProps> = ({
       size="xl"
     >
       {matches.length === 0 ? (
-        <p className={styles.emptyMessage}>No matches played yet.</p>
+        <Text c="dimmed">No matches played yet.</Text>
       ) : isTeamHistory && groupedMatches ? (
-        <div>
+        <Stack gap="lg">
           {Object.entries(groupedMatches).map(([round, roundMatches]) => (
-            <div key={round} className={styles.roundGroup}>
-              <div className={styles.roundHeader}>
-                <span className={styles.roundHeaderIcon}>
-                  <Target size={18} />
-                </span>
-                Round {round} - vs {roundMatches[0].opponent} - Table{' '}
-                {roundMatches[0].tableNumber}
-              </div>
+            <div key={round}>
+              <Group gap="xs" mb="xs">
+                <Target size={18} />
+                <Text fw={600}>
+                  Round {round} - vs {roundMatches[0].opponent} - Table{' '}
+                  {roundMatches[0].tableNumber}
+                </Text>
+              </Group>
 
-              <div className="table-responsive">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Player</th>
-                      <th>Opponent</th>
-                      <th>Result</th>
-                      <th>Tourney Pts</th>
-                      <th>Obj Pts</th>
-                      <th>VP</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {roundMatches.map((match, index) => (
-                      <tr key={index}>
-                        <td>
-                          <strong>{match.player}</strong>
-                        </td>
-                        <td>{match.opponentPlayer}</td>
-                        <td>
-                          <span className={resultBadgeClass(match.result)}>
-                            {match.result}
-                          </span>
-                        </td>
-                        <td>
-                          <strong className={styles.pointsHighlight}>
-                            {match.tournamentPoints}
-                          </strong>
-                        </td>
-                        <td>{match.objectivePoints}</td>
-                        <td>{match.victoryPoints}</td>
-                      </tr>
-                    ))}
-                    {/* Round totals row */}
-                    <tr className={styles.roundTotalsRow}>
-                      <td colSpan={3} className={styles.roundTotalsLabel}>
-                        <strong>Round Total:</strong>
-                      </td>
-                      <td>
-                        <strong className={styles.pointsHighlight}>
-                          {roundMatches.reduce(
-                            (sum, m) => sum + m.tournamentPoints,
-                            0
-                          )}
-                        </strong>
-                      </td>
-                      <td>
-                        {roundMatches.reduce(
-                          (sum, m) => sum + m.objectivePoints,
-                          0
-                        )}
-                      </td>
-                      <td>
-                        {roundMatches.reduce(
-                          (sum, m) => sum + m.victoryPoints,
-                          0
-                        )}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <Table striped highlightOnHover>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>Player</Table.Th>
+                    <Table.Th>Opponent</Table.Th>
+                    <Table.Th>Result</Table.Th>
+                    <Table.Th>Tourney Pts</Table.Th>
+                    <Table.Th>Obj Pts</Table.Th>
+                    <Table.Th>VP</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {roundMatches.map((match, index) => (
+                    <Table.Tr key={index}>
+                      <Table.Td fw={600}>{match.player}</Table.Td>
+                      <Table.Td>{match.opponentPlayer}</Table.Td>
+                      <Table.Td>
+                        <Badge color={resultColor(match.result)} variant="light" size="sm">
+                          {match.result}
+                        </Badge>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text fw={700} c="cyan">{match.tournamentPoints}</Text>
+                      </Table.Td>
+                      <Table.Td>{match.objectivePoints}</Table.Td>
+                      <Table.Td>{match.victoryPoints}</Table.Td>
+                    </Table.Tr>
+                  ))}
+                  <Table.Tr style={{ borderTop: '2px solid var(--mantine-color-dark-4)' }}>
+                    <Table.Td colSpan={3}><Text fw={700}>Round Total:</Text></Table.Td>
+                    <Table.Td>
+                      <Text fw={700} c="cyan">
+                        {roundMatches.reduce((sum, m) => sum + m.tournamentPoints, 0)}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      {roundMatches.reduce((sum, m) => sum + m.objectivePoints, 0)}
+                    </Table.Td>
+                    <Table.Td>
+                      {roundMatches.reduce((sum, m) => sum + m.victoryPoints, 0)}
+                    </Table.Td>
+                  </Table.Tr>
+                </Table.Tbody>
+              </Table>
             </div>
           ))}
-        </div>
+        </Stack>
       ) : (
-        /* Player history — single table */
-        <div className="table-responsive">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Round</th>
-                <th>Opponent</th>
-                <th>Result</th>
-                <th>Tourney Pts</th>
-                <th>Obj Pts</th>
-                <th>VP</th>
-              </tr>
-            </thead>
-            <tbody>
-              {matches.map((match, index) => (
-                <tr key={index}>
-                  <td>
-                    <strong>Round {match.round}</strong>
-                  </td>
-                  <td>{match.opponent}</td>
-                  <td>
-                    <span className={resultBadgeClass(match.result)}>
-                      {match.result}
-                    </span>
-                  </td>
-                  <td>
-                    <strong className={styles.pointsHighlight}>
-                      {match.tournamentPoints}
-                    </strong>
-                  </td>
-                  <td>{match.objectivePoints}</td>
-                  <td>{match.victoryPoints}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table striped highlightOnHover>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Round</Table.Th>
+              <Table.Th>Opponent</Table.Th>
+              <Table.Th>Result</Table.Th>
+              <Table.Th>Tourney Pts</Table.Th>
+              <Table.Th>Obj Pts</Table.Th>
+              <Table.Th>VP</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {matches.map((match, index) => (
+              <Table.Tr key={index}>
+                <Table.Td fw={600}>Round {match.round}</Table.Td>
+                <Table.Td>{match.opponent}</Table.Td>
+                <Table.Td>
+                  <Badge color={resultColor(match.result)} variant="light" size="sm">
+                    {match.result}
+                  </Badge>
+                </Table.Td>
+                <Table.Td>
+                  <Text fw={700} c="cyan">{match.tournamentPoints}</Text>
+                </Table.Td>
+                <Table.Td>{match.objectivePoints}</Table.Td>
+                <Table.Td>{match.victoryPoints}</Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
       )}
     </Modal>
   );

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import clsx from 'clsx';
 import {
   Swords,
   Shuffle,
@@ -15,12 +14,28 @@ import {
   Gamepad2,
   SkipForward,
 } from 'lucide-react';
+import {
+  Container,
+  Paper,
+  Title,
+  Group,
+  Stack,
+  Button,
+  Alert,
+  Select,
+  Badge,
+  Text,
+  Box,
+  Divider,
+  SimpleGrid,
+  ThemeIcon,
+  Loader,
+} from '@mantine/core';
 import { useTournament } from '../contexts/TournamentContext';
 import { useToast } from '../contexts/ToastContext';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import IndividualMatchResultForm from '../components/IndividualMatchResultForm';
 import { IndividualMatch, Player, Team, TeamMatch } from '../types';
-import styles from './Pairings.module.css';
 
 const Pairings: React.FC = () => {
   const {
@@ -137,225 +152,210 @@ const Pairings: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="container">
-        <h2 className={styles.pageTitle}>
-          <Swords size={28} className={styles.pageTitleIcon} />
-          Pairings &amp; Results
-        </h2>
-        <div className="card">
+      <Container size="xl" py="md">
+        <Group mb="lg">
+          <ThemeIcon size="lg" variant="light" color="cyan">
+            <Swords size={28} />
+          </ThemeIcon>
+          <Title order={2}>Pairings &amp; Results</Title>
+        </Group>
+        <Paper p="lg" radius="md" withBorder>
           <LoadingSkeleton variant="card" count={3} />
-        </div>
-      </div>
+        </Paper>
+      </Container>
     );
   }
 
   return (
-    <div className="container animate-fade-in">
-      <h2 className={styles.pageTitle}>
-        <Swords size={28} className={styles.pageTitleIcon} />
-        Pairings &amp; Results
-      </h2>
+    <Container size="xl" py="md">
+      <Group mb="lg">
+        <ThemeIcon size="lg" variant="light" color="cyan">
+          <Swords size={28} />
+        </ThemeIcon>
+        <Title order={2}>Pairings &amp; Results</Title>
+      </Group>
 
       {/* Round Selector */}
       {allRounds.length > 0 && (
-        <div className="card">
-          <div className={styles.roundSelector}>
-            <h3 className={styles.roundLabel}>
-              View Round:
-            </h3>
+        <Paper p="lg" radius="md" withBorder mb="md">
+          <Group>
+            <Text fw={600} size="sm">View Round:</Text>
             {allRounds.map(round => (
-              <button
+              <Button
                 key={round}
                 onClick={() => setSelectedRound(round)}
-                className={clsx(
-                  'btn',
-                  selectedRound === round ? 'btn-primary' : 'btn-outline',
-                  styles.roundBtn
-                )}
+                variant={selectedRound === round ? 'filled' : 'outline'}
+                size="xs"
               >
                 Round {round}
-              </button>
+              </Button>
             ))}
-          </div>
-        </div>
+          </Group>
+        </Paper>
       )}
 
       {/* Generate Pairings Section (only show for current round) */}
       {isViewingCurrentRound && currentRoundMatches.length === 0 && pairings.length === 0 && (
-        <div className="card">
-          <h3 className={styles.generateTitle}>
+        <Paper p="lg" radius="md" withBorder mb="md">
+          <Title order={3} mb="md">
             Round {currentRound} - Generate Pairings
-          </h3>
+          </Title>
 
-          <div className={styles.generateCenter}>
-            <p className={styles.generateDesc}>
+          <Stack align="center" gap="md">
+            <Text c="dimmed" ta="center">
               Generate pairings for round {currentRound}. Teams will be paired based on their current standings.
-            </p>
-            <button
+            </Text>
+            <Button
               onClick={handleGeneratePairings}
-              className={clsx('btn btn-primary', styles.generateBtn)}
+              leftSection={<Shuffle size={20} />}
+              size="lg"
             >
-              <Shuffle size={20} />
               Generate Round {currentRound} Pairings
-            </button>
-          </div>
-        </div>
+            </Button>
+          </Stack>
+        </Paper>
       )}
 
       {/* Preview Generated Pairings */}
       {pairings.length > 0 && (
-        <div className="card">
-          <h3 className={styles.previewTitle}>
-            <Eye size={22} className={styles.previewTitleIcon} />
-            Preview Round {currentRound} Pairings
-          </h3>
+        <Paper p="lg" radius="md" withBorder mb="md">
+          <Group mb="md">
+            <Eye size={22} />
+            <Title order={3}>Preview Round {currentRound} Pairings</Title>
+          </Group>
 
-          <div className={clsx('alert alert-info', styles.previewAlert)}>
-            <Info size={16} className={styles.previewAlertIcon} />
+          <Alert icon={<Info size={16} />} color="blue" mb="md">
             <strong>Review the pairings below.</strong> You can adjust table assignments before saving.
             Teams are paired to avoid previous opponents and tables when possible.
-          </div>
+          </Alert>
 
           {pairings.map((pairing, index) => {
             const team1 = teams.find(t => t.id === pairing.team1Id);
             const team2 = teams.find(t => t.id === pairing.team2Id);
 
             return (
-              <div key={index} className={styles.pairingCard}>
-                <div className={styles.pairingGrid}>
+              <Paper key={index} p="md" radius="sm" withBorder mb="sm" bg="var(--mantine-color-dark-7)">
+                <SimpleGrid cols={{ base: 1, sm: 4 }} spacing="md" verticalSpacing="md">
                   {/* Table selector */}
                   <div>
-                    <label className={styles.pairingLabel}>
-                      Table:
-                    </label>
-                    <select
-                      value={pairing.tableNumber}
-                      onChange={(e) => {
+                    <Select
+                      label="Table:"
+                      value={String(pairing.tableNumber)}
+                      onChange={(value) => {
                         const newPairings = [...pairings];
-                        newPairings[index] = { ...newPairings[index], tableNumber: parseInt(e.target.value) };
+                        newPairings[index] = { ...newPairings[index], tableNumber: parseInt(value || '1') };
                         updatePairings(newPairings);
                       }}
-                      className={clsx('form-input', styles.tableSelect)}
-                    >
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => (
-                        <option key={num} value={num}>Table {num}</option>
-                      ))}
-                    </select>
+                      data={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => ({
+                        value: String(num),
+                        label: `Table ${num}`,
+                      }))}
+                    />
                   </div>
 
                   {/* Team 1 selector */}
                   <div>
-                    <label className={styles.pairingLabel}>
-                      Team 1:
-                    </label>
-                    <select
+                    <Select
+                      label="Team 1:"
                       value={pairing.team1Id}
-                      onChange={(e) => {
+                      onChange={(value) => {
                         const newPairings = [...pairings];
-                        newPairings[index] = { ...newPairings[index], team1Id: e.target.value };
+                        newPairings[index] = { ...newPairings[index], team1Id: value || '' };
                         updatePairings(newPairings);
                       }}
-                      className="form-input"
-                    >
-                      {teams.map(team => (
-                        <option key={team.id} value={team.id}>
-                          {team.name}
-                        </option>
-                      ))}
-                    </select>
-                    <div className={styles.pairingPlayerList}>
+                      data={teams.map(team => ({
+                        value: team.id,
+                        label: team.name,
+                      }))}
+                    />
+                    <Text size="xs" c="dimmed" mt={4}>
                       {team1?.players.map(p => p.nickname).join(', ')}
-                    </div>
+                    </Text>
                   </div>
 
                   {/* VS */}
-                  <div className={styles.vsDivider}>
-                    <Swords size={24} />
-                  </div>
+                  <Stack align="center" justify="center">
+                    <ThemeIcon variant="light" color="gray" size="lg" radius="xl">
+                      <Swords size={24} />
+                    </ThemeIcon>
+                  </Stack>
 
                   {/* Team 2 selector */}
                   <div>
-                    <label className={styles.pairingLabel}>
-                      Team 2:
-                    </label>
-                    <select
+                    <Select
+                      label="Team 2:"
                       value={pairing.team2Id}
-                      onChange={(e) => {
+                      onChange={(value) => {
                         const newPairings = [...pairings];
-                        newPairings[index] = { ...newPairings[index], team2Id: e.target.value };
+                        newPairings[index] = { ...newPairings[index], team2Id: value || '' };
                         updatePairings(newPairings);
                       }}
-                      className="form-input"
-                    >
-                      {teams.map(team => (
-                        <option key={team.id} value={team.id}>
-                          {team.name}
-                        </option>
-                      ))}
-                    </select>
-                    <div className={styles.pairingPlayerList}>
+                      data={teams.map(team => ({
+                        value: team.id,
+                        label: team.name,
+                      }))}
+                    />
+                    <Text size="xs" c="dimmed" mt={4}>
                       {team2?.players.map(p => p.nickname).join(', ')}
-                    </div>
+                    </Text>
                   </div>
-
-                  {/* Empty column for layout balance */}
-                  <div></div>
-                </div>
-              </div>
+                </SimpleGrid>
+              </Paper>
             );
           })}
 
-          <div className={styles.previewActions}>
-            <button
+          <Group justify="flex-end" mt="md">
+            <Button
               onClick={clearPairings}
-              className="btn btn-outline"
+              variant="outline"
+              leftSection={<X size={18} />}
             >
-              <X size={18} />
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleSavePairings}
-              className={clsx('btn btn-success', styles.savePairingsBtn)}
+              color="green"
+              leftSection={<Save size={20} />}
             >
-              <Save size={20} />
               Save Pairings
-            </button>
-          </div>
-        </div>
+            </Button>
+          </Group>
+        </Paper>
       )}
 
       {/* Display Current/Selected Round Matches */}
       {displayedMatches.length > 0 && (
-        <div className="card">
-          <div className={styles.matchesHeader}>
-            <h3 className={styles.matchesTitle}>
-              <Target size={22} className={styles.matchesTitleIcon} />
-              Round {selectedRound} Matches
-            </h3>
+        <Paper p="lg" radius="md" withBorder mb="md">
+          <Group justify="space-between" mb="md">
+            <Group>
+              <Target size={22} />
+              <Title order={3}>Round {selectedRound} Matches</Title>
+            </Group>
 
-            <div className={styles.matchesActions}>
+            <Group>
               {/* Advance to Next Round Button */}
               {isViewingCurrentRound && canAdvanceToNextRound && (
-                <button
+                <Button
                   onClick={handleAdvanceRound}
-                  className="btn btn-success"
+                  color="green"
+                  leftSection={<SkipForward size={18} />}
                 >
-                  <SkipForward size={18} />
                   Advance to Round {currentRound + 1}
-                </button>
+                </Button>
               )}
 
               {isViewingCurrentRound && currentRoundMatches.length > 0 && !currentRoundMatches.some(m => m.isCompleted) && (
-                <button
+                <Button
                   onClick={handleDeleteRound}
-                  className="btn btn-warning"
+                  color="yellow"
+                  variant="outline"
+                  leftSection={<Trash2 size={18} />}
                 >
-                  <Trash2 size={18} />
                   Delete Round {currentRound} Matches
-                </button>
+                </Button>
               )}
-            </div>
-          </div>
+            </Group>
+          </Group>
 
           {displayedMatches.map((teamMatch) => {
             const team1 = teams.find(t => t.id === teamMatch.team1Id);
@@ -363,133 +363,137 @@ const Pairings: React.FC = () => {
             const hasIndividualMatches = teamMatch.individualMatches && teamMatch.individualMatches.length > 0;
 
             return (
-              <div key={teamMatch.id} className={styles.pairingCard}>
+              <Paper key={teamMatch.id} p="md" radius="sm" withBorder mb="sm" bg="var(--mantine-color-dark-7)">
                 {/* Team Match Header */}
-                <div className={styles.pairingGrid} style={hasIndividualMatches ? { marginBottom: 'var(--spacing-6)' } : undefined}>
-                  <div className={styles.tableBadge}>
-                    Table {teamMatch.tableNumber}
+                <SimpleGrid
+                  cols={{ base: 1, sm: 4 }}
+                  spacing="md"
+                  verticalSpacing="md"
+                  mb={hasIndividualMatches ? 'md' : undefined}
+                >
+                  <div>
+                    <Badge size="lg" variant="light" color="cyan">
+                      Table {teamMatch.tableNumber}
+                    </Badge>
                   </div>
 
                   <div>
-                    <strong className={styles.teamNamePrimary}>
+                    <Text fw={700} size="lg" c="cyan">
                       {team1?.name || 'Unknown Team'}
-                    </strong>
-                    <div className={styles.teamPlayers}>
+                    </Text>
+                    <Text size="xs" c="dimmed">
                       {team1?.players.map(p => p.nickname).join(', ')}
-                    </div>
+                    </Text>
                   </div>
 
-                  <div className={styles.vsDivider}>
-                    <Swords size={24} />
-                  </div>
+                  <Stack align="center" justify="center">
+                    <ThemeIcon variant="light" color="gray" size="lg" radius="xl">
+                      <Swords size={24} />
+                    </ThemeIcon>
+                  </Stack>
 
                   <div>
-                    <strong className={styles.teamNameSecondary}>
+                    <Text fw={700} size="lg" c="orange">
                       {team2?.name || 'Unknown Team'}
-                    </strong>
-                    <div className={styles.teamPlayers}>
+                    </Text>
+                    <Text size="xs" c="dimmed">
                       {team2?.players.map(p => p.nickname).join(', ')}
-                    </div>
+                    </Text>
                   </div>
 
                   {teamMatch.isCompleted && (
-                    <div className={styles.completedBadge}>
-                      <CheckCircle2 size={16} />
-                      Completed
+                    <div>
+                      <Badge color="green" leftSection={<CheckCircle2 size={14} />}>
+                        Completed
+                      </Badge>
                     </div>
                   )}
-                </div>
+                </SimpleGrid>
 
                 {/* Individual Matches */}
                 {hasIndividualMatches ? (
-                  <div>
-                    <h4 className={styles.individualHeader}>
-                      Individual Matches:
-                    </h4>
+                  <Box>
+                    <Divider mb="sm" />
+                    <Text fw={600} size="sm" mb="sm">Individual Matches:</Text>
                     {teamMatch.individualMatches.map((indMatch) => {
                       const player1 = team1?.players.find(p => p.id === indMatch.player1Id);
                       const player2 = team2?.players.find(p => p.id === indMatch.player2Id);
 
                       return (
-                        <div
+                        <Paper
                           key={indMatch.id}
-                          className={clsx(
-                            styles.individualMatch,
-                            indMatch.isCompleted && styles.individualMatchCompleted
-                          )}
+                          p="sm"
+                          radius="sm"
+                          mb="xs"
+                          withBorder
+                          bg={indMatch.isCompleted ? 'var(--mantine-color-dark-6)' : undefined}
                         >
-                          <div>
-                            <div className={styles.playerName}>{player1?.nickname || 'Unknown'}</div>
-                            <div className={styles.playerArmy}>
-                              {player1?.army}
+                          <SimpleGrid cols={{ base: 1, sm: 4 }} spacing="sm" verticalSpacing="sm">
+                            <div>
+                              <Text fw={600} size="sm">{player1?.nickname || 'Unknown'}</Text>
+                              <Text size="xs" c="dimmed">{player1?.army}</Text>
+                              {indMatch.isCompleted && (
+                                <Group gap={4} mt={4}>
+                                  <Text size="xs" fw={700} c="cyan">{indMatch.tournamentPoints1} pts</Text>
+                                  <Text size="xs" c="dimmed">|</Text>
+                                  <Text size="xs">{indMatch.objectivePoints1} obj</Text>
+                                  <Text size="xs" c="dimmed">|</Text>
+                                  <Text size="xs">{indMatch.victoryPointsFor1} VP</Text>
+                                </Group>
+                              )}
                             </div>
-                            {indMatch.isCompleted && (
-                              <div className={styles.playerStats}>
-                                <span className={styles.statPrimary}>
-                                  {indMatch.tournamentPoints1} pts
-                                </span>
-                                <span className={styles.statDivider}>|</span>
-                                <span>{indMatch.objectivePoints1} obj</span>
-                                <span className={styles.statDivider}>|</span>
-                                <span>{indMatch.victoryPointsFor1} VP</span>
-                              </div>
-                            )}
-                          </div>
 
-                          <div className={styles.vsSmall}>
-                            <Swords size={18} />
-                          </div>
+                            <Stack align="center" justify="center">
+                              <Swords size={18} />
+                            </Stack>
 
-                          <div>
-                            <div className={styles.playerName}>{player2?.nickname || 'Unknown'}</div>
-                            <div className={styles.playerArmy}>
-                              {player2?.army}
+                            <div>
+                              <Text fw={600} size="sm">{player2?.nickname || 'Unknown'}</Text>
+                              <Text size="xs" c="dimmed">{player2?.army}</Text>
+                              {indMatch.isCompleted && (
+                                <Group gap={4} mt={4}>
+                                  <Text size="xs" fw={700} c="orange">{indMatch.tournamentPoints2} pts</Text>
+                                  <Text size="xs" c="dimmed">|</Text>
+                                  <Text size="xs">{indMatch.objectivePoints2} obj</Text>
+                                  <Text size="xs" c="dimmed">|</Text>
+                                  <Text size="xs">{indMatch.victoryPointsFor2} VP</Text>
+                                </Group>
+                              )}
                             </div>
-                            {indMatch.isCompleted && (
-                              <div className={styles.playerStats}>
-                                <span className={styles.statSecondary}>
-                                  {indMatch.tournamentPoints2} pts
-                                </span>
-                                <span className={styles.statDivider}>|</span>
-                                <span>{indMatch.objectivePoints2} obj</span>
-                                <span className={styles.statDivider}>|</span>
-                                <span>{indMatch.victoryPointsFor2} VP</span>
-                              </div>
-                            )}
-                          </div>
 
-                          <div>
-                            {player1 && player2 && (
-                              !indMatch.isCompleted ? (
-                                <button
-                                  onClick={() => setSelectedMatch({ individualMatch: indMatch, player1, player2 })}
-                                  className={clsx('btn btn-primary', styles.resultBtn)}
-                                >
-                                  <ClipboardEdit size={14} />
-                                  Enter Results
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => setSelectedMatch({ individualMatch: indMatch, player1, player2 })}
-                                  className={clsx('btn btn-secondary', styles.resultBtn)}
-                                >
-                                  <Pencil size={14} />
-                                  Edit Results
-                                </button>
-                              )
-                            )}
+                            <Stack align="flex-end" justify="center">
+                              {player1 && player2 && (
+                                !indMatch.isCompleted ? (
+                                  <Button
+                                    onClick={() => setSelectedMatch({ individualMatch: indMatch, player1, player2 })}
+                                    size="xs"
+                                    leftSection={<ClipboardEdit size={14} />}
+                                  >
+                                    Enter Results
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    onClick={() => setSelectedMatch({ individualMatch: indMatch, player1, player2 })}
+                                    size="xs"
+                                    variant="default"
+                                    leftSection={<Pencil size={14} />}
+                                  >
+                                    Edit Results
+                                  </Button>
+                                )
+                              )}
 
-                            {indMatch.isCompleted && (
-                              <div className={styles.completeLabel}>
-                                <CheckCircle2 size={14} />
-                                Complete
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                              {indMatch.isCompleted && (
+                                <Badge color="green" size="sm" leftSection={<CheckCircle2 size={12} />}>
+                                  Complete
+                                </Badge>
+                              )}
+                            </Stack>
+                          </SimpleGrid>
+                        </Paper>
                       );
                     })}
-                  </div>
+                  </Box>
                 ) : (
                   team1 && team2 && !teamMatch.isCompleted && (
                     <PairingSetup
@@ -500,24 +504,24 @@ const Pairings: React.FC = () => {
                     />
                   )
                 )}
-              </div>
+              </Paper>
             );
           })}
-        </div>
+        </Paper>
       )}
 
       {/* No matches state */}
       {displayedMatches.length === 0 && pairings.length === 0 && !isViewingCurrentRound && (
-        <div className="card">
-          <div className={styles.emptyState}>
-            <div className={styles.emptyIcon}>
+        <Paper p="lg" radius="md" withBorder>
+          <Stack align="center" gap="md" py="xl">
+            <ThemeIcon size={64} radius="xl" variant="light" color="gray">
               <Gamepad2 size={48} />
-            </div>
-            <p className={styles.emptyText}>
+            </ThemeIcon>
+            <Text c="dimmed" size="lg">
               No matches found for Round {selectedRound}.
-            </p>
-          </div>
-        </div>
+            </Text>
+          </Stack>
+        </Paper>
       )}
 
       {/* Match Result Form Modal */}
@@ -530,7 +534,7 @@ const Pairings: React.FC = () => {
           onCancel={() => setSelectedMatch(null)}
         />
       )}
-    </div>
+    </Container>
   );
 };
 
@@ -594,55 +598,51 @@ const PairingSetup: React.FC<PairingSetupProps> = ({ teamMatch, team1, team2, on
   const isValid = pairings.every(p => p.player1Id && p.player2Id);
 
   return (
-    <div className={styles.setupBox}>
-      <h4 className={styles.setupTitle}>
-        <Target size={18} className={styles.setupTitleIcon} />
-        Set Individual Player Pairings
-      </h4>
+    <Box mt="md">
+      <Divider mb="sm" />
+      <Group mb="sm">
+        <Target size={18} />
+        <Text fw={600} size="sm">Set Individual Player Pairings</Text>
+      </Group>
 
       {pairings.map((pairing, index) => (
-        <div key={index} className={styles.setupRow}>
-          <select
-            value={pairing.player1Id}
-            onChange={(e) => handlePairingChange(index, 'player1Id', e.target.value)}
-            className="form-input"
-          >
-            <option value="">Select {team1.name} Player</option>
-            {getAvailableTeam1Players(index).map((player: Player) => (
-              <option key={player.id} value={player.id}>
-                {player.nickname} ({player.army})
-              </option>
-            ))}
-          </select>
+        <SimpleGrid key={index} cols={{ base: 1, sm: 3 }} spacing="sm" mb="sm">
+          <Select
+            value={pairing.player1Id || null}
+            onChange={(value) => handlePairingChange(index, 'player1Id', value || '')}
+            placeholder={`Select ${team1.name} Player`}
+            data={getAvailableTeam1Players(index).map((player: Player) => ({
+              value: player.id,
+              label: `${player.nickname} (${player.army})`,
+            }))}
+          />
 
-          <div className={styles.setupVs}>
+          <Stack align="center" justify="center">
             <Swords size={18} />
-          </div>
+          </Stack>
 
-          <select
-            value={pairing.player2Id}
-            onChange={(e) => handlePairingChange(index, 'player2Id', e.target.value)}
-            className="form-input"
-          >
-            <option value="">Select {team2.name} Player</option>
-            {getAvailableTeam2Players(index).map((player: Player) => (
-              <option key={player.id} value={player.id}>
-                {player.nickname} ({player.army})
-              </option>
-            ))}
-          </select>
-        </div>
+          <Select
+            value={pairing.player2Id || null}
+            onChange={(value) => handlePairingChange(index, 'player2Id', value || '')}
+            placeholder={`Select ${team2.name} Player`}
+            data={getAvailableTeam2Players(index).map((player: Player) => ({
+              value: player.id,
+              label: `${player.nickname} (${player.army})`,
+            }))}
+          />
+        </SimpleGrid>
       ))}
 
-      <button
-        onClick={handleSubmit}
-        disabled={!isValid}
-        className={clsx('btn btn-primary', styles.setupSaveBtn)}
-      >
-        <Save size={18} />
-        Save Individual Pairings
-      </button>
-    </div>
+      <Group justify="flex-end" mt="md">
+        <Button
+          onClick={handleSubmit}
+          disabled={!isValid}
+          leftSection={<Save size={18} />}
+        >
+          Save Individual Pairings
+        </Button>
+      </Group>
+    </Box>
   );
 };
 

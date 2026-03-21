@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Lock, KeyRound, BarChart3 } from 'lucide-react';
+import { Container, Paper, Stack, Title, Text, Button, Group, Center, ThemeIcon } from '@mantine/core';
 import { useAuth } from '../contexts/AuthContext';
 import LoginForm from './LoginForm';
-import styles from './ProtectedRoute.module.css';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -33,33 +33,35 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
 
     return (
-      <div className={styles.container}>
-        <div className={styles.card}>
-          <div className={styles.iconWrapper}>
-            <Lock size={40} />
-          </div>
-          <h2 className={styles.title}>Admin Access Required</h2>
-          <p className={styles.description}>
-            This page requires admin authentication to access tournament management features.
-          </p>
-          <div className={styles.actions}>
-            <button
-              onClick={() => setShowLogin(true)}
-              className={styles.loginButton}
-            >
-              <KeyRound size={18} />
-              Admin Login
-            </button>
-            <a
-              href="/rankings"
-              className={styles.rankingsLink}
-            >
-              <BarChart3 size={18} />
-              View Rankings
-            </a>
-          </div>
-        </div>
-      </div>
+      <Container size="sm" py="xl">
+        <Paper p="xl" radius="md" withBorder>
+          <Stack align="center" gap="md">
+            <ThemeIcon size={64} radius="xl" variant="light" color="cyan">
+              <Lock size={32} />
+            </ThemeIcon>
+            <Title order={2}>Admin Access Required</Title>
+            <Text c="dimmed" ta="center">
+              This page requires admin authentication to access tournament management features.
+            </Text>
+            <Group>
+              <Button
+                onClick={() => setShowLogin(true)}
+                leftSection={<KeyRound size={18} />}
+              >
+                Admin Login
+              </Button>
+              <Button
+                component="a"
+                href="/rankings"
+                variant="default"
+                leftSection={<BarChart3 size={18} />}
+              >
+                View Rankings
+              </Button>
+            </Group>
+          </Stack>
+        </Paper>
+      </Container>
     );
   }
 
