@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Pencil, Tag, Hash, Swords, Crown, Palette, Clock, AlertCircle, X, Save } from 'lucide-react';
 import { Player, Team } from '../types';
+import { ARMIES } from '../utils/armies';
 import Modal from './Modal';
 import clsx from 'clsx';
 import styles from './EditPlayerForm.module.css';
@@ -29,17 +30,12 @@ const EditPlayerForm: React.FC<EditPlayerFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const armies = [
-    'PanOceania', 'Yu Jing', 'Ariadna', 'Haqqislam', 'Nomads', 'Combined Army',
-    'Aleph', 'Tohaa', 'Non-Aligned Armies', 'O-12', 'Shasvastii'
-  ];
-
   const getAvailableArmies = () => {
     const usedArmies = team.players
       .filter(p => p.id !== player.id)
       .map(p => p.army);
 
-    return armies.filter(armyName => !usedArmies.includes(armyName));
+    return ARMIES.filter(armyName => !usedArmies.includes(armyName));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -145,7 +141,7 @@ const EditPlayerForm: React.FC<EditPlayerFormProps> = ({
           <label className={styles.fieldLabel}>
             <Swords size={16} className={styles.fieldLabelIcon} />
             Army/Sectorial:
-            {availableArmies.length < armies.length && (
+            {availableArmies.length < ARMIES.length && (
               <span className={styles.fieldHint}>
                 (Some armies already selected by teammates)
               </span>

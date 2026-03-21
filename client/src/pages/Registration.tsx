@@ -15,6 +15,7 @@ import {
 import { useTournament } from '../contexts/TournamentContext';
 import { useToast } from '../contexts/ToastContext';
 import styles from './Registration.module.css';
+import { ARMIES } from '../utils/armies';
 
 interface PlayerForm {
   nickname: string;
@@ -36,14 +37,6 @@ const Registration: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
 
-  const armies = [
-    'PanOceania', 'Acontecimiento','Órdenes Militares', 'Neoterra', 'Varuna',
-    'WinterFor', 'Kestrel', 'Yu Jing', 'Servicio Imperial', 'Ejército Invencible', 'Estandarte Blanco', 'Ariadna',
-    'Caledonia', 'Merovingia', 'USAriadna', 'Tartary Army Corps', 'Kosmoflot', 'Haqqislam',
-    'Hassassin Bahram', 'Qapu Khalqi', 'Ramah Taskforce', 'Nómadas', 'Corregidor', 'Bakunin', 'Tunguska', 'Ejército Combinado', 'Morat', 'Shasvastii', 'Ónice',
-    'Next Wave', 'ALEPH', 'Falange de Acero', 'SSO', 'Tohaa', 'O-12', 'Starmada', 'Torchlight', 'JSA', 'Shindenbutai', 'Oban', 'Druze Bayram Security',
-    'Ikari Company', 'StarCo', 'WhiteCo', 'Dashat Company'
-  ];
 
   const handlePlayerChange = (index: number, field: keyof PlayerForm, value: string | boolean) => {
     const newPlayers = [...players];
@@ -283,7 +276,7 @@ const Registration: React.FC = () => {
                           disabled={loading || submitting}
                         >
                           <option value="">Select Army</option>
-                          {armies.map(army => (
+                          {ARMIES.map(army => (
                             <option key={army} value={army}>{army}</option>
                           ))}
                         </select>
