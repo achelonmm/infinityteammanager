@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { apiService, setToken, clearToken, hasToken } from '../services/api';
+import { apiService, setToken, clearToken, hasToken, isTokenValid } from '../services/api';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -28,9 +28,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    if (hasToken()) {
+    if (isTokenValid()) {
       setIsAuthenticated(true);
       setIsAdmin(true);
+    } else if (hasToken()) {
+      // Token exists but is expired — clean it up
+      clearToken();
     }
   }, []);
 

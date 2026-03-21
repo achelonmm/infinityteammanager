@@ -27,6 +27,30 @@ export function hasToken(): boolean {
   return !!localStorage.getItem(AUTH_TOKEN_KEY);
 }
 
+export function isTokenValid(): boolean {
+  const token = getToken();
+  if (!token) return false;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return typeof payload.exp === 'number' && payload.exp * 1000 > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+async function handleResponse<T>(response: Response, errorMessage: string): Promise<T> {
+  if (response.status === 401) {
+    clearToken();
+    const data = await response.json().catch(() => ({ error: errorMessage }));
+    throw new ApiError(data.error || 'Session expired. Please log in again.', 401);
+  }
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({ error: errorMessage }));
+    throw new ApiError(data.error || errorMessage, response.status);
+  }
+  return response.json();
+}
+
 function authHeaders(): Record<string, string> {
   const token = getToken();
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -76,12 +100,7 @@ export const apiService = {
       headers: authHeaders(),
       body: JSON.stringify(data),
     });
-    if (response.status === 409) {
-      const err = await response.json().catch(() => ({ error: 'Tournament name already exists' }));
-      throw new ApiError(err.error || 'Tournament name already exists', 409);
-    }
-    if (!response.ok) throw new Error('Failed to create tournament');
-    return response.json();
+    return handleResponse<Tournament>(response, 'Failed to create tournament');
   },
 
   async updateTournament(id: string, updates: Partial<Tournament>): Promise<Tournament> {
@@ -90,12 +109,7 @@ export const apiService = {
       headers: authHeaders(),
       body: JSON.stringify(updates),
     });
-    if (response.status === 409) {
-      const err = await response.json().catch(() => ({ error: 'Tournament name already exists' }));
-      throw new ApiError(err.error || 'Tournament name already exists', 409);
-    }
-    if (!response.ok) throw new Error('Failed to update tournament');
-    return response.json();
+    return handleResponse<Tournament>(response, 'Failed to update tournament');
   },
 
   async activateTournament(id: string): Promise<Tournament> {
@@ -103,8 +117,7 @@ export const apiService = {
       method: 'POST',
       headers: authHeaders(),
     });
-    if (!response.ok) throw new ApiError('Failed to activate tournament', response.status);
-    return response.json();
+    return handleResponse<Tournament>(response, 'Failed to activate tournament');
   },
 
   async completeTournament(id: string): Promise<Tournament> {
@@ -112,8 +125,7 @@ export const apiService = {
       method: 'POST',
       headers: authHeaders(),
     });
-    if (!response.ok) throw new ApiError('Failed to complete tournament', response.status);
-    return response.json();
+    return handleResponse<Tournament>(response, 'Failed to complete tournament');
   },
 
   async deleteTournament(id: string): Promise<void> {
@@ -121,7 +133,7 @@ export const apiService = {
       method: 'DELETE',
       headers: authHeaders(),
     });
-    if (!response.ok) throw new Error('Failed to delete tournament');
+    await handleResponse<void>(response, 'Failed to delete tournament');
   },
 
   // Team endpoints
@@ -131,8 +143,7 @@ export const apiService = {
       headers: authHeaders(),
       body: JSON.stringify(data),
     });
-    if (!response.ok) throw new Error('Failed to create team');
-    return response.json();
+    return handleResponse<Team>(response, 'Failed to create team');
   },
 
   async updateTeam(id: string, data: { team: Partial<Team>; players: Player[] }): Promise<Team> {
@@ -141,8 +152,7 @@ export const apiService = {
       headers: authHeaders(),
       body: JSON.stringify(data),
     });
-    if (!response.ok) throw new Error('Failed to update team');
-    return response.json();
+    return handleResponse<Team>(response, 'Failed to update team');
   },
 
   async deleteTeam(id: string): Promise<void> {
@@ -150,7 +160,7 @@ export const apiService = {
       method: 'DELETE',
       headers: authHeaders(),
     });
-    if (!response.ok) throw new Error('Failed to delete team');
+    await handleResponse<void>(response, 'Failed to delete team');
   },
 
   // Player endpoints
@@ -160,8 +170,7 @@ export const apiService = {
       headers: authHeaders(),
       body: JSON.stringify(updates),
     });
-    if (!response.ok) throw new Error('Failed to update player');
-    return response.json();
+    return handleResponse<Player>(response, 'Failed to update player');
   },
 
   async deletePlayer(id: string): Promise<void> {
@@ -169,7 +178,7 @@ export const apiService = {
       method: 'DELETE',
       headers: authHeaders(),
     });
-    if (!response.ok) throw new Error('Failed to delete player');
+    await handleResponse<void>(response, 'Failed to delete player');
   },
 
   // Match endpoints
@@ -179,8 +188,7 @@ export const apiService = {
       headers: authHeaders(),
       body: JSON.stringify(teamMatch),
     });
-    if (!response.ok) throw new Error('Failed to create team match');
-    return response.json();
+    return handleResponse<TeamMatch>(response, 'Failed to create team match');
   },
 
   async updateTeamMatch(id: string, updates: Partial<TeamMatch>): Promise<TeamMatch> {
@@ -189,8 +197,7 @@ export const apiService = {
       headers: authHeaders(),
       body: JSON.stringify(updates),
     });
-    if (!response.ok) throw new Error('Failed to update team match');
-    return response.json();
+    return handleResponse<TeamMatch>(response, 'Failed to update team match');
   },
 
   async createIndividualMatches(teamMatchId: string, pairings: { player1Id: string; player2Id: string }[]): Promise<IndividualMatch[]> {
@@ -199,8 +206,7 @@ export const apiService = {
       headers: authHeaders(),
       body: JSON.stringify({ teamMatchId, pairings }),
     });
-    if (!response.ok) throw new Error('Failed to create individual matches');
-    return response.json();
+    return handleResponse<IndividualMatch[]>(response, 'Failed to create individual matches');
   },
 
   async batchCreateTeamMatches(matches: Omit<TeamMatch, 'created_at' | 'updated_at' | 'individualMatches'>[]): Promise<TeamMatch[]> {
@@ -209,8 +215,7 @@ export const apiService = {
       headers: authHeaders(),
       body: JSON.stringify({ matches }),
     });
-    if (!response.ok) throw new Error('Failed to batch create team matches');
-    return response.json();
+    return handleResponse<TeamMatch[]>(response, 'Failed to batch create team matches');
   },
 
   async batchDeleteRoundMatches(tournamentId: string, round: number): Promise<{ deleted: number }> {
@@ -218,8 +223,7 @@ export const apiService = {
       method: 'DELETE',
       headers: authHeaders(),
     });
-    if (!response.ok) throw new ApiError('Failed to batch delete round matches', response.status);
-    return response.json();
+    return handleResponse<{ deleted: number }>(response, 'Failed to batch delete round matches');
   },
 
   async deleteTeamMatch(id: string): Promise<void> {
@@ -227,7 +231,7 @@ export const apiService = {
       method: 'DELETE',
       headers: authHeaders(),
     });
-    if (!response.ok) throw new ApiError('Failed to delete team match', response.status);
+    await handleResponse<void>(response, 'Failed to delete team match');
   },
 
   async updateIndividualMatch(id: string, updates: Partial<IndividualMatch>): Promise<IndividualMatch> {
@@ -236,7 +240,6 @@ export const apiService = {
       headers: authHeaders(),
       body: JSON.stringify(updates),
     });
-    if (!response.ok) throw new Error('Failed to update individual match');
-    return response.json();
+    return handleResponse<IndividualMatch>(response, 'Failed to update individual match');
   },
 };
