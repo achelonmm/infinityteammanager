@@ -118,13 +118,13 @@ interface FactionLayout {
 const CX = 450;
 const CY = 450;
 const CENTER_R = 60;
-const FACTION_LABEL_R = 120;
+const FACTION_LABEL_R = 155;
 const ARC_R = 170;
 const BAR_START = 183;
 const BAR_MAX = 320;
 const GUIDE_END = 340;
 const LABEL_R = 348;
-const GAP_DEG = 3;
+const GAP_DEG = 6;
 
 /** Short display names for the curved inner-ring labels */
 const ARC_LABEL_NAMES: Record<string, string> = {
