@@ -8,6 +8,7 @@ interface FactionDef {
   subfactions: string[];
 }
 
+// Main factions only — subfaction lists will be updated with full details
 const FACTION_HIERARCHY: FactionDef[] = [
   {
     name: 'PanOceania',
@@ -60,7 +61,7 @@ const FACTION_HIERARCHY: FactionDef[] = [
     subfactions: ['O-12', 'Starmada', 'Torchlight'],
   },
   {
-    name: 'Non-Aligned Armies',
+    name: 'Ejércitos No Alineados',
     color: '#78350f',
     subfactions: ['NA2', 'Druze Bayram Security', 'Ikari Company', 'StarCo', 'WhiteCo', 'Dashat Company'],
   },
@@ -88,6 +89,18 @@ const describeArc = (
     `A ${r2} ${r2} 0 ${large} 0 ${e2.x} ${e2.y}`,
     'Z',
   ].join(' ');
+};
+
+/** Single-arc path at a given radius for textPath labels */
+const describeTextArc = (
+  cx: number, cy: number,
+  r: number,
+  startAngle: number, endAngle: number,
+): string => {
+  const s = polarToCartesian(cx, cy, r, startAngle);
+  const e = polarToCartesian(cx, cy, r, endAngle);
+  const large = endAngle - startAngle > 180 ? 1 : 0;
+  return `M ${s.x} ${s.y} A ${r} ${r} 0 ${large} 1 ${e.x} ${e.y}`;
 };
 
 interface Props {
@@ -179,7 +192,7 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
         angle,
         barEnd: BAR_START + barLength,
         isVanilla: sub.name === faction.name
-          || (faction.name === 'Non-Aligned Armies' && sub.name === 'NA2'),
+          || (faction.name === 'Ejércitos No Alineados' && sub.name === 'NA2'),
       };
     });
 
@@ -222,29 +235,51 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
         />
       ))}
 
-      {/* Inner ring: faction labels */}
-      {layouts.map((faction) => {
+      {/* Inner ring: curved faction labels */}
+      <defs>
+        {layouts.map((faction, idx) => {
+          const arcSpan = faction.endAngle - faction.startAngle;
+          if (arcSpan < 8) return null;
+          const labelR = (INNER_R1 + INNER_R2) / 2;
+          const midAngle = (faction.startAngle + faction.endAngle) / 2;
+          const svgAngle = midAngle - 90;
+          const normalized = ((svgAngle % 360) + 360) % 360;
+          const isFlipped = normalized > 90 && normalized < 270;
+          // For flipped arcs, draw the path in reverse so text reads correctly
+          return isFlipped ? (
+            <path
+              key={`tp-${idx}`}
+              id={`arc-text-${idx}`}
+              d={describeTextArc(CX, CY, labelR, faction.endAngle, faction.startAngle + 360)}
+            />
+          ) : (
+            <path
+              key={`tp-${idx}`}
+              id={`arc-text-${idx}`}
+              d={describeTextArc(CX, CY, labelR, faction.startAngle, faction.endAngle)}
+            />
+          );
+        })}
+      </defs>
+      {layouts.map((faction, idx) => {
         const arcSpan = faction.endAngle - faction.startAngle;
-        if (arcSpan < 10) return null;
-        const midAngle = (faction.startAngle + faction.endAngle) / 2;
-        const labelR = (INNER_R1 + INNER_R2) / 2;
-        const pos = polarToCartesian(CX, CY, labelR, midAngle);
-        const { rotation } = getLabelTransform(midAngle);
-
+        if (arcSpan < 8) return null;
         return (
           <text
             key={`arc-label-${faction.name}`}
-            x={pos.x}
-            y={pos.y}
-            textAnchor="middle"
-            dominantBaseline="middle"
             fill="white"
-            fontSize={arcSpan > 25 ? 13 : 10}
+            fontSize={arcSpan > 30 ? 13 : arcSpan > 18 ? 11 : 9}
             fontWeight={700}
-            transform={`rotate(${rotation}, ${pos.x}, ${pos.y})`}
             style={{ pointerEvents: 'none' }}
           >
-            {arcSpan > 25 ? `${faction.name} (${faction.total})` : String(faction.total)}
+            <textPath
+              href={`#arc-text-${idx}`}
+              startOffset="50%"
+              textAnchor="middle"
+              dominantBaseline="central"
+            >
+              {faction.name}
+            </textPath>
           </text>
         );
       })}
