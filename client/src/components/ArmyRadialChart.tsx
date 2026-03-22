@@ -215,26 +215,44 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
         />
       ))}
 
-      {/* Faction name labels at intermediate radius */}
-      {layouts.map((faction) => {
-        const pos = polarToCartesian(CX, CY, FACTION_LABEL_R, faction.midAngle);
-        const { isFlipped, rotation } = getLabelTransform(faction.midAngle);
+      {/* Curved faction name labels following the arc */}
+      <defs>
+        {layouts.map((faction, idx) => {
+          const midAngle = faction.midAngle;
+          const svgAngle = midAngle - 90;
+          const normalized = ((svgAngle % 360) + 360) % 360;
+          const isFlipped = normalized > 90 && normalized < 270;
+          // For left-side arcs, reverse path direction so text reads correctly
+          return (
+            <path
+              key={`tp-${idx}`}
+              id={`faction-arc-${idx}`}
+              d={isFlipped
+                ? describeStrokeArc(CX, CY, FACTION_LABEL_R, faction.endAngle, faction.startAngle + 360)
+                : describeStrokeArc(CX, CY, FACTION_LABEL_R, faction.startAngle, faction.endAngle)
+              }
+            />
+          );
+        })}
+      </defs>
+      {layouts.map((faction, idx) => {
         const isDimmed = !!hoveredFaction && hoveredFaction !== faction.name;
-
         return (
           <text
             key={`fl-${faction.name}`}
-            x={pos.x}
-            y={pos.y}
-            textAnchor={isFlipped ? 'end' : 'start'}
-            dominantBaseline="middle"
             fill={isDimmed ? '#334155' : '#f1f5f9'}
-            fontSize={13}
+            fontSize={12}
             fontWeight={700}
-            transform={`rotate(${rotation}, ${pos.x}, ${pos.y})`}
             style={{ pointerEvents: 'none', transition: 'fill 0.2s' }}
           >
-            {faction.name} ({faction.total})
+            <textPath
+              href={`#faction-arc-${idx}`}
+              startOffset="50%"
+              textAnchor="middle"
+              dominantBaseline="central"
+            >
+              {faction.name} ({faction.total})
+            </textPath>
           </text>
         );
       })}
