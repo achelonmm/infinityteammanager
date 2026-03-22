@@ -291,9 +291,9 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
           return (
             <text
               key={`fl-${faction.name}`}
-              x={pos.x}
+              x={pos.x + 10}
               y={pos.y}
-              textAnchor="middle"
+              textAnchor="start"
               dominantBaseline="middle"
               fill={isDimmed ? '#334155' : '#f1f5f9'}
               fontSize={10}
