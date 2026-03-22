@@ -287,11 +287,11 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
 
         // For very small arcs (e.g. Tohaa with 1 subfaction), use horizontal text
         if (arcSpan < 10) {
-          const pos = polarToCartesian(CX, CY, FACTION_LABEL_R, faction.midAngle);
+          const pos = polarToCartesian(CX, CY, ARC_R_INNER + 6, faction.midAngle);
           return (
             <text
               key={`fl-${faction.name}`}
-              x={pos.x + 10}
+              x={pos.x}
               y={pos.y}
               textAnchor="start"
               dominantBaseline="middle"
