@@ -145,8 +145,6 @@ const ARC_R_INNER = 170;
 const ARC_R_MAX_THICKNESS = 35;
 const ARC_BAR_GAP = 10;
 const BAR_MAX = 320;
-const GUIDE_END = 340;
-const LABEL_R = 348;
 const GAP_DEG = 9;
 
 /** Short display names for the curved inner-ring labels */
