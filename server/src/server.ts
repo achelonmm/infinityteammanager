@@ -23,6 +23,9 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Trust proxy (Railway/PaaS runs behind a reverse proxy)
+app.set('trust proxy', 1);
+
 // Rate limiting
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
