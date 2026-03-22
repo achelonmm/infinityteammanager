@@ -71,7 +71,7 @@ const polarToCartesian = (cx: number, cy: number, r: number, angleDeg: number) =
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 };
 
-/** Stroke-only arc path at a single radius */
+/** Stroke-only arc path at a single radius (clockwise) */
 const describeStrokeArc = (
   cx: number, cy: number, r: number,
   startAngle: number, endAngle: number,
@@ -80,6 +80,17 @@ const describeStrokeArc = (
   const e = polarToCartesian(cx, cy, r, endAngle);
   const large = endAngle - startAngle > 180 ? 1 : 0;
   return `M ${s.x} ${s.y} A ${r} ${r} 0 ${large} 1 ${e.x} ${e.y}`;
+};
+
+/** Same arc but drawn in reverse direction (for readable textPath on the left side) */
+const describeStrokeArcReversed = (
+  cx: number, cy: number, r: number,
+  startAngle: number, endAngle: number,
+): string => {
+  const s = polarToCartesian(cx, cy, r, endAngle);
+  const e = polarToCartesian(cx, cy, r, startAngle);
+  const large = endAngle - startAngle > 180 ? 1 : 0;
+  return `M ${s.x} ${s.y} A ${r} ${r} 0 ${large} 0 ${e.x} ${e.y}`;
 };
 
 interface Props {
@@ -222,13 +233,12 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
           const svgAngle = midAngle - 90;
           const normalized = ((svgAngle % 360) + 360) % 360;
           const isFlipped = normalized > 90 && normalized < 270;
-          // For left-side arcs, reverse path direction so text reads correctly
           return (
             <path
               key={`tp-${idx}`}
               id={`faction-arc-${idx}`}
               d={isFlipped
-                ? describeStrokeArc(CX, CY, FACTION_LABEL_R, faction.endAngle, faction.startAngle + 360)
+                ? describeStrokeArcReversed(CX, CY, FACTION_LABEL_R, faction.startAngle, faction.endAngle)
                 : describeStrokeArc(CX, CY, FACTION_LABEL_R, faction.startAngle, faction.endAngle)
               }
             />
