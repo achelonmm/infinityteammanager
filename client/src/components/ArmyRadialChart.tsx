@@ -153,7 +153,7 @@ const GAP_DEG = 9;
 const ARC_LABEL_NAMES: Record<string, string> = {
   'PanOceania': 'PanO',
   'Ejércitos No Alineados': 'NA2',
-  'Ejército Combinado': 'Ej. Combinado',
+  'Ejército Combinado': 'EC',
 };
 
 const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) => {
@@ -284,6 +284,29 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
       </defs>
       {layouts.map((faction, idx) => {
         const isDimmed = !!hoveredFaction && hoveredFaction !== faction.name;
+        const displayName = ARC_LABEL_NAMES[faction.name] ?? faction.name;
+        const arcSpan = faction.endAngle - faction.startAngle;
+
+        // For very small arcs (e.g. Tohaa with 1 subfaction), use horizontal text
+        if (arcSpan < 10) {
+          const pos = polarToCartesian(CX, CY, FACTION_LABEL_R, faction.midAngle);
+          return (
+            <text
+              key={`fl-${faction.name}`}
+              x={pos.x}
+              y={pos.y}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fill={isDimmed ? '#334155' : '#f1f5f9'}
+              fontSize={10}
+              fontWeight={700}
+              style={{ pointerEvents: 'none', transition: 'fill 0.2s' }}
+            >
+              {displayName} ({faction.total})
+            </text>
+          );
+        }
+
         return (
           <text
             key={`fl-${faction.name}`}
@@ -298,20 +321,20 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
               textAnchor="middle"
               dominantBaseline="central"
             >
-              {ARC_LABEL_NAMES[faction.name] ?? faction.name} ({faction.total})
+              {displayName} ({faction.total})
             </textPath>
           </text>
         );
       })}
 
-      {/* Subfaction spokes: guide lines, colored bars, and labels */}
+      {/* Subfaction bars and labels */}
       {layouts.flatMap((faction) =>
         faction.spokes.map((spoke) => {
-          const guideStart = polarToCartesian(CX, CY, faction.arcOuter + 2, spoke.angle);
-          const guideEnd = polarToCartesian(CX, CY, GUIDE_END, spoke.angle);
           const barStart = polarToCartesian(CX, CY, faction.barStart, spoke.angle);
           const barEnd = polarToCartesian(CX, CY, spoke.barEnd, spoke.angle);
-          const labelPos = polarToCartesian(CX, CY, LABEL_R, spoke.angle);
+          // Label sits right after the bar tip, or right after the arc if no bar
+          const labelAnchorR = spoke.count > 0 ? spoke.barEnd + 8 : faction.arcOuter + 8;
+          const labelPos = polarToCartesian(CX, CY, labelAnchorR, spoke.angle);
           const { isFlipped, rotation } = getLabelTransform(spoke.angle);
           const isDimmed = !!hoveredFaction && hoveredFaction !== faction.name;
 
@@ -322,14 +345,6 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
               onMouseEnter={() => setHoveredFaction(faction.name)}
               onMouseLeave={() => setHoveredFaction(null)}
             >
-              {/* Grey guide line (always shown for every subfaction) */}
-              <line
-                x1={guideStart.x} y1={guideStart.y}
-                x2={guideEnd.x} y2={guideEnd.y}
-                stroke={isDimmed ? '#0f172a' : '#334155'}
-                strokeWidth={0.5}
-                style={{ transition: 'stroke 0.2s' }}
-              />
               {/* Colored bar (only if count > 0) */}
               {spoke.count > 0 && (
                 <line
@@ -342,7 +357,7 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
                   style={{ transition: 'opacity 0.2s' }}
                 />
               )}
-              {/* Subfaction label (always shown) */}
+              {/* Subfaction label */}
               <text
                 x={labelPos.x}
                 y={labelPos.y}
