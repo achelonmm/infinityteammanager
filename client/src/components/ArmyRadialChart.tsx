@@ -118,9 +118,9 @@ interface FactionLayout {
 const CX = 450;
 const CY = 450;
 const CENTER_R = 60;
-const FACTION_LABEL_R = 100;
-const ARC_R = 135;
-const BAR_START = 148;
+const FACTION_LABEL_R = 110;
+const ARC_R = 155;
+const BAR_START = 168;
 const BAR_MAX = 320;
 const GUIDE_END = 340;
 const LABEL_R = 348;
