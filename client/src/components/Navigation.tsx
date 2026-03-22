@@ -12,6 +12,7 @@ import {
   KeyRound,
   ListTodo,
 } from 'lucide-react';
+import NanopulsersLogo from './NanopulsersLogo';
 import {
   Group,
   Text,
@@ -93,7 +94,7 @@ const Navigation: React.FC = () => {
         >
           {/* Brand */}
           <Group gap="xs" style={{ flexShrink: 0 }}>
-            <Swords size={24} color="var(--mantine-color-cyan-5)" />
+            <NanopulsersLogo size={28} />
             <Text fw={700} size="lg" c="white">Infinity TM</Text>
           </Group>
 
