@@ -126,6 +126,12 @@ const GUIDE_END = 340;
 const LABEL_R = 348;
 const GAP_DEG = 3;
 
+/** Short display names for the curved inner-ring labels */
+const ARC_LABEL_NAMES: Record<string, string> = {
+  'PanOceania': 'PanO',
+  'Ejércitos No Alineados': 'NA2',
+};
+
 const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) => {
   const [hoveredFaction, setHoveredFaction] = useState<string | null>(null);
 
@@ -229,10 +235,8 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
       {/* Curved faction name labels following the arc */}
       <defs>
         {layouts.map((faction, idx) => {
-          const midAngle = faction.midAngle;
-          const svgAngle = midAngle - 90;
-          const normalized = ((svgAngle % 360) + 360) % 360;
-          const isFlipped = normalized > 90 && normalized < 270;
+          // Flip text for the bottom half so it always reads left-to-right
+          const isFlipped = faction.midAngle >= 90 && faction.midAngle <= 270;
           return (
             <path
               key={`tp-${idx}`}
@@ -261,7 +265,7 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
               textAnchor="middle"
               dominantBaseline="central"
             >
-              {faction.name} ({faction.total})
+              {ARC_LABEL_NAMES[faction.name] ?? faction.name} ({faction.total})
             </textPath>
           </text>
         );
