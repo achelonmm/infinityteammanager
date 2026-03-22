@@ -112,14 +112,14 @@ interface FactionLayout {
   spokes: SpokeLayout[];
 }
 
-const CX = 400;
-const CY = 400;
-const CENTER_R = 55;
-const INNER_R1 = 65;
-const INNER_R2 = 125;
-const BAR_START = 138;
-const BAR_MAX = 290;
-const LABEL_OFFSET = 8;
+const CX = 450;
+const CY = 450;
+const CENTER_R = 70;
+const INNER_R1 = 82;
+const INNER_R2 = 160;
+const BAR_START = 175;
+const BAR_MAX = 340;
+const LABEL_OFFSET = 10;
 const GAP_DEG = 2.5;
 
 const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) => {
@@ -196,15 +196,15 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
 
   return (
     <svg
-      viewBox="0 0 800 800"
-      style={{ width: '100%', maxWidth: 700, height: 'auto', display: 'block', margin: '0 auto' }}
+      viewBox="0 0 900 900"
+      style={{ width: '100%', maxWidth: 850, height: 'auto', display: 'block', margin: '0 auto' }}
       aria-label="Army distribution sunburst chart"
     >
-      <rect x="0" y="0" width="800" height="800" fill="white" rx="12" />
+      <rect x="0" y="0" width="900" height="900" fill="#0f172a" rx="12" />
 
       {/* Guide rings */}
       {[INNER_R2, BAR_START, (BAR_START + BAR_MAX) / 2, BAR_MAX].map((r) => (
-        <circle key={r} cx={CX} cy={CY} r={r} fill="none" stroke="#f1f5f9" strokeWidth={0.5} />
+        <circle key={r} cx={CX} cy={CY} r={r} fill="none" stroke="#1e293b" strokeWidth={0.5} />
       ))}
 
       {/* Inner ring: faction arcs */}
@@ -239,7 +239,7 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
             textAnchor="middle"
             dominantBaseline="middle"
             fill="white"
-            fontSize={arcSpan > 25 ? 10 : 8}
+            fontSize={arcSpan > 25 ? 13 : 10}
             fontWeight={700}
             transform={`rotate(${rotation}, ${pos.x}, ${pos.y})`}
             style={{ pointerEvents: 'none' }}
@@ -299,8 +299,8 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
                 y={labelPos.y}
                 textAnchor={isFlipped ? 'end' : 'start'}
                 dominantBaseline="middle"
-                fill={isDimmed ? '#cbd5e1' : '#334155'}
-                fontSize={spoke.isVanilla ? 10 : 9}
+                fill={isDimmed ? '#334155' : spoke.isVanilla ? '#f1f5f9' : '#cbd5e1'}
+                fontSize={spoke.isVanilla ? 13 : 11}
                 fontWeight={spoke.isVanilla ? 700 : 400}
                 transform={`rotate(${rotation}, ${labelPos.x}, ${labelPos.y})`}
                 style={{ transition: 'fill 0.2s', pointerEvents: 'none' }}
@@ -313,16 +313,16 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
       )}
 
       {/* Center disc */}
-      <circle cx={CX} cy={CY} r={CENTER_R} fill="white" stroke="#e2e8f0" strokeWidth={1} />
-      <text x={CX} y={CY - 6} textAnchor="middle" fill="#1e293b" fontSize={24} fontWeight="bold">
+      <circle cx={CX} cy={CY} r={CENTER_R} fill="#0b1120" stroke="#1e293b" strokeWidth={1.5} />
+      <text x={CX} y={CY - 8} textAnchor="middle" fill="#f1f5f9" fontSize={30} fontWeight="bold">
         {totalPlayers}
       </text>
       <text
         x={CX}
-        y={CY + 14}
+        y={CY + 18}
         textAnchor="middle"
         fill="#64748b"
-        fontSize={9}
+        fontSize={11}
         style={{ letterSpacing: '0.12em' }}
       >
         PLAYERS
