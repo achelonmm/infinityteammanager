@@ -93,6 +93,26 @@ const describeStrokeArcReversed = (
   return `M ${s.x} ${s.y} A ${r} ${r} 0 ${large} 0 ${e.x} ${e.y}`;
 };
 
+/** Filled arc (ring segment) between two radii */
+const describeFilledArc = (
+  cx: number, cy: number,
+  r1: number, r2: number,
+  startAngle: number, endAngle: number,
+): string => {
+  const s1 = polarToCartesian(cx, cy, r1, startAngle);
+  const e1 = polarToCartesian(cx, cy, r1, endAngle);
+  const s2 = polarToCartesian(cx, cy, r2, endAngle);
+  const e2 = polarToCartesian(cx, cy, r2, startAngle);
+  const large = endAngle - startAngle > 180 ? 1 : 0;
+  return [
+    `M ${s1.x} ${s1.y}`,
+    `A ${r1} ${r1} 0 ${large} 1 ${e1.x} ${e1.y}`,
+    `L ${s2.x} ${s2.y}`,
+    `A ${r2} ${r2} 0 ${large} 0 ${e2.x} ${e2.y}`,
+    'Z',
+  ].join(' ');
+};
+
 interface Props {
   armyDistribution: ArmyDistribution[];
   totalPlayers: number;
@@ -112,6 +132,8 @@ interface FactionLayout {
   startAngle: number;
   endAngle: number;
   midAngle: number;
+  arcOuter: number;
+  barStart: number;
   spokes: SpokeLayout[];
 }
 
@@ -119,12 +141,13 @@ const CX = 450;
 const CY = 450;
 const CENTER_R = 60;
 const FACTION_LABEL_R = 155;
-const ARC_R = 170;
-const BAR_START = 183;
+const ARC_R_INNER = 170;
+const ARC_R_MAX_THICKNESS = 35;
+const ARC_BAR_GAP = 10;
 const BAR_MAX = 320;
 const GUIDE_END = 340;
 const LABEL_R = 348;
-const GAP_DEG = 6;
+const GAP_DEG = 9;
 
 /** Short display names for the curved inner-ring labels */
 const ARC_LABEL_NAMES: Record<string, string> = {
@@ -177,6 +200,7 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
     ...factionData.flatMap((f) => f.subfactions.map((s) => s.count)),
     1,
   );
+  const maxFactionTotal = Math.max(...factionData.map((f) => f.total), 1);
 
   let currentAngle = 0;
   const layouts: FactionLayout[] = factionData.map((faction) => {
@@ -186,21 +210,29 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
     const endAngle = currentAngle + factionSpan;
     const midAngle = (startAngle + endAngle) / 2;
 
+    // Arc thickness proportional to faction total players
+    const arcThickness = Math.max(
+      (faction.total / maxFactionTotal) * ARC_R_MAX_THICKNESS,
+      2, // minimum visible thickness
+    );
+    const arcOuter = ARC_R_INNER + arcThickness;
+    const barStart = arcOuter + ARC_BAR_GAP;
+
     const spokes: SpokeLayout[] = faction.subfactions.map((sub, i) => {
       const angle = startAngle + spokeAngle * (i + 0.5);
       const barLength = sub.count > 0
-        ? (sub.count / maxSubCount) * (BAR_MAX - BAR_START)
+        ? (sub.count / maxSubCount) * (BAR_MAX - barStart)
         : 0;
       return {
         name: sub.name,
         count: sub.count,
         angle,
-        barEnd: BAR_START + barLength,
+        barEnd: barStart + barLength,
       };
     });
 
     currentAngle = endAngle + GAP_DEG;
-    return { name: faction.name, color: faction.color, total: faction.total, startAngle, endAngle, midAngle, spokes };
+    return { name: faction.name, color: faction.color, total: faction.total, startAngle, endAngle, midAngle, arcOuter, barStart, spokes };
   });
 
   const getLabelTransform = (angleDeg: number) => {
@@ -218,15 +250,15 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
     >
       <rect x="0" y="0" width="900" height="900" fill="#0f172a" rx="12" />
 
-      {/* Thin colored arc per faction marking the subfaction span */}
+      {/* Colored arc per faction — thickness proportional to total players */}
       {layouts.map((faction) => (
         <path
           key={`arc-${faction.name}`}
-          d={describeStrokeArc(CX, CY, ARC_R, faction.startAngle, faction.endAngle)}
-          fill="none"
-          stroke={faction.color}
-          strokeWidth={4}
+          d={describeFilledArc(CX, CY, ARC_R_INNER, faction.arcOuter, faction.startAngle, faction.endAngle)}
+          fill={faction.color}
           opacity={hoveredFaction && hoveredFaction !== faction.name ? 0.15 : 0.9}
+          stroke="#0f172a"
+          strokeWidth={1}
           style={{ cursor: 'pointer', transition: 'opacity 0.2s' }}
           onMouseEnter={() => setHoveredFaction(faction.name)}
           onMouseLeave={() => setHoveredFaction(null)}
@@ -256,7 +288,7 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
           <text
             key={`fl-${faction.name}`}
             fill={isDimmed ? '#334155' : '#f1f5f9'}
-            fontSize={11}
+            fontSize={10}
             fontWeight={700}
             style={{ pointerEvents: 'none', transition: 'fill 0.2s' }}
           >
@@ -275,9 +307,9 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
       {/* Subfaction spokes: guide lines, colored bars, and labels */}
       {layouts.flatMap((faction) =>
         faction.spokes.map((spoke) => {
-          const guideStart = polarToCartesian(CX, CY, ARC_R + 6, spoke.angle);
+          const guideStart = polarToCartesian(CX, CY, faction.arcOuter + 2, spoke.angle);
           const guideEnd = polarToCartesian(CX, CY, GUIDE_END, spoke.angle);
-          const barStart = polarToCartesian(CX, CY, BAR_START, spoke.angle);
+          const barStart = polarToCartesian(CX, CY, faction.barStart, spoke.angle);
           const barEnd = polarToCartesian(CX, CY, spoke.barEnd, spoke.angle);
           const labelPos = polarToCartesian(CX, CY, LABEL_R, spoke.angle);
           const { isFlipped, rotation } = getLabelTransform(spoke.angle);
