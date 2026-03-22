@@ -118,9 +118,9 @@ interface FactionLayout {
 const CX = 450;
 const CY = 450;
 const CENTER_R = 60;
-const FACTION_LABEL_R = 110;
-const ARC_R = 155;
-const BAR_START = 168;
+const FACTION_LABEL_R = 120;
+const ARC_R = 170;
+const BAR_START = 183;
 const BAR_MAX = 320;
 const GUIDE_END = 340;
 const LABEL_R = 348;
@@ -130,6 +130,7 @@ const GAP_DEG = 3;
 const ARC_LABEL_NAMES: Record<string, string> = {
   'PanOceania': 'PanO',
   'Ejércitos No Alineados': 'NA2',
+  'Ejército Combinado': 'Ej. Combinado',
 };
 
 const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) => {
@@ -255,7 +256,7 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
           <text
             key={`fl-${faction.name}`}
             fill={isDimmed ? '#334155' : '#f1f5f9'}
-            fontSize={12}
+            fontSize={11}
             fontWeight={700}
             style={{ pointerEvents: 'none', transition: 'fill 0.2s' }}
           >
