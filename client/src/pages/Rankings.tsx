@@ -20,6 +20,7 @@ import {
   Stack,
   Button,
   Alert,
+  Tooltip,
 } from '@mantine/core';
 import { useTournament } from '../contexts/TournamentContext';
 import {
@@ -388,7 +389,7 @@ const Rankings: React.FC = () => {
                       <Table.Th>Rank</Table.Th>
                       <Table.Th>Player</Table.Th>
                       <Table.Th>Team</Table.Th>
-                      <Table.Th>Army</Table.Th>
+                      <Table.Th style={{ minWidth: 160 }}>Army</Table.Th>
                       <Table.Th>Tournament Pts</Table.Th>
                       <Table.Th>Obj Pts</Table.Th>
                       <Table.Th>Obj Against</Table.Th>
@@ -418,9 +419,11 @@ const Rankings: React.FC = () => {
                         </Table.Td>
                         <Table.Td>{ranking.team.name}</Table.Td>
                         <Table.Td>
-                          <Badge variant="light" color="cyan" size="xs">
-                            {ranking.player.army}
-                          </Badge>
+                          <Tooltip label={ranking.player.army} openDelay={300}>
+                            <Badge variant="light" color="cyan" size="xs" style={{ maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {ranking.player.army}
+                            </Badge>
+                          </Tooltip>
                         </Table.Td>
                         <Table.Td>
                           <Text fw={700} c="cyan">
