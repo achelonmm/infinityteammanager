@@ -2,204 +2,331 @@ import React, { useState } from 'react';
 import { Text } from '@mantine/core';
 import { ArmyDistribution } from '../utils/statisticsUtils';
 
-const FACTION_HIERARCHY: Array<{ name: string; color: string; sectorials: string[] }> = [
+interface FactionDef {
+  name: string;
+  color: string;
+  subfactions: string[];
+}
+
+const FACTION_HIERARCHY: FactionDef[] = [
   {
     name: 'PanOceania',
     color: '#3b82f6',
-    sectorials: ['Acontecimiento', 'Órdenes Militares', 'Neoterra', 'Varuna', 'WinterFor', 'Kestrel'],
+    subfactions: ['PanOceania', 'Acontecimiento', 'Órdenes Militares', 'Neoterra', 'Varuna', 'WinterFor', 'Kestrel'],
   },
   {
     name: 'Yu Jing',
     color: '#f97316',
-    sectorials: ['Servicio Imperial', 'Ejército Invencible', 'Estandarte Blanco'],
+    subfactions: ['Yu Jing', 'Ejército Invencible', 'Servicio Imperial', 'Estandarte Blanco'],
   },
   {
     name: 'Ariadna',
     color: '#22c55e',
-    sectorials: ['Caledonia', 'Merovingia', 'USAriadna', 'Tartary Army Corps', 'Kosmoflot'],
+    subfactions: ['Ariadna', 'Caledonia', 'Merovingia', 'USAriadna', 'Tartary Army Corps', 'Kosmoflot'],
   },
   {
     name: 'Haqqislam',
-    color: '#a3e635',
-    sectorials: ['Hassassin Bahram', 'Qapu Khalqi', 'Ramah Taskforce'],
+    color: '#d4a853',
+    subfactions: ['Haqqislam', 'Hassassin Bahram', 'Qapu Khalqi', 'Ramah'],
   },
   {
     name: 'Nómadas',
-    color: '#e879f9',
-    sectorials: ['Corregidor', 'Bakunin', 'Tunguska'],
+    color: '#f87171',
+    subfactions: ['Nómadas', 'Corregidor', 'Tunguska', 'Bakunin'],
   },
   {
     name: 'Ejército Combinado',
-    color: '#818cf8',
-    sectorials: ['Morat', 'Shasvastii', 'Ónice', 'Next Wave'],
+    color: '#1e3a5f',
+    subfactions: ['Ejército Combinado', 'Morat', 'Shasvastii', 'Ónice', 'Next Wave'],
   },
   {
     name: 'ALEPH',
-    color: '#06b6d4',
-    sectorials: ['Falange de Acero', 'SSO'],
+    color: '#94a3b8',
+    subfactions: ['ALEPH', 'Falange de Acero', 'SSO'],
   },
   {
     name: 'Tohaa',
-    color: '#10b981',
-    sectorials: [],
-  },
-  {
-    name: 'O-12',
-    color: '#f59e0b',
-    sectorials: ['Starmada', 'Torchlight'],
+    color: '#86efac',
+    subfactions: ['Tohaa'],
   },
   {
     name: 'JSA',
-    color: '#ec4899',
-    sectorials: ['Shindenbutai', 'Oban'],
+    color: '#991b1b',
+    subfactions: ['JSA', 'Shindenbutai', 'Oban'],
   },
   {
-    name: 'NA2',
-    color: '#94a3b8',
-    sectorials: ['Druze Bayram Security', 'Ikari Company', 'StarCo', 'WhiteCo', 'Dashat Company'],
+    name: 'O-12',
+    color: '#7c3aed',
+    subfactions: ['O-12', 'Starmada', 'Torchlight'],
+  },
+  {
+    name: 'Non-Aligned Armies',
+    color: '#78350f',
+    subfactions: ['NA2', 'Druze Bayram Security', 'Ikari Company', 'StarCo', 'WhiteCo', 'Dashat Company'],
   },
 ];
 
-interface SpokeEntry {
-  army: string;
-  count: number;
-  color: string;
-  isMain: boolean;
-}
+const polarToCartesian = (cx: number, cy: number, r: number, angleDeg: number) => {
+  const rad = ((angleDeg - 90) * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+};
+
+const describeArc = (
+  cx: number, cy: number,
+  r1: number, r2: number,
+  startAngle: number, endAngle: number,
+): string => {
+  const s1 = polarToCartesian(cx, cy, r1, startAngle);
+  const e1 = polarToCartesian(cx, cy, r1, endAngle);
+  const s2 = polarToCartesian(cx, cy, r2, endAngle);
+  const e2 = polarToCartesian(cx, cy, r2, startAngle);
+  const large = endAngle - startAngle > 180 ? 1 : 0;
+  return [
+    `M ${s1.x} ${s1.y}`,
+    `A ${r1} ${r1} 0 ${large} 1 ${e1.x} ${e1.y}`,
+    `L ${s2.x} ${s2.y}`,
+    `A ${r2} ${r2} 0 ${large} 0 ${e2.x} ${e2.y}`,
+    'Z',
+  ].join(' ');
+};
 
 interface Props {
   armyDistribution: ArmyDistribution[];
   totalPlayers: number;
 }
 
+interface SpokeLayout {
+  name: string;
+  count: number;
+  angle: number;
+  barEnd: number;
+  isVanilla: boolean;
+}
+
+interface FactionLayout {
+  name: string;
+  color: string;
+  total: number;
+  startAngle: number;
+  endAngle: number;
+  spokes: SpokeLayout[];
+}
+
+const CX = 400;
+const CY = 400;
+const CENTER_R = 55;
+const INNER_R1 = 65;
+const INNER_R2 = 125;
+const BAR_START = 138;
+const BAR_MAX = 290;
+const LABEL_OFFSET = 8;
+const GAP_DEG = 2.5;
+
 const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) => {
-  const [hoveredArmy, setHoveredArmy] = useState<string | null>(null);
+  const [hoveredFaction, setHoveredFaction] = useState<string | null>(null);
 
-  // Build ordered spokes: main faction then its sectorials
-  const countMap = new Map(armyDistribution.map(a => [a.army, a.count]));
-  const spokes: SpokeEntry[] = [];
-  const added = new Set<string>();
+  const countMap = new Map(armyDistribution.map((a) => [a.army, a.count]));
 
-  for (const faction of FACTION_HIERARCHY) {
-    const mainCount = countMap.get(faction.name) ?? 0;
-    const sectorItems = faction.sectorials.map(s => ({ s, c: countMap.get(s) ?? 0 }));
-    if (mainCount === 0 && !sectorItems.some(x => x.c > 0)) continue;
+  const factionData = FACTION_HIERARCHY.map((f) => {
+    const subfactions = f.subfactions.map((name) => ({
+      name,
+      count: countMap.get(name) ?? 0,
+    }));
+    const total = subfactions.reduce((sum, s) => sum + s.count, 0);
+    return { ...f, subfactions, total };
+  }).filter((f) => f.total > 0);
 
-    if (mainCount > 0) {
-      spokes.push({ army: faction.name, count: mainCount, color: faction.color, isMain: true });
-      added.add(faction.name);
-    }
-    for (const { s, c } of sectorItems) {
-      if (c > 0) {
-        spokes.push({ army: s, count: c, color: faction.color, isMain: false });
-        added.add(s);
-      }
-    }
-  }
-  // Fallback: any army not in the hierarchy
-  for (const { army, count } of armyDistribution) {
-    if (!added.has(army) && count > 0) {
-      spokes.push({ army, count, color: '#64748b', isMain: true });
-    }
+  // Collect unmatched armies into an "Other" group
+  const matched = new Set(FACTION_HIERARCHY.flatMap((f) => f.subfactions));
+  const unmatched = armyDistribution.filter((a) => !matched.has(a.army) && a.count > 0);
+  if (unmatched.length > 0) {
+    factionData.push({
+      name: 'Other',
+      color: '#64748b',
+      subfactions: unmatched.map((a) => ({ name: a.army, count: a.count })),
+      total: unmatched.reduce((s, a) => s + a.count, 0),
+    });
   }
 
-  if (spokes.length === 0) {
+  const grandTotal = factionData.reduce((s, f) => s + f.total, 0);
+
+  if (grandTotal === 0) {
     return <Text c="dimmed">No army data available yet.</Text>;
   }
 
-  const CX = 400;
-  const CY = 400;
-  const INNER_R = 85;
-  const MAX_R = 215;
-  const LABEL_R = 262;
-  const N = spokes.length;
-  const maxCount = Math.max(...spokes.map(s => s.count), 1);
+  const usableDeg = 360 - factionData.length * GAP_DEG;
+  const maxSubCount = Math.max(
+    ...factionData.flatMap((f) => f.subfactions.map((s) => s.count)),
+    1,
+  );
+
+  let currentAngle = 0;
+  const layouts: FactionLayout[] = factionData.map((faction) => {
+    const arcSpan = (faction.total / grandTotal) * usableDeg;
+    const startAngle = currentAngle;
+    const endAngle = currentAngle + arcSpan;
+
+    const activeSubs = faction.subfactions.filter((s) => s.count > 0);
+    const spokeCount = activeSubs.length;
+    const spokeSpacing = spokeCount > 0 ? arcSpan / spokeCount : 0;
+
+    const spokes: SpokeLayout[] = activeSubs.map((sub, i) => {
+      const angle = startAngle + spokeSpacing * (i + 0.5);
+      const barLength = (sub.count / maxSubCount) * (BAR_MAX - BAR_START);
+      return {
+        name: sub.name,
+        count: sub.count,
+        angle,
+        barEnd: BAR_START + barLength,
+        isVanilla: sub.name === faction.name
+          || (faction.name === 'Non-Aligned Armies' && sub.name === 'NA2'),
+      };
+    });
+
+    currentAngle = endAngle + GAP_DEG;
+    return { name: faction.name, color: faction.color, total: faction.total, startAngle, endAngle, spokes };
+  });
+
+  const getLabelTransform = (angleDeg: number) => {
+    const svgAngle = angleDeg - 90;
+    const normalized = ((svgAngle % 360) + 360) % 360;
+    const isFlipped = normalized > 90 && normalized < 270;
+    return { isFlipped, rotation: isFlipped ? svgAngle + 180 : svgAngle };
+  };
 
   return (
     <svg
       viewBox="0 0 800 800"
-      style={{ width: '100%', height: 'auto', display: 'block' }}
-      aria-label="Army distribution radial chart"
+      style={{ width: '100%', maxWidth: 700, height: 'auto', display: 'block', margin: '0 auto' }}
+      aria-label="Army distribution sunburst chart"
     >
-      {/* Concentric guide rings */}
-      {[110, 150, 185, MAX_R].map(r => (
-        <circle
-          key={r}
-          cx={CX}
-          cy={CY}
-          r={r}
-          fill="none"
-          stroke="#1e293b"
-          strokeWidth={1}
+      <rect x="0" y="0" width="800" height="800" fill="white" rx="12" />
+
+      {/* Guide rings */}
+      {[INNER_R2, BAR_START, (BAR_START + BAR_MAX) / 2, BAR_MAX].map((r) => (
+        <circle key={r} cx={CX} cy={CY} r={r} fill="none" stroke="#f1f5f9" strokeWidth={0.5} />
+      ))}
+
+      {/* Inner ring: faction arcs */}
+      {layouts.map((faction) => (
+        <path
+          key={`arc-${faction.name}`}
+          d={describeArc(CX, CY, INNER_R1, INNER_R2, faction.startAngle, faction.endAngle)}
+          fill={faction.color}
+          opacity={hoveredFaction && hoveredFaction !== faction.name ? 0.2 : 1}
+          stroke="white"
+          strokeWidth={1.5}
+          style={{ cursor: 'pointer', transition: 'opacity 0.2s' }}
+          onMouseEnter={() => setHoveredFaction(faction.name)}
+          onMouseLeave={() => setHoveredFaction(null)}
         />
       ))}
 
-      {/* Centre disc */}
-      <circle cx={CX} cy={CY} r={INNER_R} fill="#0f172a" stroke="#334155" strokeWidth={2} />
-      <text x={CX} y={CY - 10} textAnchor="middle" fill="#f1f5f9" fontSize={34} fontWeight="bold">
-        {totalPlayers}
-      </text>
-      <text x={CX} y={CY + 16} textAnchor="middle" fill="#64748b" fontSize={12}>
-        PLAYERS
-      </text>
-
-      {/* Spokes */}
-      {spokes.map((spoke, i) => {
-        const angleDeg = (i / N) * 360 - 90;
-        const barR = INNER_R + ((spoke.count / maxCount) * (MAX_R - INNER_R));
-
-        const normalizedAngle = ((angleDeg % 360) + 360) % 360;
-        const isLeftHalf = normalizedAngle > 90 && normalizedAngle < 270;
-        const isHovered = hoveredArmy === spoke.army;
-        const isDimmed = !!hoveredArmy && !isHovered;
+      {/* Inner ring: faction labels */}
+      {layouts.map((faction) => {
+        const arcSpan = faction.endAngle - faction.startAngle;
+        if (arcSpan < 10) return null;
+        const midAngle = (faction.startAngle + faction.endAngle) / 2;
+        const labelR = (INNER_R1 + INNER_R2) / 2;
+        const pos = polarToCartesian(CX, CY, labelR, midAngle);
+        const { rotation } = getLabelTransform(midAngle);
 
         return (
-          <g
-            key={spoke.army}
-            transform={`rotate(${angleDeg}, ${CX}, ${CY})`}
-            style={{ cursor: 'pointer' }}
-            onMouseEnter={() => setHoveredArmy(spoke.army)}
-            onMouseLeave={() => setHoveredArmy(null)}
+          <text
+            key={`arc-label-${faction.name}`}
+            x={pos.x}
+            y={pos.y}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            fill="white"
+            fontSize={arcSpan > 25 ? 10 : 8}
+            fontWeight={700}
+            transform={`rotate(${rotation}, ${pos.x}, ${pos.y})`}
+            style={{ pointerEvents: 'none' }}
           >
-            {/* Bar */}
-            <line
-              x1={CX + INNER_R + 2}
-              y1={CY}
-              x2={CX + barR}
-              y2={CY}
-              stroke={spoke.color}
-              strokeWidth={spoke.isMain ? 10 : 5}
-              strokeLinecap="round"
-              opacity={isDimmed ? 0.1 : 1}
-            />
-            {/* End cap */}
-            <circle
-              cx={CX + barR}
-              cy={CY}
-              r={spoke.isMain ? 6 : 3.5}
-              fill={spoke.color}
-              opacity={isDimmed ? 0.1 : 1}
-            />
-            {/* Label — flipped for left-half so it's always readable */}
-            <text
-              x={CX + LABEL_R}
-              y={CY}
-              textAnchor={isLeftHalf ? 'end' : 'start'}
-              dominantBaseline="middle"
-              fill={isHovered ? '#f1f5f9' : isDimmed ? '#1e293b' : spoke.isMain ? '#cbd5e1' : '#94a3b8'}
-              fontSize={spoke.isMain ? 12 : 10}
-              fontWeight={spoke.isMain ? 600 : 400}
-              transform={
-                isLeftHalf
-                  ? `rotate(180, ${CX + LABEL_R}, ${CY})`
-                  : undefined
-              }
-            >
-              {spoke.army} ({spoke.count})
-            </text>
-          </g>
+            {arcSpan > 25 ? `${faction.name} (${faction.total})` : String(faction.total)}
+          </text>
         );
       })}
+
+      {/* Outer spokes: subfaction bars and labels */}
+      {layouts.flatMap((faction) =>
+        faction.spokes.map((spoke) => {
+          const innerEdge = polarToCartesian(CX, CY, INNER_R2, spoke.angle);
+          const start = polarToCartesian(CX, CY, BAR_START, spoke.angle);
+          const end = polarToCartesian(CX, CY, spoke.barEnd, spoke.angle);
+          const labelPos = polarToCartesian(CX, CY, spoke.barEnd + LABEL_OFFSET, spoke.angle);
+          const { isFlipped, rotation } = getLabelTransform(spoke.angle);
+          const isDimmed = !!hoveredFaction && hoveredFaction !== faction.name;
+
+          return (
+            <g
+              key={spoke.name}
+              style={{ cursor: 'pointer' }}
+              onMouseEnter={() => setHoveredFaction(faction.name)}
+              onMouseLeave={() => setHoveredFaction(null)}
+            >
+              {/* Thin connector from inner ring to bar start */}
+              <line
+                x1={innerEdge.x} y1={innerEdge.y}
+                x2={start.x} y2={start.y}
+                stroke={faction.color}
+                strokeWidth={0.5}
+                opacity={isDimmed ? 0.08 : 0.3}
+                style={{ transition: 'opacity 0.2s' }}
+              />
+              {/* Bar segment */}
+              <line
+                x1={start.x} y1={start.y}
+                x2={end.x} y2={end.y}
+                stroke={faction.color}
+                strokeWidth={spoke.isVanilla ? 8 : 5}
+                strokeLinecap="round"
+                opacity={isDimmed ? 0.1 : 0.85}
+                style={{ transition: 'opacity 0.2s' }}
+              />
+              {/* End cap */}
+              <circle
+                cx={end.x} cy={end.y}
+                r={spoke.isVanilla ? 4.5 : 3}
+                fill={faction.color}
+                opacity={isDimmed ? 0.1 : 1}
+                style={{ transition: 'opacity 0.2s' }}
+              />
+              {/* Label */}
+              <text
+                x={labelPos.x}
+                y={labelPos.y}
+                textAnchor={isFlipped ? 'end' : 'start'}
+                dominantBaseline="middle"
+                fill={isDimmed ? '#cbd5e1' : '#334155'}
+                fontSize={spoke.isVanilla ? 10 : 9}
+                fontWeight={spoke.isVanilla ? 700 : 400}
+                transform={`rotate(${rotation}, ${labelPos.x}, ${labelPos.y})`}
+                style={{ transition: 'fill 0.2s', pointerEvents: 'none' }}
+              >
+                {spoke.name} ({spoke.count})
+              </text>
+            </g>
+          );
+        }),
+      )}
+
+      {/* Center disc */}
+      <circle cx={CX} cy={CY} r={CENTER_R} fill="white" stroke="#e2e8f0" strokeWidth={1} />
+      <text x={CX} y={CY - 6} textAnchor="middle" fill="#1e293b" fontSize={24} fontWeight="bold">
+        {totalPlayers}
+      </text>
+      <text
+        x={CX}
+        y={CY + 14}
+        textAnchor="middle"
+        fill="#64748b"
+        fontSize={9}
+        style={{ letterSpacing: '0.12em' }}
+      >
+        PLAYERS
+      </text>
     </svg>
   );
 };
