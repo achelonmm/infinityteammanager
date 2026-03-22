@@ -298,7 +298,9 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
               fill={isDimmed ? '#334155' : '#f1f5f9'}
               fontSize={10}
               fontWeight={700}
-              style={{ pointerEvents: 'none', transition: 'fill 0.2s' }}
+              style={{ cursor: 'pointer', transition: 'fill 0.2s' }}
+              onMouseEnter={() => setHoveredFaction(faction.name)}
+              onMouseLeave={() => setHoveredFaction(null)}
             >
               {displayName} ({faction.total})
             </text>
@@ -311,7 +313,9 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
             fill={isDimmed ? '#334155' : '#f1f5f9'}
             fontSize={10}
             fontWeight={700}
-            style={{ pointerEvents: 'none', transition: 'fill 0.2s' }}
+            style={{ cursor: 'pointer', transition: 'fill 0.2s' }}
+            onMouseEnter={() => setHoveredFaction(faction.name)}
+            onMouseLeave={() => setHoveredFaction(null)}
           >
             <textPath
               href={`#faction-arc-${idx}`}
@@ -365,7 +369,7 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
                 fontSize={11}
                 fontWeight={400}
                 transform={`rotate(${rotation}, ${labelPos.x}, ${labelPos.y})`}
-                style={{ transition: 'fill 0.2s', pointerEvents: 'none' }}
+                style={{ transition: 'fill 0.2s', cursor: 'pointer' }}
               >
                 {spoke.name} ({spoke.count})
               </text>
