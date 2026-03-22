@@ -28,7 +28,7 @@ const FACTION_HIERARCHY: FactionDef[] = [
   {
     name: 'Haqqislam',
     color: '#d4a853',
-    subfactions: ['Haqqislam', 'Hassassin Bahram', 'Qapu Khalqi', 'Ramah'],
+    subfactions: ['Haqqislam', 'Hassassin Bahram', 'Qapu Khalqi', 'Ramah Taskforce'],
   },
   {
     name: 'Nómadas',
@@ -63,7 +63,7 @@ const FACTION_HIERARCHY: FactionDef[] = [
   {
     name: 'Ejércitos No Alineados',
     color: '#78350f',
-    subfactions: ['NA2', 'Druze Bayram Security', 'Ikari Company', 'StarCo', 'WhiteCo', 'Dashat Company'],
+    subfactions: ['Druze Bayram Security', 'Ikari Company', 'StarCo', 'WhiteCo', 'Dashat Company'],
   },
 ];
 
@@ -191,8 +191,7 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
         count: sub.count,
         angle,
         barEnd: BAR_START + barLength,
-        isVanilla: sub.name === faction.name
-          || (faction.name === 'Ejércitos No Alineados' && sub.name === 'NA2'),
+        isVanilla: sub.name === faction.name,
       };
     });
 
