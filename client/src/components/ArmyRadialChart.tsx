@@ -292,9 +292,9 @@ const ArmyRadialChart: React.FC<Props> = ({ armyDistribution, totalPlayers }) =>
           return (
             <text
               key={`fl-${faction.name}`}
-              x={isLeftSide ? arcEdge.x - 6 : arcEdge.x + 6}
+              x={isLeftSide ? arcEdge.x + 6 : arcEdge.x - 6}
               y={arcEdge.y}
-              textAnchor={isLeftSide ? 'end' : 'start'}
+              textAnchor={isLeftSide ? 'start' : 'end'}
               dominantBaseline="middle"
               fill={isDimmed ? '#334155' : '#f1f5f9'}
               fontSize={10}
