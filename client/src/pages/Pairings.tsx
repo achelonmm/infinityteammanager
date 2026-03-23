@@ -224,8 +224,8 @@ const Pairings: React.FC = () => {
           </Group>
 
           <Alert icon={<Info size={16} />} color="blue" mb="md">
-            <strong>Review the pairings below.</strong> You can adjust table assignments before saving.
-            Teams are paired to avoid previous opponents and tables when possible.
+            <strong>Review the pairings below.</strong> You can adjust table group assignments before saving.
+            Teams are paired to avoid previous opponents and table groups when possible.
           </Alert>
 
           {pairings.map((pairing, index) => {
@@ -238,7 +238,7 @@ const Pairings: React.FC = () => {
                   {/* Table selector */}
                   <div>
                     <Select
-                      label="Table:"
+                      label="Table Group:"
                       value={String(pairing.tableNumber)}
                       onChange={(value) => {
                         const newPairings = [...pairings];
@@ -247,7 +247,7 @@ const Pairings: React.FC = () => {
                       }}
                       data={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => ({
                         value: String(num),
-                        label: `Table ${num}`,
+                        label: `Table ${String.fromCharCode(64 + num)}`,
                       }))}
                     />
                   </div>
@@ -372,7 +372,7 @@ const Pairings: React.FC = () => {
                 >
                   <div>
                     <Badge size="lg" variant="light" color="cyan">
-                      Table {teamMatch.tableNumber}
+                      Table {String.fromCharCode(64 + teamMatch.tableNumber)}
                     </Badge>
                   </div>
 

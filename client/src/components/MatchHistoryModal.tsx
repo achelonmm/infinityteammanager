@@ -61,7 +61,7 @@ const MatchHistoryModal: React.FC<MatchHistoryModalProps> = ({
                 <Target size={18} />
                 <Text fw={600}>
                   Round {round} - vs {roundMatches[0].opponent} - Table{' '}
-                  {roundMatches[0].tableNumber}
+                  {roundMatches[0].tableNumber ? String.fromCharCode(64 + roundMatches[0].tableNumber) : '?'}
                 </Text>
               </Group>
 
