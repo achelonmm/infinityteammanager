@@ -45,7 +45,7 @@ app.use('/api/tournaments', tournamentRoutes);
 // Protected mutation routes - require auth for POST/PUT/DELETE
 app.use('/api/teams', requireAuth, teamRoutes);
 app.use('/api/players', requireAuth, playerRoutes);
-app.use('/api/matches', requireAuth, matchRoutes);
+app.use('/api/matches', matchRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

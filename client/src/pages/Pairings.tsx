@@ -31,6 +31,7 @@ import {
   ThemeIcon,
 } from '@mantine/core';
 import { useTournament } from '../contexts/TournamentContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import LoadingSkeleton from '../components/LoadingSkeleton';
 import IndividualMatchResultForm from '../components/IndividualMatchResultForm';
@@ -47,6 +48,7 @@ const Pairings: React.FC = () => {
     getCurrentRoundMatches,
     setIndividualPairings,
     updateIndividualMatch,
+    submitPlayerResult,
     canAdvanceToNextRound,
     advanceToNextRound,
     getCurrentRound,
@@ -56,6 +58,8 @@ const Pairings: React.FC = () => {
     pairings
   } = useTournament();
 
+  const { checkAdminAccess } = useAuth();
+  const isAdmin = checkAdminAccess();
   const toast = useToast();
 
   const [selectedMatch, setSelectedMatch] = useState<{
@@ -114,6 +118,12 @@ const Pairings: React.FC = () => {
       console.error('Error saving match result:', error);
       toast.error('Error saving match result. Please try again.');
     }
+  };
+
+  const handlePlayerSubmitResult = async (matchId: string, itsPin: string, results: Partial<IndividualMatch>) => {
+    await submitPlayerResult(matchId, itsPin, results);
+    setSelectedMatch(null);
+    toast.success('Match results submitted successfully!');
   };
 
   const handleAdvanceRound = async () => {
@@ -193,8 +203,8 @@ const Pairings: React.FC = () => {
         </Paper>
       )}
 
-      {/* Generate Pairings Section (only show for current round) */}
-      {isViewingCurrentRound && currentRoundMatches.length === 0 && pairings.length === 0 && (
+      {/* Generate Pairings Section (admin only, current round) */}
+      {isAdmin && isViewingCurrentRound && currentRoundMatches.length === 0 && pairings.length === 0 && (
         <Paper p="lg" radius="md" withBorder mb="md">
           <Title order={3} mb="md">
             Round {currentRound} - Generate Pairings
@@ -215,8 +225,8 @@ const Pairings: React.FC = () => {
         </Paper>
       )}
 
-      {/* Preview Generated Pairings */}
-      {pairings.length > 0 && (
+      {/* Preview Generated Pairings (admin only) */}
+      {isAdmin && pairings.length > 0 && (
         <Paper p="lg" radius="md" withBorder mb="md">
           <Group mb="md">
             <Eye size={22} />
@@ -331,29 +341,31 @@ const Pairings: React.FC = () => {
               <Title order={3}>Round {selectedRound} Matches</Title>
             </Group>
 
-            <Group>
-              {/* Advance to Next Round Button */}
-              {isViewingCurrentRound && canAdvanceToNextRound && (
-                <Button
-                  onClick={handleAdvanceRound}
-                  color="green"
-                  leftSection={<SkipForward size={18} />}
-                >
-                  Advance to Round {currentRound + 1}
-                </Button>
-              )}
+            {isAdmin && (
+              <Group>
+                {/* Advance to Next Round Button */}
+                {isViewingCurrentRound && canAdvanceToNextRound && (
+                  <Button
+                    onClick={handleAdvanceRound}
+                    color="green"
+                    leftSection={<SkipForward size={18} />}
+                  >
+                    Advance to Round {currentRound + 1}
+                  </Button>
+                )}
 
-              {isViewingCurrentRound && currentRoundMatches.length > 0 && !currentRoundMatches.some(m => m.isCompleted) && (
-                <Button
-                  onClick={handleDeleteRound}
-                  color="yellow"
-                  variant="outline"
-                  leftSection={<Trash2 size={18} />}
-                >
-                  Delete Round {currentRound} Matches
-                </Button>
-              )}
-            </Group>
+                {isViewingCurrentRound && currentRoundMatches.length > 0 && !currentRoundMatches.some(m => m.isCompleted) && (
+                  <Button
+                    onClick={handleDeleteRound}
+                    color="yellow"
+                    variant="outline"
+                    leftSection={<Trash2 size={18} />}
+                  >
+                    Delete Round {currentRound} Matches
+                  </Button>
+                )}
+              </Group>
+            )}
           </Group>
 
           {displayedMatches.map((teamMatch) => {
@@ -461,25 +473,25 @@ const Pairings: React.FC = () => {
                             </div>
 
                             <Stack align="flex-end" justify="center">
-                              {player1 && player2 && (
-                                !indMatch.isCompleted ? (
-                                  <Button
-                                    onClick={() => setSelectedMatch({ individualMatch: indMatch, player1, player2 })}
-                                    size="xs"
-                                    leftSection={<ClipboardEdit size={14} />}
-                                  >
-                                    Enter Results
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    onClick={() => setSelectedMatch({ individualMatch: indMatch, player1, player2 })}
-                                    size="xs"
-                                    variant="default"
-                                    leftSection={<Pencil size={14} />}
-                                  >
-                                    Edit Results
-                                  </Button>
-                                )
+                              {player1 && player2 && !indMatch.isCompleted && (
+                                <Button
+                                  onClick={() => setSelectedMatch({ individualMatch: indMatch, player1, player2 })}
+                                  size="xs"
+                                  leftSection={<ClipboardEdit size={14} />}
+                                >
+                                  Enter Results
+                                </Button>
+                              )}
+
+                              {player1 && player2 && indMatch.isCompleted && isAdmin && (
+                                <Button
+                                  onClick={() => setSelectedMatch({ individualMatch: indMatch, player1, player2 })}
+                                  size="xs"
+                                  variant="default"
+                                  leftSection={<Pencil size={14} />}
+                                >
+                                  Edit Results
+                                </Button>
                               )}
 
                               {indMatch.isCompleted && (
@@ -494,7 +506,7 @@ const Pairings: React.FC = () => {
                     })}
                   </Box>
                 ) : (
-                  team1 && team2 && !teamMatch.isCompleted && (
+                  isAdmin && team1 && team2 && !teamMatch.isCompleted && (
                     <PairingSetup
                       teamMatch={teamMatch}
                       team1={team1}
@@ -509,8 +521,25 @@ const Pairings: React.FC = () => {
         </Paper>
       )}
 
-      {/* No matches state */}
-      {displayedMatches.length === 0 && pairings.length === 0 && !isViewingCurrentRound && (
+      {/* No matches state (non-admin: pairings not published yet) */}
+      {!isAdmin && displayedMatches.length === 0 && (
+        <Paper p="lg" radius="md" withBorder>
+          <Stack align="center" gap="md" py="xl">
+            <ThemeIcon size={64} radius="xl" variant="light" color="gray">
+              <Swords size={48} />
+            </ThemeIcon>
+            <Text c="dimmed" size="lg">
+              Pairings have not been published yet.
+            </Text>
+            <Text c="dimmed" size="sm">
+              Check back once the round begins.
+            </Text>
+          </Stack>
+        </Paper>
+      )}
+
+      {/* No matches state (admin, viewing past round) */}
+      {isAdmin && displayedMatches.length === 0 && pairings.length === 0 && !isViewingCurrentRound && (
         <Paper p="lg" radius="md" withBorder>
           <Stack align="center" gap="md" py="xl">
             <ThemeIcon size={64} radius="xl" variant="light" color="gray">
@@ -531,6 +560,8 @@ const Pairings: React.FC = () => {
           player2={selectedMatch.player2}
           onSave={handleSaveMatchResult}
           onCancel={() => setSelectedMatch(null)}
+          mode={isAdmin ? 'admin' : 'player'}
+          onPlayerSubmit={handlePlayerSubmitResult}
         />
       )}
     </Container>

@@ -50,6 +50,7 @@ const Navigation: React.FC = () => {
   }, [location]);
 
   const publicNavItems: NavItem[] = [
+    { path: '/pairings', label: 'Pairings', icon: <Swords size={16} /> },
     { path: '/rankings', label: 'Rankings', icon: <Trophy size={16} /> },
     { path: '/statistics', label: 'Statistics', icon: <TrendingUp size={16} /> },
   ];
@@ -59,7 +60,6 @@ const Navigation: React.FC = () => {
     { path: '/tournaments', label: 'Tournaments', icon: <ListTodo size={16} /> },
     { path: '/registration', label: 'Register Team', icon: <UserPlus size={16} /> },
     { path: '/teams', label: 'Teams & Players', icon: <Users size={16} /> },
-    { path: '/pairings', label: 'Pairings', icon: <Swords size={16} /> },
   ];
 
   const navItems = isAdmin ? [...adminNavItems, ...publicNavItems] : publicNavItems;

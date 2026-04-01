@@ -1,6 +1,7 @@
 import db from '../models/db';
 import { TeamMatchModel } from '../models/TeamMatchModel';
 import { IndividualMatchModel } from '../models/IndividualMatchModel';
+import { PlayerModel } from '../models/PlayerModel';
 import { teamMatchMapper, individualMatchMapper } from '../utils/caseMapper';
 
 interface IndividualMatchPairing {
@@ -84,5 +85,37 @@ export const matchService = {
       }
     })();
     return matchesToDelete.length;
+  },
+
+  submitPlayerResult(matchId: string, itsPin: string, results: Record<string, unknown>) {
+    const match = IndividualMatchModel.findById(matchId);
+    if (!match) return null;
+
+    if (match.is_completed) {
+      throw new Error('MATCH_ALREADY_COMPLETED');
+    }
+
+    const player1 = PlayerModel.findById(match.player1_id);
+    const player2 = PlayerModel.findById(match.player2_id);
+
+    if (!player1 || !player2) return null;
+
+    const pinMatches = player1.its_pin === itsPin || player2.its_pin === itsPin;
+    if (!pinMatches) {
+      throw new Error('INVALID_PIN');
+    }
+
+    const dbUpdates = individualMatchMapper.toDb({ ...results, isCompleted: true });
+    const updated = IndividualMatchModel.update(matchId, dbUpdates);
+    if (!updated) return null;
+
+    // Auto-complete team match if all 3 individual matches are done
+    const siblingMatches = IndividualMatchModel.findByTeamMatchId(match.team_match_id);
+    const allCompleted = siblingMatches.every(m => m.is_completed);
+    if (allCompleted) {
+      TeamMatchModel.update(match.team_match_id, { is_completed: 1 } as Record<string, unknown>);
+    }
+
+    return individualMatchMapper.toApi(updated);
   }
 };

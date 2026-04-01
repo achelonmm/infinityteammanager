@@ -40,13 +40,8 @@ function App() {
                   <TeamsPlayers />
                 </ProtectedRoute>
               } />
-              <Route path="/pairings" element={
-                <ProtectedRoute>
-                  <Pairings />
-                </ProtectedRoute>
-              } />
-
               {/* Public Routes */}
+              <Route path="/pairings" element={<Pairings />} />
               <Route path="/rankings" element={<Rankings />} />
               <Route path="/statistics" element={<Statistics />} />
             </Routes>

@@ -107,6 +107,21 @@ export const batchCreateIndividualMatchSchema = z.object({
   })).min(1),
 });
 
+// Player result submission schema (public endpoint, PIN-verified)
+export const playerSubmitResultSchema = z.object({
+  itsPin: z.string().min(1),
+  objectivePoints1: z.number().int().min(0).max(10),
+  objectivePoints2: z.number().int().min(0).max(10),
+  victoryPointsFor1: z.number().int().min(0).max(300),
+  victoryPointsFor2: z.number().int().min(0).max(300),
+  paintedBonus1: z.boolean(),
+  paintedBonus2: z.boolean(),
+  lateListPenalty1: z.boolean(),
+  lateListPenalty2: z.boolean(),
+  tournamentPoints1: z.number().int().min(0),
+  tournamentPoints2: z.number().int().min(0),
+});
+
 // Validation middleware factory
 export function validate(schema: z.ZodSchema) {
   return (req: Request, res: Response, next: NextFunction) => {

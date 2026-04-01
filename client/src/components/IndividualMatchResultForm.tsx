@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
   ClipboardList, FileText, Trophy, Zap, Target,
-  Gamepad2, Palette, Clock, Flag, Swords, Save
+  Gamepad2, Palette, Clock, Flag, Swords, Save, KeyRound
 } from 'lucide-react';
 import {
   NumberInput, Checkbox, Button, Group, Stack, Text, Paper,
-  Alert, SimpleGrid, Badge, List, Box,
+  Alert, SimpleGrid, Badge, List, Box, TextInput,
 } from '@mantine/core';
 import { Player, IndividualMatch } from '../types';
 import { calculateTeamTournamentPoints } from '../utils/rankingUtils';
@@ -17,6 +17,8 @@ interface IndividualMatchResultFormProps {
   player2: Player;
   onSave: (matchId: string, results: Partial<IndividualMatch>) => void;
   onCancel: () => void;
+  mode?: 'admin' | 'player';
+  onPlayerSubmit?: (matchId: string, itsPin: string, results: Partial<IndividualMatch>) => Promise<void>;
 }
 
 const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
@@ -24,7 +26,9 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
   player1,
   player2,
   onSave,
-  onCancel
+  onCancel,
+  mode = 'admin',
+  onPlayerSubmit,
 }) => {
   const [results, setResults] = useState({
     objectivePoints1: individualMatch.objectivePoints1 || 0,
@@ -37,6 +41,7 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
     lateListPenalty2: individualMatch.lateListPenalty2 || player2.armyListLate,
   });
 
+  const [itsPin, setItsPin] = useState('');
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   const calculatedPoints = {
@@ -72,6 +77,10 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
   const validateForm = (): boolean => {
     const errors: string[] = [];
 
+    if (mode === 'player' && !itsPin.trim()) {
+      errors.push('Please enter your ITS PIN to verify your identity');
+    }
+
     if (results.objectivePoints1 < 0 || results.objectivePoints1 > 10) {
       errors.push(`${player1.nickname}'s Objective Points must be between 0 and 10`);
     }
@@ -90,7 +99,7 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
     return errors.length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -106,10 +115,24 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
         tournamentPoints2: calculatedPoints.points2,
         isCompleted: true
       };
-      onSave(individualMatch.id, finalResults);
+
+      if (mode === 'player' && onPlayerSubmit) {
+        await onPlayerSubmit(individualMatch.id, itsPin.trim(), finalResults);
+      } else {
+        onSave(individualMatch.id, finalResults);
+      }
     } catch (error) {
-      console.error('Error saving results:', error);
-      setValidationErrors(['Error saving results. Please try again.']);
+      if (error instanceof Error) {
+        if (error.message.includes('Invalid ITS PIN') || (error as { status?: number }).status === 403) {
+          setValidationErrors(['Invalid ITS PIN. Make sure you enter your own ITS PIN.']);
+        } else if (error.message.includes('already been submitted') || (error as { status?: number }).status === 409) {
+          setValidationErrors(['Results have already been submitted for this match. Only an admin can edit them.']);
+        } else {
+          setValidationErrors([error.message || 'Error saving results. Please try again.']);
+        }
+      } else {
+        setValidationErrors(['Error saving results. Please try again.']);
+      }
       setIsSubmitting(false);
     }
   };
@@ -214,6 +237,23 @@ const IndividualMatchResultForm: React.FC<IndividualMatchResultFormProps> = ({
 
         <form onSubmit={handleSubmit}>
           <Stack gap="md">
+            {/* ITS PIN (player mode only) */}
+            {mode === 'player' && (
+              <Box>
+                <Group gap="xs" mb="xs">
+                  <KeyRound size={18} />
+                  <Text fw={600} size="sm">Your ITS PIN (required to verify identity)</Text>
+                </Group>
+                <TextInput
+                  placeholder="Enter your ITS PIN"
+                  value={itsPin}
+                  onChange={(e) => { setItsPin(e.currentTarget.value); setValidationErrors([]); }}
+                  disabled={isSubmitting}
+                  required
+                />
+              </Box>
+            )}
+
             {/* Objective Points */}
             <Box>
               <Group gap="xs" mb="xs">

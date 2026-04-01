@@ -16,6 +16,7 @@ interface MatchesContextType {
   updateTeamMatch: (teamMatchId: string, updates: Partial<TeamMatch>) => Promise<void>;
   setIndividualPairings: (teamMatchId: string, pairings: { player1Id: string; player2Id: string }[]) => Promise<void>;
   updateIndividualMatch: (individualMatchId: string, updates: Partial<IndividualMatch>) => Promise<void>;
+  submitPlayerResult: (matchId: string, itsPin: string, results: Partial<IndividualMatch>) => Promise<void>;
   canAdvanceToNextRound: boolean;
   advanceToNextRound: () => Promise<void>;
   getCurrentRound: () => number;
@@ -189,6 +190,24 @@ export const MatchesProvider: React.FC<MatchesProviderProps> = ({ children }) =>
     }
   };
 
+  const submitPlayerResult = async (matchId: string, itsPin: string, results: Partial<IndividualMatch>) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await apiService.submitPlayerResult(matchId, { itsPin, ...results });
+
+      if (tournament?.id) {
+        const freshTournament = await apiService.getTournament(tournament.id);
+        setTournament(freshTournament);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to submit result');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const canAdvanceToNextRound = useMemo(() => {
     if (!tournament) return false;
 
@@ -254,6 +273,7 @@ export const MatchesProvider: React.FC<MatchesProviderProps> = ({ children }) =>
       updateTeamMatch,
       setIndividualPairings,
       updateIndividualMatch,
+      submitPlayerResult,
       canAdvanceToNextRound,
       advanceToNextRound,
       getCurrentRound,

@@ -242,4 +242,17 @@ export const apiService = {
     });
     return handleResponse<IndividualMatch>(response, 'Failed to update individual match');
   },
+
+  async submitPlayerResult(matchId: string, data: { itsPin: string } & Partial<IndividualMatch>): Promise<IndividualMatch> {
+    const response = await fetch(`${API_BASE}/matches/individual/${matchId}/player-result`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Failed to submit result' }));
+      throw new ApiError(errorData.error || 'Failed to submit result', response.status);
+    }
+    return response.json();
+  },
 };
