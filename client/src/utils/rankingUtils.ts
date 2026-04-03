@@ -286,17 +286,21 @@ export const calculateTeamRankings = (teams: Team[], allMatches: TeamMatch[]): T
         team2Stats.victoryPointsAgainst += team1TotalVictoryFor; // Enemy's victory points
         team2Stats.matchesPlayed += 1;
 
-        // Determine team match winner (based on total objective points for the team match)
-        if (team1TotalObjective > team2TotalObjective) {
-          team1Stats.wins += 1;
-          team2Stats.losses += 1;
-        } else if (team1TotalObjective < team2TotalObjective) {
-          team1Stats.losses += 1;
-          team2Stats.wins += 1;
-        } else {
-          team1Stats.draws += 1;
-          team2Stats.draws += 1;
-        }
+        // Sum individual match W-D-L for each team
+        teamMatch.individualMatches.forEach((match) => {
+          if (match.isCompleted) {
+            if (match.objectivePoints1 > match.objectivePoints2) {
+              team1Stats.wins += 1;
+              team2Stats.losses += 1;
+            } else if (match.objectivePoints1 < match.objectivePoints2) {
+              team1Stats.losses += 1;
+              team2Stats.wins += 1;
+            } else {
+              team1Stats.draws += 1;
+              team2Stats.draws += 1;
+            }
+          }
+        });
       }
     }
   });
